@@ -12,6 +12,7 @@ Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0
 - Use `es2018` as compile target
 - Keep upgrading Colony when below a certain level
     - Colonization got stuck when hostile workers entered the room even though they didn't attack us
+- only calculate road network + coverage if RCL is high enough
 
 ### Fixed
 

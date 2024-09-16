@@ -1,5 +1,5 @@
 import {$} from '../caching/GlobalCache';
-import {Colony, getAllColonies} from '../Colony';
+import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {MatrixTypes, Pathing} from '../movement/Pathing';
@@ -425,16 +425,19 @@ export class RoadPlanner {
 		}
 
 		// Once in a blue moon, recalculate the entire network and write to memory to keep it up to date
-		if (Game.time % RoadPlanner.settings.recalculateRoadNetworkInterval == this.colony.id && this.roomPlanner.storagePos) {
-			log.debug("recalculate road network and coverage")
-			this.cleanRoadCoverage();
-			this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles(8));
-			this.recomputeRoadCoverages(this.roomPlanner.storagePos);
+		if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL && this.roomPlanner.storagePos) {
+			if (Game.time % RoadPlanner.settings.recalculateRoadNetworkInterval == this.colony.id) {
+				log.debug("recalculate road network")
+				this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles(8));
+			}
+
+			if (Game.time % RoadPlanner.settings.recomputeCoverageInterval == this.colony.id) {
+				log.debug("recalculate road coverage")
+				this.cleanRoadCoverage();
+				this.recomputeRoadCoverages(this.roomPlanner.storagePos);
+			}
 		}
-		// Recompute coverage to destinations
-		if (Game.time % RoadPlanner.settings.recomputeCoverageInterval == this.colony.id && this.roomPlanner.storagePos) {
-			// TODO maybe remove??
-		}
+
 		// Build missing roads
 		if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL && this.roomPlanner.shouldRecheck(4)) {
 			this.buildMissing();
