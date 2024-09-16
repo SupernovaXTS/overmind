@@ -361,54 +361,56 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private handleWorker(worker: Zerg) {
-		if (worker.carry.energy > 0) {
-			// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
-			// FIXME workers get stalled at controller in case of downgrade attack
-			// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
-			const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
-								   (this.colony.controller.level < 4 ? .3 : .7);
-			if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
-				&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
-					|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
-				if (this.upgradeActions(worker)) return;
-			}
-			// Repair damaged non-road non-barrier structures
-			if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-				if (this.repairActions(worker)) return;
-			}
-			// Fortify critical barriers
-			if (this.criticalBarriers.length > 0) {
-				if (this.fortifyActions(worker, this.criticalBarriers)) return;
-			}
-			// Build new structures
-			if (this.constructionSites.length > 0) {
-				if (this.buildActions(worker)) return;
-			}
-			// Build ramparts to block incoming nuke
-			if (this.nukeDefenseRamparts.length > 0 && !this.colony.state.isRebuilding) {
-				if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
-			}
-			// Build and maintain roads
-			if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
-				if (this.pavingActions(worker)) return;
-			}
-			// Dismantle marked structures
-			if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-				if (this.dismantleActions(worker)) return;
-			}
-			// Fortify walls and ramparts
-			if (this.fortifyBarriers.length > 0) {
-				if (this.fortifyActions(worker, this.fortifyBarriers)) return;
-			}
-			// Upgrade controller if less than RCL8 or no upgraders
-			if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
-				&& this.colony.defcon == DEFCON.safe) {
-				if (this.upgradeActions(worker)) return;
-			}
-		} else {
+		if (worker.carry.energy == 0) {
 			// Acquire more energy
 			const workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 200 : 100;
 			worker.task = Tasks.recharge(workerWithdrawLimit);
+			return
+		}
+
+		// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
+		// FIXME workers get stalled at controller in case of downgrade attack
+		// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
+		const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
+								(this.colony.controller.level < 4 ? .3 : .7);
+		if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
+			&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
+				|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
+			if (this.upgradeActions(worker)) return;
+		}
+		// Repair damaged non-road non-barrier structures
+		if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+			if (this.repairActions(worker)) return;
+		}
+		// Fortify critical barriers
+		if (this.criticalBarriers.length > 0) {
+			if (this.fortifyActions(worker, this.criticalBarriers)) return;
+		}
+		// Build new structures
+		if (this.constructionSites.length > 0) {
+			if (this.buildActions(worker)) return;
+		}
+		// Build ramparts to block incoming nuke
+		if (this.nukeDefenseRamparts.length > 0 && !this.colony.state.isRebuilding) {
+			if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
+		}
+		// Build and maintain roads
+		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
+			if (this.pavingActions(worker)) return;
+		}
+		// Dismantle marked structures
+		if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+			if (this.dismantleActions(worker)) return;
+		}
+		// Fortify walls and ramparts
+		if (this.fortifyBarriers.length > 0) {
+			if (this.fortifyActions(worker, this.fortifyBarriers)) return;
+		}
+		// Upgrade controller if less than RCL8 or no upgraders
+		if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
+			// if below 3, we are in bootstrapping, always upgrade
+			&& (this.colony.defcon == DEFCON.safe || this.colony.level < 3)) {
+			if (this.upgradeActions(worker)) return;
 		}
 	}
 

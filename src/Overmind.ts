@@ -22,19 +22,6 @@ import { PowerZerg } from 'zerg/PowerZerg';
 import { Overlord } from 'overlords/Overlord';
 import { SpawnGroup } from 'logistics/SpawnGroup';
 
-const profilerRooms: {[colonyName: string]: boolean} = {};
-
-if (USE_SCREEPS_PROFILER) {
-    for (const name of PROFILER_INCLUDE_COLONIES) {
-        profilerRooms[name] = true;
-    }
-
-    const myRoomNames = _.filter(_.keys(Game.rooms), name => Game.rooms[name] && Game.rooms[name].my);
-    for (const name of _.sample(myRoomNames, PROFILER_COLONY_LIMIT - PROFILER_INCLUDE_COLONIES.length)) {
-        profilerRooms[name] = true;
-    }
-}
-
 @profile
 export default class _Overmind implements IOvermind {
 	memory: Mem
@@ -56,7 +43,7 @@ export default class _Overmind implements IOvermind {
 	expansionPlanner: ExpansionPlanner;
 	exceptions: Error[];
 	roomIntel: RoomIntel;
-
+    profilerRooms: {[colonyName: string]: boolean};
 
     constructor() {
         this.memory = Memory.Overmind;
@@ -80,9 +67,21 @@ export default class _Overmind implements IOvermind {
         this.expansionPlanner = new ExpansionPlanner();
         this.roomIntel = new RoomIntel();
         this.exceptions = [];
+        this.profilerRooms = {};
     }
 
 	build() {
+        if (USE_SCREEPS_PROFILER) {
+            for (const name of PROFILER_INCLUDE_COLONIES) {
+                this.profilerRooms[name] = true;
+            }
+
+            const myRoomNames = _.filter(_.keys(Game.rooms), name => Game.rooms[name] && Game.rooms[name].my);
+            for (const name of _.sample(myRoomNames, PROFILER_COLONY_LIMIT - PROFILER_INCLUDE_COLONIES.length)) {
+                this.profilerRooms[name] = true;
+            }
+        }
+
         this.cache.build();
         this.registerColonies();
         this.registerDirectives();
@@ -186,7 +185,7 @@ export default class _Overmind implements IOvermind {
 			// if these do not match, it is an outpost
 			if (this.colonyMap[colonyName] != colonyName) continue
 
-            if (USE_SCREEPS_PROFILER && !profilerRooms[colonyName]) {
+            if (USE_SCREEPS_PROFILER && !this.profilerRooms[colonyName]) {
                 Game.time % 20 == 0 && log.alert('Suppressing instantiation of colony ' + colonyName + '.');
                 continue;
             }
@@ -204,7 +203,7 @@ export default class _Overmind implements IOvermind {
 
             const room = Game.flags[flag].memory[MEM.COLONY];
             if (room) {
-                if (USE_SCREEPS_PROFILER && !profilerRooms[room]) {
+                if (USE_SCREEPS_PROFILER && !this.profilerRooms[room]) {
                     continue;
                 }
                 const colony = Memory.colonies[room];
@@ -214,8 +213,6 @@ export default class _Overmind implements IOvermind {
             }
 
             const directive = DirectiveWrapper(Game.flags[flag])
-			const found = !!this.directives[flag];
-
             if (!directive && !SUPPRESS_INVALID_DIRECTIVE_ALERTS && Game.time % 10 == 0) {
 				log.alert('Flag [' + flag + ' @ ' + Game.flags[flag].pos.print + '] does not match ' + 'a valid directive color code! (Refer to /src/directives/initializer.ts)' + alignedNewline + 'Use removeErrantFlags() to remove flags which do not match a directive.');
             }

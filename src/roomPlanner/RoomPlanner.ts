@@ -1,4 +1,4 @@
-import {Colony, ColonyStage, getAllColonies} from '../Colony';
+import {Colony, ColonyStage, DEFCON, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {isOwnedStructure, isRampart, isSpawn, isStorage, isTerminal, isWall} from '../declarations/typeGuards';
 import {DirectiveTerminalRebuildState} from '../directives/terminalState/terminalState_rebuild';
@@ -706,8 +706,17 @@ export class RoomPlanner {
 	 * Create construction sites for any buildings that need to be built
 	 */
 	private buildMissingStructures(): void {
+
 		// Max buildings that can be placed each tick
 		let remainingSites = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
+
+		if (this.colony.defcon > DEFCON.safe) {
+			// queue up one building after another to prevent players from demolishing construction sites by walking over them
+			remainingSites = 1
+			// only allow one construction site at a time
+			if (this.colony.constructionSites.length > 1) return
+		}
+
 		// Recall the appropriate map
 		this.recallMap();
 		if (!this.map || _.isEmpty(this.map)) { // in case a map hasn't been generated yet
@@ -732,6 +741,11 @@ export class RoomPlanner {
 					if (result == OK) {
 						remainingSites--;
 						this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
+					}
+
+					// somehow we might have too many containers already
+					else if (result == ERR_GCL_NOT_ENOUGH || result == ERR_RCL_NOT_ENOUGH) {
+						log.debug(`${this.colony.print}: couldn't build ${structureType} at ${pos.print}! RCL or GCL too low.`);
 					}
 
 					// If we've run into a problem then we might need to remove something

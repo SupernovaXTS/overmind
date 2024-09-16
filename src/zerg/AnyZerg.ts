@@ -383,23 +383,26 @@ export abstract class AnyZerg {
 		if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(
 			creep => creep.pos.getRangeToXY(this.pos.x, this.pos.y) < 6) == undefined) {
 			return false;
-		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
-			return false;
-		} else {
-			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
-			if (fleeing) {
-				// Drop energy if needed
-				if (fleeOptions.dropEnergy && this.carry.energy > 0) {
-					const nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
-					if (nearbyContainers.length > 0) {
-						this.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
-					} else {
-						this.drop(RESOURCE_ENERGY);
-					}
+		}
+
+		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) return false
+		// if bootstrapping keep going
+		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false
+
+		const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
+		if (fleeing) {
+			// Drop energy if needed
+			if (fleeOptions.dropEnergy && this.carry.energy > 0) {
+				const nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
+				if (nearbyContainers.length > 0) {
+					this.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
+				} else {
+					this.drop(RESOURCE_ENERGY);
 				}
 			}
-			return fleeing;
 		}
+
+		return fleeing;
 	}
 
 	/**
@@ -429,67 +432,64 @@ export abstract class AnyZerg {
 				delete this.memory.avoidDanger;
 			}
 		}
+		
+		if (this.room.isSafe && this.hits == this.hitsMax) return false
+		// if in colony room and you are healthy, just do your job
+		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false
 
-		if (!this.room.isSafe || this.hits < this.hitsMax) {
-
-			if (Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER) {
-				// If you're in an SK room, you can skip the danger avoidance as long as you have max hp, there are no
-				// player hostiles, no invaders, and you're not in range to any of the sourceKeepers or spawning lairs
-				if (this.hits == this.hitsMax &&
-					this.room.dangerousPlayerHostiles.length == 0 &&
-					this.room.invaders.length == 0 &&
-					!_.any(this.room.fleeDefaults, fleeThing => this.pos.inRangeTo(fleeThing, 5))) {
-					// Not actually in danger
-					return false;
-				}
+		if (Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER) {
+			// If you're in an SK room, you can skip the danger avoidance as long as you have max hp, there are no
+			// player hostiles, no invaders, and you're not in range to any of the sourceKeepers or spawning lairs
+			if (this.hits == this.hitsMax &&
+				this.room.dangerousPlayerHostiles.length == 0 &&
+				this.room.invaders.length == 0 &&
+				!_.any(this.room.fleeDefaults, fleeThing => this.pos.inRangeTo(fleeThing, 5))) {
+				// Not actually in danger
+				return false;
 			}
-
-			let fallback: string;
-			const maxLinearRange = 6;
-			// Like 99.999% of the time this will be the case
-			if (this.colony && Game.map.getRoomLinearDistance(this.room.name, this.colony.name) <= maxLinearRange) {
-				fallback = this.colony.name;
-			}
-			// But this could happen if the creep was working remotely through a portal
-			else {
-				const nearbyColonies = _.filter(getAllColonies(), colony =>
-					Game.map.getRoomLinearDistance(this.room.name, colony.name) <= maxLinearRange);
-				const closestColony = minBy(nearbyColonies, colony => {
-					const route = Pathing.findRoute(this.room.name, colony.room.name);
-					if (route == ERR_NO_PATH) {
-						return false;
-					} else {
-						return route.length;
-					}
-				});
-				if (!closestColony) {
-					log.error(`${this.print} is all alone in a dangerous place and can't find their way home!`);
-					return false;
-				}
-				fallback = closestColony.name;
-			}
-
-			this.memory.avoidDanger = {
-				start   : Game.time,
-				timer   : opts.timer!,
-				fallback: fallback,
-			};
-
-			if (opts.dropEnergy && this.carry.energy > 0) {
-				const containersInRange = this.pos.findInRange(this.room.containers, 1);
-				const adjacentContainer = _.first(containersInRange);
-				if (adjacentContainer) {
-					this.transfer(adjacentContainer, RESOURCE_ENERGY);
-				}
-			}
-
-			this.goToRoom(fallback);
-			return true;
-
 		}
 
-		return false;
+		let fallback: string;
+		const maxLinearRange = 6;
+		// Like 99.999% of the time this will be the case
+		if (this.colony && Game.map.getRoomLinearDistance(this.room.name, this.colony.name) <= maxLinearRange) {
+			fallback = this.colony.name;
+		}
+		// But this could happen if the creep was working remotely through a portal
+		else {
+			const nearbyColonies = _.filter(getAllColonies(), colony =>
+				Game.map.getRoomLinearDistance(this.room.name, colony.name) <= maxLinearRange);
+			const closestColony = minBy(nearbyColonies, colony => {
+				const route = Pathing.findRoute(this.room.name, colony.room.name);
+				if (route == ERR_NO_PATH) {
+					return false;
+				} else {
+					return route.length;
+				}
+			});
+			if (!closestColony) {
+				log.error(`${this.print} is all alone in a dangerous place and can't find their way home!`);
+				return false;
+			}
+			fallback = closestColony.name;
+		}
 
+		this.memory.avoidDanger = {
+			start   : Game.time,
+			timer   : opts.timer!,
+			fallback: fallback,
+		};
+
+		if (opts.dropEnergy && this.carry.energy > 0) {
+			const containersInRange = this.pos.findInRange(this.room.containers, 1);
+			const adjacentContainer = _.first(containersInRange);
+			if (adjacentContainer) {
+				this.transfer(adjacentContainer, RESOURCE_ENERGY);
+			}
+		}
+
+		this.goToRoom(fallback);
+		return true;
 	}
 
 	/**

@@ -607,7 +607,7 @@ export class RoomIntel {
 		}
 
 		// Instantaneous threat level for a room scales from 0 to 1, with presence from non-player hostiles capped at
-		// a threat levle of 0.5.
+		// a threat level of 0.5.
 		let instantaneousThreatLevel: 0 | 0.5 | 1;
 		if (!room) {
 			instantaneousThreatLevel = 0.5;

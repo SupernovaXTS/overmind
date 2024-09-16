@@ -12,7 +12,7 @@ import {
 	RESOURCES_ALL_EXCEPT_ENERGY
 } from '../resources/map_resources';
 import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
-import {ema, maxBy, mergeSum, minBy, printRoomName} from '../utilities/utils';
+import {ema, maxBy, mergeSum, minBy, onPublicServer, printRoomName} from '../utilities/utils';
 import {TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
@@ -1059,7 +1059,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.passiveRequestors,
 			this.equilibriumNodes,
 			// this.passiveProviders // shouldn't include passiveProviders - these already have too many
-		], {allowMarketSell: true});
+		], {allowMarketSell: true, complainIfUnfulfilled: onPublicServer()});
 
 		// There are a lot of passive requestors, and usually their requests won't be able to be fulfilled, so
 		// we only run this call every few ticks

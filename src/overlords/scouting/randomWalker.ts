@@ -8,7 +8,7 @@ import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {log} from '../../console/log';
 
-const DEFAULT_NUM_SCOUTS = 3;
+const DEFAULT_NUM_SCOUTS = 1;
 
 /**
  * Sends out scouts which randomly traverse rooms to uncover possible expansion locations and gather intel

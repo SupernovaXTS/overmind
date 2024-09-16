@@ -86,11 +86,6 @@ interface IExpansionPlanner {
 
 }
 
-// interface IOvermindMemory {
-// 	terminalNetwork: any;
-// 	versionUpdater: any;
-// }
-
 interface IOvermind {
 	shouldBuild: boolean;
 	expiration: number;
@@ -310,8 +305,3 @@ type TransferrableStoreStructure =
 	| StructureStorage
 	| StructureTerminal
 	| StructureTower;
-
-// interface StoreLike {
-// 	[resourceType: string]: number
-// }
-

@@ -36,6 +36,8 @@ import {USE_TRY_CATCH} from './~settings';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
+// TODO maybe set to 0.5 since this is the threshold for player invasion
+const INVASION_THREAT_LEVEL_THRESHOLD = 0.25;
 
 interface OverseerMemory {
 
@@ -298,7 +300,7 @@ export class Overseer implements IOverseer {
 
 	private handleColonyInvasions(colony: Colony, checkPersistent = false) {
 		// See if invasion is big enough to warrant creep defenses
-		if (!colony.room.isSafe && colony.room.threatLevel > 0.25) {
+		if (!colony.room.isSafe && colony.room.threatLevel > INVASION_THREAT_LEVEL_THRESHOLD) {
 			if (checkPersistent) {
 				// Place defensive directive after hostiles have been present for a long enough time
 				const safetyData = RoomIntel.getSafetyData(colony.room.name);
