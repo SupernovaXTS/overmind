@@ -1,4 +1,4 @@
-import {hasPos} from '../declarations/typeGuards';
+import {_HasRoomPosition} from '../declarations/typeGuards';
 import {profile} from '../profiler/decorator';
 import {attackTargetType, TaskAttack} from './instances/attack';
 import {buildTargetType, TaskBuild} from './instances/build';
@@ -95,8 +95,8 @@ export class Tasks {
 		return new TaskGetRenewed(target, options);
 	}
 
-	// static goTo(target: RoomPosition | HasPos, options = {} as TaskOptions): TaskGoToRoom {
-	// 	if (hasPos(target)) {
+	// static goTo(target: RoomPosition | _HasRoomPosition, options = {} as TaskOptions): TaskGoToRoom {
+	// 	if (_HasRoomPosition(target)) {
 	// 		return new TaskGoToRoom({ref: '', pos: target.pos}, options);
 	// 	} else {
 	// 		return new TaskGoToRoom({ref: '', pos: target}, options);

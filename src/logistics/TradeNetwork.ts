@@ -849,9 +849,11 @@ export class TraderJoe implements ITradeNetwork {
 
 		this.notifyLastTickTransactions();
 
-		if (this.notifications.length > 0) {
-			this.notifications.sort();
-			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+		if (Game.time % 10 == 0) {
+			if (this.notifications.length > 0) {
+				this.notifications.sort();
+				log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+			}
 		}
 
 		this.recordStats();

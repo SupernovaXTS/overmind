@@ -1083,15 +1083,15 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 					log.warning(`${colony.print} is critially full; requires immediate attention!`);
 				}
 			}
+
+			// Display notifications
+			if (this.notifications.length > 0) {
+				this.notifications.sort();
+				log.info(`Terminal network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+			}
 		}
 
 		// this.summarize();
-
-		// Display notifications
-		if (this.notifications.length > 0) {
-			this.notifications.sort();
-			log.info(`Terminal network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
-		}
 	}
 
 	private isInternalTransaction(transaction: Transaction): boolean {

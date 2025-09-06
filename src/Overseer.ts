@@ -327,9 +327,7 @@ export class Overseer implements IOverseer {
 	 * Creates directives to handle mining from nearby power banks
 	 */
 	private handlePowerMining(room: Room) {
-
 		const powerSetting = Memory.settings.powerCollection;
-
 		const roomType = Cartographer.roomType(room.name);
 
 		if (powerSetting.enabled && (roomType == ROOMTYPE_ALLEY || roomType == ROOMTYPE_CROSSROAD)) {
@@ -590,7 +588,6 @@ export class Overseer implements IOverseer {
 	}
 
 	getCreepReport(colony: Colony): string[][] {
-		const spoopyBugFix = false;
 		const roleOccupancy: { [role: string]: [number, number] } = {};
 
 		for (const overlord of this.overlordsByColony[colony.name]) {
@@ -607,10 +604,8 @@ export class Overseer implements IOverseer {
 					}
 					roleOccupancy[role][0] += report[0];
 					roleOccupancy[role][1] += report[1];
-					if (spoopyBugFix) { // bizzarely, if you comment these lines out, the creep report is incorrect
-						log.debug(`report: ${JSON.stringify(report)}`);
-						log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
-					}
+					//log.debug(`report: ${JSON.stringify(report)}`);
+					//log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
 				}
 			}
 		}

@@ -7,7 +7,7 @@ interface Creep {
 	inRampart: boolean;
 	approxMoveSpeed: number;
 	bodypartCounts: { [bodypart in BodyPartConstant]: number };
-	isHuman: true;
+	isPlayer: true;
 }
 
 interface PowerCreep {
@@ -74,7 +74,7 @@ interface Room {
 	threatLevel: number;
 	instantaneousThreatLevel: 0 | 0.5 | 1;
 
-	fleeDefaults: HasPos[];
+	fleeDefaults: _HasRoomPosition[];
 
 	structures: Structure[];
 	hostileStructures: Structure[];
@@ -136,6 +136,7 @@ interface Room {
 interface RoomObject {
 	ref: string;
 	targetedBy: string[];
+	print: string;
 
 	serialize(): ProtoRoomObject;
 }

@@ -3,15 +3,15 @@ import {Task} from '../Task';
 
 
 // export type goToRoomTargetType = string;
-export type goToRoomTargetType = HasRef & HasPos;  // This is handled better in the Tasks.goToRoom() dispatcher
+export type goToRoomTargetType = HasRef & _HasRoomPosition;  // This is handled better in the Tasks.goToRoom() dispatcher
 
 export const goToRoomTaskName = 'goToRoom';
 
 @profile
 export class TaskGoToRoom extends Task<goToRoomTargetType> {
 
-	constructor(hasPosObj: goToRoomTargetType, options = {} as TaskOptions) {
-		super(goToRoomTaskName, {ref: '', pos: hasPosObj.pos}, options);
+	constructor(_HasRoomPositionObj: goToRoomTargetType, options = {} as TaskOptions) {
+		super(goToRoomTaskName, {ref: '', pos: _HasRoomPositionObj.pos}, options);
 		// super(goToRoomTaskName, {ref: '', pos: new RoomPosition(25, 25, roomName)}, options);
 
 		// Settings

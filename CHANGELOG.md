@@ -6,6 +6,9 @@ Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0
 ### Added
 
 - change `RoomPlanner` to only build one construction site at a time when defcon is not safe
+- power collection is enabled with lower prerequisites
+- Added `roomObjectType()` function and `print` property to `RoomObject` prototype for better debugging
+- enabled power collection by default
 
 ### Changed
 
@@ -13,11 +16,21 @@ Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0
 - Keep upgrading Colony when below a certain level
     - Colonization got stuck when hostile workers entered the room even though they didn't attack us
 - only calculate road network + coverage if RCL is high enough
+- Improved pairwise movement pathfinding with `maxRooms: 1` to prevent edge tile blocking
+- Enhanced NPC defense spawning logic to better handle rooms without vision
+- Removed combat potential limits in outpost defense to enable fighting stronger enemies
+- changed `HasID` to `_HasId` and `HasPos` to `_HasRoomPosition`
+- Improved move priority calculation with safer property access
 
 ### Fixed
 
 - Outposts no longer try to find blocking positions (path can't be calculated across multiple rooms)
+- Fixed pairwise movement oscillation when healer and attacker creeps cross room boundaries together
 - `RoadPlanner` checks if there is already a `ConstructionSite` before placing one
+- Fixed potential memory access issues in global cache with improved type safety
+- Improved error handling in terminal network operations
+- Fixed type guard compatibility issues with updated Screeps API
+- max distance for power mining aligns actual setting in settings
 
 ## Overmind [0.7.0] - 2024.09.3
 

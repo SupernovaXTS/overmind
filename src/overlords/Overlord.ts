@@ -543,7 +543,7 @@ export abstract class Overlord {
 			const [moveBoosts, nonMoveBoosts] = _.partition(neededBoostResources,
 															resource => Abathur.isMoveBoost(<ResourceConstant>resource));
 
-			for (const boost of [...moveBoosts, nonMoveBoosts]) { // try to get move boosts first if they're available
+			for (const boost of [...moveBoosts, ...nonMoveBoosts]) { // try to get move boosts first if they're available
 				const boostLab = _.find(evolutionChamber.boostingLabs, lab => lab.mineralType == boost);
 				if (boostLab) {
 					zerg.task = Tasks.getBoosted(boostLab, <ResourceConstant>boost);
@@ -560,7 +560,7 @@ export abstract class Overlord {
 	autoRun<T extends Zerg | CombatZerg>(roleCreeps: T[], taskHandler: (creep: T) => void, fleeCallback?: (creep: T) => boolean) {
 		for (const creep of roleCreeps) {
 			if (creep.spawning) {
-				return;
+				continue;
 			}
 			if (!!fleeCallback) {
 				if (fleeCallback(creep)) continue;

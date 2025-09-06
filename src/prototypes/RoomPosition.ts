@@ -62,7 +62,7 @@ RoomPosition.prototype.getOffsetPos = function(dx: number, dy: number): RoomPosi
 	return new RoomPosition(x, y, roomName);
 };
 
-// RoomPosition.prototype.findInRange_fast = function<T extends HasPos>(objects: T[], range: number): T[] {
+// RoomPosition.prototype.findInRange_fast = function<T extends _HasRoomPosition>(objects: T[], range: number): T[] {
 // 	return _.filter(objects, o => this.inRangeToXY(o.pos.x, o.pos.y, range));
 // }
 

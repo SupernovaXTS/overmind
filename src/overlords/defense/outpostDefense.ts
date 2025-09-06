@@ -1,4 +1,5 @@
 import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
+import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
 import {CombatIntel, CombatPotentials} from '../../intel/CombatIntel';
@@ -71,11 +72,13 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	// }
 
 	private getEnemyPotentials(): CombatPotentials {
-		if (this.room) {
-			return CombatIntel.getCombatPotentials(this.room.hostiles);
-		} else {
-			return {attack: 0, ranged: 1, heal: 0,};
-		}
+		const d = {attack: 0, ranged: 1, heal: 0,};
+		if (!this.room) return d
+
+		const pot = CombatIntel.getCombatPotentials(this.room.hostiles);
+		if (!pot.ranged && !pot.attack && !pot.heal) return d
+
+		return pot
 	}
 
 	init() {
@@ -84,9 +87,10 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const needRanged = enemyPotentials.ranged * 1.3;
 		const needHeal = enemyPotentials.heal * 1.2;
 
-		if (needAttack > 100 || needRanged > 100 || needHeal > 100) {
-			return; // fuck it let's not fight this
-		}
+		// NOTE: i want to fight it!
+		// if (needAttack > 100 || needRanged > 100 || needHeal > 100) {
+		// 	return; // fuck it let's not fight this
+		// }
 
 		// Only try to obtain one additional creep at a time
 		if (this.reassignIdleCreeps(Roles.melee, 1)) return;

@@ -61,7 +61,7 @@ interface IGlobalCache {
 	lists: { [key: string]: any[] };
 	costMatrices: { [key: string]: CostMatrix };
 	roomPositions: { [key: string]: RoomPosition | undefined };
-	things: { [key: string]: undefined | HasID | HasID[] };
+	things: { [key: string]: undefined | _HasId | _HasId[] };
 	// objects: { [key: string]: Object };
 }
 
@@ -266,16 +266,8 @@ interface ProtoPos {
 	roomName: string;
 }
 
-interface HasPos {
-	pos: RoomPosition;
-}
-
 interface HasRef {
 	ref: string;
-}
-
-interface HasID {
-	id: Id;
 }
 
 type AnyStoreStructure =

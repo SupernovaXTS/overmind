@@ -1,5 +1,5 @@
 import {log} from '../console/log';
-import {hasPos} from '../declarations/typeGuards';
+import {_HasRoomPosition} from '../declarations/typeGuards';
 import {PortalInfo, RoomIntel} from '../intel/RoomIntel';
 import {getDefaultMatrixOptions, MatrixLib, MatrixOptions, VolatileMatrixOptions} from '../matrix/MatrixLib';
 import {profile} from '../profiler/decorator';
@@ -488,7 +488,7 @@ export class Pathing {
 	/**
 	 * Get a kiting path within a room
 	 */
-	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+	static findKitingPath(creepPos: RoomPosition, fleeFrom: (RoomPosition | _HasRoomPosition)[],
 						  opts: PathOptions = {}): PathFinderPath {
 		_.defaults(opts, {
 			fleeRange   : 5,
@@ -511,7 +511,7 @@ export class Pathing {
 	/**
 	 * Get a flee path possibly leaving the room; generally called further in advance of kitingPath
 	 */
-	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | HasPos)[],
+	static findFleePath(creepPos: RoomPosition, fleeFrom: (RoomPosition | _HasRoomPosition)[],
 						opts: PathOptions = {}): PathFinderPath {
 		_.defaults(opts, {
 			terrainCosts: {plainCost: 1, swampCost: 5},
@@ -629,7 +629,7 @@ export class Pathing {
 	// 				const terrain = Game.map.getRoomTerrain(roomName);
 	// 				const blockThese = _.compact([...roomInfo.sources,
 	// 											  roomInfo.mineral,
-	// 											  ...roomInfo.skLairs]) as HasPos[];
+	// 											  ...roomInfo.skLairs]) as _HasRoomPosition[];
 	// 				_.forEach(blockThese, thing => {
 	// 					let x, y: number;
 	// 					for (let dx = -avoidRange; dx <= avoidRange; dx++) {
@@ -807,7 +807,7 @@ export class Pathing {
 	// 	return $.costMatrix(room.name, MatrixTypes.sk, () => {
 	// 		const matrix = this.getDefaultMatrix(room).clone();
 	// 		if (room.sourceKeepers.length > 0) {
-	// 			// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as HasPos[];
+	// 			// const blockThese = _.compact([...room.sources, room.mineral, ...room.keeperLairs]) as _HasRoomPosition[];
 	// 			// _.forEach(blockThese, thing => {
 	// 			// 	for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 	// 			// 		for (let dy = -avoidRange; dy <= avoidRange; dy++) {
@@ -931,7 +931,7 @@ export class Pathing {
 	// 	}
 	// }
 
-	// static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | HasPos, range: number, cost = 30, add = false) {
+	// static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition, range: number, cost = 30, add = false) {
 	// 	pos = normalizePos(pos);
 	// 	const terrain = Game.map.getRoomTerrain(pos.roomName);
 	//
@@ -1139,7 +1139,7 @@ export class Pathing {
 	 * Whether another object in the same room can be reached from the current position.
 	 * This method is very expensive and kind of stupid, so use it sparingly!
 	 */
-	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+	static isReachable(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | _HasRoomPosition)[],
 					   options: PathOptions = {}): boolean {
 		_.defaults(options, {
 			blockCreeps: false,
@@ -1153,7 +1153,7 @@ export class Pathing {
 		}
 		const matrix = new PathFinder.CostMatrix();
 		_.forEach(obstacles, obstacle => {
-			if (hasPos(obstacle)) {
+			if (_HasRoomPosition(obstacle)) {
 				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
 			} else {
 				matrix.set(obstacle.x, obstacle.y, 0xfe);
@@ -1182,7 +1182,7 @@ export class Pathing {
 	/**
 	 * Like isReachable(), but returns the first position which should be cleared to find a path to destination
 	 */
-	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | HasPos)[],
+	static findBlockingPos(startPos: RoomPosition, endPos: RoomPosition, obstacles: (RoomPosition | _HasRoomPosition)[],
 						   options: PathOptions = {}): RoomPosition | undefined {
 		_.defaults(options, {
 			blockCreeps: false,
@@ -1196,7 +1196,7 @@ export class Pathing {
 		}
 		const matrix = new PathFinder.CostMatrix();
 		_.forEach(obstacles, obstacle => {
-			if (hasPos(obstacle)) {
+			if (_HasRoomPosition(obstacle)) {
 				matrix.set(obstacle.pos.x, obstacle.pos.y, 0xfe);
 			} else {
 				matrix.set(obstacle.x, obstacle.y, 0xfe);

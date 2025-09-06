@@ -665,7 +665,7 @@ export class Zerg extends AnyZerg {
 
 	// Movement and location -------------------------------------------------------------------------------------------
 
-	// goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
+	// goTo(destination: RoomPosition | _HasRoomPosition, options: MoveOptions = {}) {
 	// 	return Movement.goTo(this, destination, options);
 	// }
 	//
@@ -673,7 +673,7 @@ export class Zerg extends AnyZerg {
 	// 	return Movement.goToRoom(this, roomName, options);
 	// }
 	//
-	// inSameRoomAs(target: HasPos): boolean {
+	// inSameRoomAs(target: _HasRoomPosition): boolean {
 	// 	return this.pos.roomName == target.pos.roomName;
 	// }
 	//
@@ -693,7 +693,7 @@ export class Zerg extends AnyZerg {
 	// /**
 	//  * Kite around hostiles in the room
 	//  */
-	// kite(avoidGoals: (RoomPosition | HasPos)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
+	// kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
 	// 	_.defaults(options, {
 	// 		fleeRange: 5
 	// 	});
@@ -701,7 +701,7 @@ export class Zerg extends AnyZerg {
 	// }
 	//
 	// private defaultFleeGoals() {
-	// 	let fleeGoals: (RoomPosition | HasPos)[] = [];
+	// 	let fleeGoals: (RoomPosition | _HasRoomPosition)[] = [];
 	// 	fleeGoals = fleeGoals.concat(this.room.hostiles)
 	// 						 .concat(_.filter(this.room.keeperLairs, lair => (lair.ticksToSpawn || Infinity) < 10));
 	// 	return fleeGoals;
@@ -710,7 +710,7 @@ export class Zerg extends AnyZerg {
 	// /**
 	//  * Flee from hostiles in the room, while not repathing every tick
 	//  */
-	// flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
+	// flee(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.fleeDefaults,
 	// 	 fleeOptions: FleeOptions              = {},
 	// 	 moveOptions: MoveOptions              = {}): boolean {
 	// 	if (avoidGoals.length == 0 || this.room.dangerousHostiles.find(creep =>

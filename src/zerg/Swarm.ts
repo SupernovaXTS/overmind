@@ -1,5 +1,5 @@
 import {log} from '../console/log';
-import {hasPos} from '../declarations/typeGuards';
+import {_HasRoomPosition} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
 import {Mem} from '../memory/Memory';
 import {normalizePos} from '../movement/helpers';
@@ -337,8 +337,8 @@ export class Swarm implements ProtoSwarm {
 
 	// Range finding methods ===========================================================================================
 
-	minRangeTo(obj: RoomPosition | HasPos): number {
-		if (hasPos(obj)) {
+	minRangeTo(obj: RoomPosition | _HasRoomPosition): number {
+		if (_HasRoomPosition(obj)) {
 			return _.min(_.map(this.creeps, creep =>
 				creep.pos.roomName === obj.pos.roomName ? creep.pos.getRangeToXY(obj.pos.x, obj.pos.y) : Infinity));
 		} else {
@@ -347,8 +347,8 @@ export class Swarm implements ProtoSwarm {
 		}
 	}
 
-	maxRangeTo(obj: RoomPosition | HasPos): number {
-		if (hasPos(obj)) {
+	maxRangeTo(obj: RoomPosition | _HasRoomPosition): number {
+		if (_HasRoomPosition(obj)) {
 			return _.max(_.map(this.creeps, creep =>
 				creep.pos.roomName === obj.pos.roomName ? creep.pos.getRangeToXY(obj.pos.x, obj.pos.y) : Infinity));
 		} else {
@@ -357,7 +357,7 @@ export class Swarm implements ProtoSwarm {
 		}
 	}
 
-	findInMinRange(targets: HasPos[], range: number): HasPos[] {
+	findInMinRange(targets: _HasRoomPosition[], range: number): _HasRoomPosition[] {
 		const initialRange = range + Math.max(this.width, this.height) - 1;
 		const targetsInRange = _.filter(targets, t => this.anchor.inRangeToXY(t.pos.x, t.pos.y, initialRange));
 		return _.filter(targetsInRange, t => this.minRangeTo(t) <= range);
@@ -366,7 +366,7 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Compute the "average" direction to a target
 	 */
-	getDirectionTo(obj: RoomPosition | HasPos): DirectionConstant {
+	getDirectionTo(obj: RoomPosition | _HasRoomPosition): DirectionConstant {
 		const pos = normalizePos(obj);
 		const directions = _.map(this.creeps, creep => creep.pos.getDirectionTo(obj));
 		// TODO
@@ -519,7 +519,7 @@ export class Swarm implements ProtoSwarm {
 		return allMoved ? OK : ERR_NOT_ALL_OK;
 	}
 
-	goTo(destination: RoomPosition | HasPos, options: SwarmMoveOptions = {}): number {
+	goTo(destination: RoomPosition | _HasRoomPosition, options: SwarmMoveOptions = {}): number {
 		// if (DEBUG) {
 		// 	options.displayCostMatrix = true;
 		// }
@@ -547,7 +547,7 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	// private getBestSiegeOrientation(room: Room): TOP | RIGHT | BOTTOM | LEFT {
-	// 	let targets: HasPos[] = [];
+	// 	let targets: _HasRoomPosition[] = [];
 	// 	let structureTargets = this.findInMinRange(room.hostileStructures, 1);
 	// 	for (let structure of structureTargets) {
 	// 		targets.push(structure);
@@ -588,7 +588,7 @@ export class Swarm implements ProtoSwarm {
 	}
 
 	private getBestOrientation(room: Room, includeStructures = true, includeCreeps = false): TOP | RIGHT | BOTTOM | LEFT {
-		const targets: HasPos[] = [];
+		const targets: _HasRoomPosition[] = [];
 		if (includeStructures) {
 			const structureTargets = this.findInMinRange(room.hostileStructures, 1);
 			for (const structure of structureTargets) {
@@ -823,7 +823,7 @@ export class Swarm implements ProtoSwarm {
 	/**
 	 * Groups enemies into proto-swarms based on proximity to each other
 	 */
-	static findEnemySwarms(room: Room, anchor?: HasPos, maxClumpSize = 3): ProtoSwarm[] {
+	static findEnemySwarms(room: Room, anchor?: _HasRoomPosition, maxClumpSize = 3): ProtoSwarm[] {
 		const enemySwarms: ProtoSwarm[] = [];
 		const origin = anchor || _.first(room.spawns) || room.controller || {pos: new RoomPosition(25, 25, room.name)};
 		let attackers = _.sortBy(room.dangerousHostiles, creep => origin.pos.getRangeTo(creep));

@@ -191,9 +191,10 @@ export class Mem {
 				resourceCollectionMode: 0,
 				allies                : [MY_USERNAME],
 				powerCollection       : {
-					enabled : false,
+					enabled : true,
 					maxRange: 5,
 					minPower: 5000,
+					minEnergy: 100000,
 				},
 				autoPoison            : {
 					enabled      : false,

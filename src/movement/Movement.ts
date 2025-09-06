@@ -127,7 +127,7 @@ export class Movement {
 	/**
 	 * Move a creep to a destination
 	 */
-	static goTo(creep: AnyZerg, destination: HasPos | RoomPosition, opts: MoveOptions = {}): number {
+	static goTo(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
 
 		if (creep.blockMovement && !opts.force) {
 			return ERR_BUSY;
@@ -484,7 +484,7 @@ export class Movement {
 			if (isPowerZerg(creep)) {
 				return MovePriorities.powerCreep;
 			} else {
-				return MovePriorities[creep.memory.role] || MovePriorities.default;
+				return (creep.memory.role in MovePriorities) ? MovePriorities[creep.memory.role] : MovePriorities.default;
 			}
 		}
 	}
@@ -589,7 +589,6 @@ export class Movement {
 	}
 
 
-	// TODO: this is bugged somewhere
 	/**
 	 * Recursively moves creeps out of the way of a position to make room for something, such as a spawning creep.
 	 * If suicide is specified and there is no series of move commands that can move a block of creeps out of the way,
@@ -730,8 +729,7 @@ export class Movement {
 				const position = creep.pos.getPositionAtDirection(direction);
 				const terrain = position.lookFor(LOOK_TERRAIN)[0];
 				if (terrain != 'wall' && position.rangeToEdge == 0) {
-					const outcome = creep.move(direction);
-					return outcome;
+					return creep.move(direction);
 				}
 			}
 			log.warning(`moveOnExit() assumes nearby exit tile, position: ${creep.pos}`);
@@ -773,13 +771,14 @@ export class Movement {
 	/**
 	 * Moves a pair of creeps; the follower will always attempt to be in the last position of the leader
 	 */
-	static pairwiseMove(leader: AnyZerg, follower: AnyZerg, target: HasPos | RoomPosition,
+	static pairwiseMove(leader: AnyZerg, follower: AnyZerg, target: _HasRoomPosition | RoomPosition,
 						opts = {} as MoveOptions, allowedRange = 1): number | undefined {
 		let outcome;
 		if (leader.room != follower.room) {
 			if (leader.pos.rangeToEdge == 0) {
-				// Leader should move off of exit tiles while waiting for follower
-				outcome = leader.goTo(target, opts);
+				// the maxRooms overwrite will prevent the leader from being stuck on the edge
+				// this happens if there is swamp right after the edge
+				outcome = leader.goTo(target, {...opts, pathOpts: {...opts.pathOpts, maxRooms: 1}});
 			}
 			follower.goTo(leader);
 			return outcome;
@@ -813,7 +812,7 @@ export class Movement {
 	/**
 	 * Moves a swarm to a destination, accounting for group pathfinding
 	 */
-	static swarmMove(swarm: Swarm, destination: HasPos | RoomPosition, opts: SwarmMoveOptions = {}): number {
+	static swarmMove(swarm: Swarm, destination: _HasRoomPosition | RoomPosition, opts: SwarmMoveOptions = {}): number {
 
 		if (swarm.fatigue > 0) {
 			Movement.circle(swarm.anchor, 'aqua', .3);
@@ -823,7 +822,7 @@ export class Movement {
 
 		// Set default options
 		_.defaults(opts, {
-			range      : 1, // Math.max(swarm.width, swarm.height),
+			range      : Math.max(swarm.width, swarm.height),
 			blockCreeps: false,
 			exitCost   : 10,
 		});
@@ -1215,7 +1214,7 @@ export class Movement {
 	/**
 	 * Moving routine for guards or sourceReapers in a room with NPC invaders
 	 */
-	static invasionMove(creep: Zerg, destination: RoomPosition | HasPos, opts: MoveOptions = {}): number {
+	static invasionMove(creep: Zerg, destination: RoomPosition | _HasRoomPosition, opts: MoveOptions = {}): number {
 		_.defaults(opts, getDefaultMoveOptions());
 		const dest = normalizePos(destination);
 		if (creep.pos.getRangeTo(dest) > 8) {
@@ -1234,7 +1233,7 @@ export class Movement {
 	/**
 	 * Kite around enemies in a single room, repathing every tick. More expensive than flee().
 	 */
-	static kite(creep: AnyZerg, avoidGoals: (RoomPosition | HasPos)[], options: MoveOptions = {}): number | undefined {
+	static kite(creep: AnyZerg, avoidGoals: (RoomPosition | _HasRoomPosition)[], options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange   : 5,
 			terrainCosts: isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep)),
@@ -1248,7 +1247,7 @@ export class Movement {
 	/**
 	 * Flee from avoid goals in the room while not re-pathing every tick like kite() does.
 	 */
-	static flee(creep: AnyZerg, avoidGoals: (RoomPosition | HasPos)[],
+	static flee(creep: AnyZerg, avoidGoals: (RoomPosition | _HasRoomPosition)[],
 				dropEnergy = false, opts: MoveOptions = {}): number | undefined {
 
 		if (avoidGoals.length == 0) {
@@ -1404,7 +1403,7 @@ export class Movement {
 	}
 }
 
-// Creep.prototype.goTo = function (destination: RoomPosition | HasPos, options?: MoveOptions) {
+// Creep.prototype.goTo = function (destination: RoomPosition | _HasRoomPosition, options?: MoveOptions) {
 // 	return Movement.goTo(this, destination, options);
 // };
 

@@ -67,8 +67,17 @@ export class DefenseNPCOverlord extends Overlord {
 	}
 
 	init() {
-		// always wishlist one guard since if the attack killed every creep i have no vision of the room
-		this.wishlist(1, CombatSetups.broodlings.default, {reassignIdle: true});
+		let amount = 0
+		if (!this.room && !this.colony.observer) {
+			// i have no vision, at least spawn one defender
+			amount = 1
+		}
+
+		if (this.room && (this.room.invaders.length > 0 || this.room.invaderCore || RoomIntel.isInvasionLikely(this.room))) {
+			amount = 1
+		}
+
+		this.wishlist(amount, CombatSetups.broodlings.default, {reassignIdle: true});
 	}
 
 	run() {

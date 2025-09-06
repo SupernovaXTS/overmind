@@ -58,6 +58,7 @@ interface Memory {
 			enabled: boolean;
 			maxRange: number;
 			minPower: number;
+			minEnergy: number;
 		};
 		autoPoison: {
 			enabled: boolean;

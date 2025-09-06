@@ -158,8 +158,6 @@ export class Colony {
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawler: SporeCrawler;
-	// miningSites: { [sourceID: string]: MiningSite };	// Component with logic for mining and hauling
-	// extractionSites: { [extractorID: string]: ExtractionSite };
 	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;
