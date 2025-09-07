@@ -35,7 +35,7 @@ export function getAutonomyLevel(): number {
 let lastMemory: any;
 let lastTime: number = 0;
 
-const MAX_BUCKET = 10000;
+const MAX_BUCKET = 1000;
 const HEAP_CLEAN_FREQUENCY = 200;
 const BUCKET_CLEAR_CACHE = 7000;
 const BUCKET_CPU_HALT = 4000;
@@ -55,7 +55,9 @@ export class Mem {
 		if (USE_SCREEPS_PROFILER && Game.time % 10 == 0) {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
-		if (Game.cpu.bucket < 500) {
+
+		// only run the reset Bucke on shard3
+		if (Game.cpu.bucket < 500 && Game.shard.name == "shard3") {
 			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);

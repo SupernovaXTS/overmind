@@ -16,7 +16,7 @@ export function p(probability: number): boolean {
  * Flips a coin with probability p * (bucket / bucketMax)
  */
 export function pBucket(maxProbability: number): boolean {
-	return Math.random() < maxProbability * Game.cpu.bucket / 10000;
+	return Math.random() < maxProbability * (Game.cpu.bucket || 1) / 10000;
 }
 
 /**

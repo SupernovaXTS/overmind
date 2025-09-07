@@ -317,7 +317,7 @@ export class Visualizer {
 		this.text(`CPU`, {x: 1, y: 7});
 		this.barGraph(Memory.stats.persistent.avgCPU / Game.cpu.limit, {x: 2.75, y: 7});
 		this.text(`BKT`, {x: 1, y: 8});
-		this.barGraph(Game.cpu.bucket / 10000, {x: 2.75, y: 8});
+		this.barGraph((Game.cpu.bucket || 1) / 10000, {x: 2.75, y: 8});
 		this.text(`GCL`, {x: 1, y: 9});
 		this.barGraph(Game.gcl.progress / Game.gcl.progressTotal, {x: 2.75, y: 9});
 	}
