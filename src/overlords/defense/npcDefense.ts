@@ -83,6 +83,8 @@ export class DefenseNPCOverlord extends Overlord {
 	}
 
 	run() {
+		// TODO: maybe switch to guard.autoCombat
 		this.autoRun(this.guards, guard => this.handleGuard(guard))
+		
 	}
 }

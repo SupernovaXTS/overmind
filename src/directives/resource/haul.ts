@@ -26,6 +26,8 @@ export class DirectiveHaul extends Directive {
 	static color = COLOR_YELLOW;
 	static secondaryColor = COLOR_BLUE;
 
+	static requiredRCL = 4;
+
 	private _store: StoreDefinition;
 	private _drops: { [resourceType: string]: Resource[] };
 	private _finishAtTime: number;
@@ -33,7 +35,7 @@ export class DirectiveHaul extends Directive {
 	memory: DirectiveHaulMemory;
 
 	constructor(flag: Flag) {
-		super(flag);
+		super(flag, (colony) => colony.level >= DirectiveHaul.requiredRCL);
 	}
 
 	spawnMoarOverlords() {

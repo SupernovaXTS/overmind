@@ -279,9 +279,9 @@ const Profiler = {
         const elapsedTicks = endTick - startTick;
         const header = 'calls\t\ttime\t\tavg\t\tfunction';
         const footer = [
-            `Avg: ${(Memory.screepsProfiler.totalTime / elapsedTicks).toFixed(2)}`,
-            `Total: ${Memory.screepsProfiler.totalTime.toFixed(2)}`,
             `Ticks: ${elapsedTicks}`,
+            `Total: ${Memory.screepsProfiler.totalTime.toFixed(2)}`,
+            `Avg: ${(Memory.screepsProfiler.totalTime / elapsedTicks).toFixed(2)}`,
         ].join('\t');
 
         const lines = [header];

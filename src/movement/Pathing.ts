@@ -1085,7 +1085,8 @@ export class Pathing {
 			Memory.pathing.distances[name1] = {};
 		}
 		if (!Memory.pathing.distances[name1][name2]) {
-			const ret = this.findPath(pos1, pos2);
+			// NOTE: get path even through hostile terrority
+			const ret = this.findPath(pos1, pos2, { avoidSK: false, allowHostile: true });
 			if (!ret.incomplete) {
 				Memory.pathing.distances[name1][name2] = ret.path.length;
 			} else {

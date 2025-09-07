@@ -76,8 +76,7 @@ export class BunkerQueenOverlord extends Overlord {
 		return (colony.layout === "bunker"
 			&& insideBunkerBounds(colony.spawns[0].pos, colony)
 			&& (!!colony.storage || !!colony.terminal)
-			&& colony.assets[RESOURCE_ENERGY] > 10000
-			&& !colony.roomPlanner.memory.misplacedStructures)
+		)
 	}
 
 	/**
