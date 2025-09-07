@@ -216,7 +216,7 @@ export class Hatchery extends HiveCluster {
 		if (this.link && this.link.isEmpty) {
 			this.colony.linkNetwork.requestReceive(this.link);
 		}
-		if (this.batteries.length>0) {
+		if (this.batteries.length > 0) {
 			for (const battery of this.batteries) {
 				const threshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 				if (battery.energy < threshold * battery.store.getCapacity()) {
@@ -227,6 +227,11 @@ export class Hatchery extends HiveCluster {
 					this.colony.logisticsNetwork.requestOutputMinerals(battery);
 				}
 			}
+		} else {
+			// We don't have the battery up yet, so we need to also ask for input from the logistic network
+			// so that transporters participate as well
+			_.forEach(this.energyStructures,
+				struct => this.colony.logisticsNetwork.requestInput(struct, { multiplier: 1.5 }));
 		}
 		// Register energy transport requests (goes on hatchery store group, which can be colony store group)
 		// let refillStructures = this.energyStructures;

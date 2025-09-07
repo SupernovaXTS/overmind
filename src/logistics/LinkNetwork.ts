@@ -13,7 +13,7 @@ export class LinkNetwork {
 	transmit: StructureLink[];
 
 	private settings: {
-		linksTrasmitAt: number,
+		linksTransmitAt: number,
 	};
 
 	constructor(colony: Colony) {
@@ -21,7 +21,7 @@ export class LinkNetwork {
 		this.receive = [];
 		this.transmit = [];
 		this.settings = {
-			linksTrasmitAt: LINK_CAPACITY - 100,
+			linksTransmitAt: LINK_CAPACITY - 100,
 		};
 	}
 
@@ -50,7 +50,7 @@ export class LinkNetwork {
 	getDropoffAvailability(link: StructureLink): number {
 		const dest = this.colony.commandCenter ? this.colony.commandCenter.pos : this.colony.pos;
 		const usualCooldown = link.pos.getRangeTo(dest);
-		if (link.energy > this.settings.linksTrasmitAt) { // Energy will be sent next time cooldown == 0
+		if (link.energy > this.settings.linksTransmitAt) { // Energy will be sent next time cooldown == 0
 			return link.cooldown + usualCooldown;
 		} else {
 			return link.cooldown;
@@ -59,7 +59,7 @@ export class LinkNetwork {
 
 	init(): void {
 		// for (let link of this.colony.dropoffLinks) {
-		// 	if (link.energy > this.settings.linksTrasmitAt) {
+		// 	if (link.energy > this.settings.linksTransmitAt) {
 		// 		this.requestTransmit(link);
 		// 	}
 		// }
@@ -84,8 +84,15 @@ export class LinkNetwork {
 		}
 		// Now send all remaining transmit link requests to the command center
 		if (this.colony.commandCenter && this.colony.commandCenter.link) {
+			let free = this.colony.commandCenter.link.store.getFreeCapacity(RESOURCE_ENERGY)
 			for (const transmitLink of this.transmit) {
-				transmitLink.transferEnergy(this.colony.commandCenter.link);
+				if (free <= 0) break
+
+				const available = transmitLink.store.getUsedCapacity(RESOURCE_ENERGY);
+				if (free >= available) {
+					transmitLink.transferEnergy(this.colony.commandCenter.link);
+					free -= available;
+				}
 			}
 		}
 	}

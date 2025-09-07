@@ -1,3 +1,4 @@
+import { ColonyStage } from 'Colony';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveGuard} from '../../directives/defense/guard';
 import {DirectiveHaul} from '../../directives/resource/haul';
@@ -77,7 +78,8 @@ export class DefenseNPCOverlord extends Overlord {
 			amount = 1
 		}
 
-		this.wishlist(amount, CombatSetups.broodlings.default, {reassignIdle: true});
+		const setup = this.colony.stage == ColonyStage.Larva ? CombatSetups.broodlings.early : CombatSetups.broodlings.default
+		this.wishlist(amount, setup, {reassignIdle: true});
 	}
 
 	run() {

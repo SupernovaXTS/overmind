@@ -179,7 +179,7 @@ export class Overseer implements IOverseer {
 					if (inputRequest) continue; // early levels may request transporters to drop off at a resource
 					if (drop.amount > LogisticsNetwork.settings.droppedEnergyThreshold
 						|| drop.resourceType != RESOURCE_ENERGY) {
-						colony.logisticsNetwork.requestOutput(drop);
+						colony.logisticsNetwork.requestOutput(drop, {dAmountdt: 1});
 					}
 				}
 			}

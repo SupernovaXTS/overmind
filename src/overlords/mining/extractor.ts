@@ -58,11 +58,13 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private registerOutputRequests(): void {
-		if (this.container) {
-			const outputThreshold = this.drones.length == 0 ? this.container.store.getCapacity() : 0;
-			if (this.container.store.getUsedCapacity() > outputThreshold) {
-				this.colony.logisticsNetwork.requestOutput(this.container, {resourceType: 'all'});
-			}
+		if (!this.container) return
+		const exhausted = this.mineral?.mineralAmount === 0
+				&& (this.mineral?.ticksToRegeneration ?? 0) > 0;
+		const outputThreshold = this.drones.length == 0 ? this.container.store.getCapacity() : 0;
+		if (this.container.store.getUsedCapacity() > outputThreshold ||
+				exhausted && this.container.store.getUsedCapacity() > 0) {
+			this.colony.logisticsNetwork.requestOutput(this.container, {resourceType: 'all'});
 		}
 	}
 
@@ -122,10 +124,12 @@ export class ExtractorOverlord extends Overlord {
 				return drone.goTo(this.mineral.pos);
 			}
 			if (this.mineral) {
-				// Do harvest first - needs to check if in range anyway so this is more CPU efficient
-				const ret = drone.harvest(this.mineral);
-				if (ret == ERR_NOT_IN_RANGE) {
-					return drone.goTo(this.mineral);
+				if (this.extractor?.cooldown == 0) {
+					// Do harvest first - needs to check if in range anyway so this is more CPU efficient
+					const ret = drone.harvest(this.mineral);
+					if (ret == ERR_NOT_IN_RANGE) {
+						return drone.goTo(this.mineral);
+					}
 				}
 				if (this.container) {
 					// Transfer to container if you need to (can do at same tick as harvest)

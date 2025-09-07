@@ -29,9 +29,10 @@ export class UpgradingOverlord extends Overlord {
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
 			return;
 		}
+
+		let setup = Setups.upgraders.default;
 		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
 			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
-			let setup = Setups.upgraders.default;
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
 				if (this.colony.labs.length == 10 &&
@@ -42,12 +43,15 @@ export class UpgradingOverlord extends Overlord {
 
 			if (this.colony.level == 8) {
 				this.wishlist(1, setup);
-			} else {
-				const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
-				const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
-				this.wishlist(upgradersNeeded, setup);
+				return
 			}
+
+			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
+			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
+			this.wishlist(upgradersNeeded, setup);
 		}
+
+		this.wishlist(0, setup);
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {
