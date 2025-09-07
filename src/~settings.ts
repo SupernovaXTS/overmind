@@ -43,7 +43,7 @@ export const SUPPRESS_INVALID_DIRECTIVE_ALERTS: boolean = false;
  * Operation will be penalized by skipping every 3rd tick for using a signature that does not contain the substring
  * "overmind" or the small-caps variant.
  */
-export const OVERMIND_SMALL_CAPS = '\u1D0F\u1D20\u1D07\u0280\u1D0D\u026A\u0274\u1D05';
+export const OVERMIND_SMALL_CAPS = 'learning by doing';
 export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote;
 global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 
@@ -60,12 +60,12 @@ export const MAX_OWNED_ROOMS = Infinity;
 /**
  * If you are running on shard3 (CPU limit 20), only claim this many rooms
  */
-export const SHARD3_MAX_OWNED_ROOMS = 3;
+export const SHARD3_MAX_OWNED_ROOMS = 2;
 
 /**
  * The amount of credits that Overmind will try to keep in the bank. Default:
  * Private servers: 1,000 (will spend aggressively)
- * Public servers: 100,000 if you are below RCL 10, otherwise 1,000,000.
+ * Public servers: 100,000 if you are below GCL 10, otherwise 1,000,000.
  */
 export const RESERVE_CREDITS = onPublicServer() ? (Game.gcl.level >= 10 ? 1e6 : 1e5) : 1000;
 

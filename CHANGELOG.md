@@ -9,6 +9,11 @@ Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0
 - power collection is enabled with lower prerequisites
 - Added `roomObjectType()` function and `print` property to `RoomObject` prototype for better debugging
 - enabled power collection by default
+- colonize new shard with `DirectiveColonizeNewShard`
+    - you need to manually set a Purple/Brown flag on the destination shard controller
+    - the Purple/Blue flag need to be placed on the portal to the destination shard
+    - this flag needs to manually be removed when target room is claimed
+        - can be automated via interShardMemory in the future
 
 ### Changed
 

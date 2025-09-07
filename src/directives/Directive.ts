@@ -38,7 +38,6 @@ export abstract class Directive {
 	room: Room | undefined;						// Flag room
 	memory: FlagMemory;							// Flag memory
 	overlords: { [name: string]: Overlord };	// Overlords
-	// waypoints?: RoomPosition[];					// List of portals to travel through to reach destination
 
 	constructor(flag: Flag, colonyFilter?: (colony: Colony) => boolean) {
 
@@ -50,10 +49,6 @@ export abstract class Directive {
 		if (!this.memory[MEM.TICK]) {
 			this.memory[MEM.TICK] = Game.time;
 		}
-
-		// if (this.memory.waypoints) {
-		// 	this.waypoints = _.map(this.memory.waypoints, posName => getPosFromString(posName)!);
-		// }
 
 		// Relocate flag if needed; this must be called before the colony calculations
 		if (this.memory.setPos) {
@@ -93,9 +88,10 @@ export abstract class Directive {
 			return;
 		}
 
-		// Register colony and add flags to colony.flags
 		this.colony = colony;
 		this.colony.flags.push(flag);
+
+		// Register colony and add flags to colony.flags
 		this.overlords = {};
 
 		// Run creation actions if needed

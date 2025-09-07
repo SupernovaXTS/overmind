@@ -119,8 +119,8 @@ export class TraderJoe implements ITradeNetwork {
 			credits  : {
 				mustSellDirectBelow    : 5000,
 				canPlaceSellOrdersAbove: 2000,
-				canBuyAbove            : 10000,
-				canBuyPassivelyAbove   : 50000,
+				canBuyAbove            : 1000000, // old value 10 000
+				canBuyPassivelyAbove   : 3000000, // old value 50 000
 				canBuyBoostsAbove      : 5 * Math.max(RESERVE_CREDITS, 1e5),
 				canBuyEnergyAbove      : 10 * Math.max(RESERVE_CREDITS, 1e5),
 			},

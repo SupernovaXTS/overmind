@@ -2,6 +2,7 @@
 
 import {DirectiveClearRoom} from './colony/clearRoom';
 import {DirectiveColonize} from './colony/colonize';
+import {DirectiveColonizeShard} from './colony/colonize_shard';
 import {DirectiveIncubate} from './colony/incubate';
 import {DirectiveOutpost} from './colony/outpost';
 import {DirectiveSKOutpost} from './colony/outpostSK';
@@ -53,10 +54,16 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
+				case COLOR_BLUE:
+					return new DirectiveColonizeShard(flag);
 				case COLOR_ORANGE:
 					return new DirectiveClearRoom(flag);
 				case COLOR_RED:
 					return new DirectivePoisonRoom(flag);
+				case COLOR_BROWN:
+					// used when settling on a new shard as the controller ref
+					// must be placed manually
+					return undefined
 			}
 			break;
 

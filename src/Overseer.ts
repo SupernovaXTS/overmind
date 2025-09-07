@@ -450,7 +450,6 @@ export class Overseer implements IOverseer {
 	 * Place directives to respond to various conditions
 	 */
 	private placeDirectives(): void {
-
 		const allRooms = getAllRooms();
 		const allColonies = getAllColonies();
 
@@ -563,9 +562,110 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	// TODO: handle this in an overseer -> overseer only work with a colony thats why this is "raw" code
+	private handleNewShard() {
+		// Find purple-brown flags indicating new shard controller positions
+		const newShardFlags = _.filter(Game.flags, flag =>
+			flag.color === COLOR_PURPLE && flag.secondaryColor === COLOR_BROWN
+		);
+
+		if (newShardFlags.length == 0) {
+			log.alert("No colonies found, and no purple-brown flag to bootstrap colony found.");
+			return;
+		}
+
+		// Use the first purple-brown flag found
+		const targetFlag = newShardFlags[0];
+		const targetRoom = targetFlag.pos.roomName;
+
+		// Get all creeps in the game
+		for (const creepName in Game.creeps) {
+			const creep = Game.creeps[creepName];
+
+			// Move creep to target room if not already there
+			if (creep.pos.roomName != targetRoom || creep.pos.isEdge) {
+				creep.moveTo(new RoomPosition(25, 25, targetRoom), {reusePath: 50});
+				continue
+			}
+
+			// claim the controller
+			if (creep.getActiveBodyparts(CLAIM) > 0) {
+				// In target room - check if creep has CLAIM body part and controller needs claiming
+				const controller = creep.room.controller;
+				if (!controller || controller.my) continue
+
+				if (!creep.pos.isNearTo(controller)) {
+					creep.moveTo(controller, {reusePath: 50});
+					continue
+				}
+
+				creep.claimController(controller);
+				continue
+			}
+
+			// Handle WORK creeps for harvesting and building
+			if (creep.getActiveBodyparts(WORK) > 0) {
+				// If controller not claimed, check for construction sites to build
+				const constructionSite = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+				if (constructionSite && creep.store.getFreeCapacity() == 0) {
+					if (!creep.pos.isNearTo(constructionSite)) {
+						creep.moveTo(constructionSite, {reusePath: 50});
+						continue
+					}
+				}
+
+				if (constructionSite && creep.store[RESOURCE_ENERGY] > 0 && creep.pos.isNearTo(constructionSite)) {
+					creep.build(constructionSite);
+					continue
+				}
+
+				if (creep.room.spawns.length == 1) {
+					const spawn = creep.room.spawns[0]
+					if (creep.store.getFreeCapacity() == 0) {
+						if (!creep.pos.isNearTo(spawn)) {
+							creep.moveTo(spawn, {reusePath: 50});
+							continue
+						}
+					}
+
+					if (creep.store[RESOURCE_ENERGY] > 0 && creep.pos.isNearTo(spawn)) {
+						creep.transfer(spawn, RESOURCE_ENERGY)
+						continue
+					}
+				}
+
+
+				// Distribute creeps across available sources
+				const sources = creep.room.find(FIND_SOURCES_ACTIVE);
+				if (sources.length > 0) {
+					for (const source of sources) {
+						if (source.energy == 0) continue
+
+						if (!creep.pos.isNearTo(source)) {
+							creep.moveTo(source, {reusePath: 50});
+							break
+						} else {
+							creep.harvest(source);
+							break
+						}
+
+					}
+
+					continue
+				}
+			}
+		}
+	}
+
 	// Operation =======================================================================================================
 
 	run(): void {
+		const colonies = getAllColonies()
+		if (colonies.length == 0 || (colonies.length == 1 && colonies[0].spawns.length == 0)) {
+			log.debug("No colonies or no spawn found. Probably new shard bootstrap.")
+			this.handleNewShard()
+		}
+
 		for (const directive of this.directives) {
 			directive.run();
 		}

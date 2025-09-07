@@ -194,7 +194,6 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
-	// abathur: Abathur;
 
 	static settings = {
 		remoteSourcesByLevel: {

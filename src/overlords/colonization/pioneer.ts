@@ -1,6 +1,7 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {DirectiveColonize} from '../../directives/colony/colonize';
+import {Directive} from '../../directives/Directive';
+import {DirectiveColonizeShard} from 'directives/colony/colonize_shard';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
@@ -14,11 +15,11 @@ import {Overlord} from '../Overlord';
 @profile
 export class PioneerOverlord extends Overlord {
 
-	directive: DirectiveColonize;
+	directive: Directive;
 	pioneers: Zerg[];
 	spawnSite: ConstructionSite | undefined;
 
-	constructor(directive: DirectiveColonize, priority = OverlordPriority.colonization.pioneer) {
+	constructor(directive: Directive, priority = OverlordPriority.colonization.pioneer) {
 		super(directive, 'pioneer', priority);
 		this.directive = directive;
 		this.pioneers = this.zerg(Roles.pioneer);
@@ -46,31 +47,37 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
-		// Ensure you are in the assigned room
-		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
-			// Remove any blocking structures preventing claimer from reaching controller
-			if (!this.room.my && this.room.structures.length > 0) {
-				const dismantleTarget = this.findStructureBlockingController(pioneer);
-				if (dismantleTarget) {
-					pioneer.task = Tasks.dismantle(dismantleTarget);
-					return;
-				}
-			}
-			// Build and recharge
-			if (pioneer.carry.energy == 0) {
-				pioneer.task = Tasks.recharge();
-			} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
-															 (0.1 * CONTROLLER_DOWNGRADE[this.room.controller.level])
-															 || !this.spawnSite)
-					   && !(this.room.controller.upgradeBlocked > 0)) {
-				// Save controller if it's about to downgrade or if you have nothing else to do
-				pioneer.task = Tasks.upgrade(this.room.controller);
-			} else if (this.spawnSite) {
-				pioneer.task = Tasks.build(this.spawnSite);
-			}
-		} else {
-			// pioneer.task = Tasks.goTo(this.pos);
+		if (pioneer.room != this.room || pioneer.pos.isEdge) {
 			pioneer.goTo(this.pos, {pathOpts: {ensurePath: true, avoidSK: true}});
+			return
+		}
+
+		if (!this.room.controller && this.directive.directiveName == DirectiveColonizeShard.directiveName) {
+			// this is a portal room, just go on the portal
+			// the creep is already in the room
+			pioneer.goTo(this.pos, {pathOpts: {maxRooms: 1}})
+			return
+		}
+
+		// Remove any blocking structures preventing claimer from reaching controller
+		if (!this.room.my && this.room.structures.length > 0) {
+			const dismantleTarget = this.findStructureBlockingController(pioneer);
+			if (dismantleTarget) {
+				pioneer.task = Tasks.dismantle(dismantleTarget);
+				return;
+			}
+		}
+		// Build and recharge
+		if (pioneer.carry.energy == 0) {
+			pioneer.task = Tasks.recharge();
+		} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
+															(0.1 * CONTROLLER_DOWNGRADE[this.room.controller.level])
+															|| !this.spawnSite)
+					&& !(this.room.controller.upgradeBlocked > 0)) {
+			// Save controller if it's about to downgrade or if you have nothing else to do
+			pioneer.task = Tasks.upgrade(this.room.controller);
+		} else if (this.spawnSite) {
+			pioneer.task = Tasks.build(this.spawnSite);
 		}
 	}
 
