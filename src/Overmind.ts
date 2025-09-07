@@ -275,7 +275,7 @@ export default class _Overmind implements IOvermind {
     }
 
     visuals() {
-        if (Game.cpu.bucket < 9000) {
+        if (Game.cpu.bucket < 9000 && Game.shard.name == "shard3") {
 			Game.time % 10 == 0 && log.info('CPU bucket is too low (' + Game.cpu.bucket + ') - skip rendering visuals.');
 		}
 

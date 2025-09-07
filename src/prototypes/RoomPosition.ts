@@ -144,7 +144,7 @@ RoomPosition.prototype.getPositionsInRange = function(range: number,
 		for (let dy = -1 * range; dy <= range; dy++) {
 			const x = this.x + dx;
 			const y = this.y + dy;
-			if (xmin <= x && x <= xmax && xmin <= y && y <= xmax) {
+			if (xmin <= x && x <= xmax && ymin <= y && y <= ymax) {
 				if (includeWalls || terrain.get(x, y) !== TERRAIN_MASK_WALL) {
 					adjPos.push(new RoomPosition(x, y, this.roomName));
 				}
@@ -167,7 +167,7 @@ RoomPosition.prototype.getPositionsAtRange = function(range: number,
 			}
 			const x = this.x + dx;
 			const y = this.y + dy;
-			if (xmin <= x && x <= xmax && xmin <= y && y <= xmax) {
+			if (xmin <= x && x <= xmax && ymin <= y && y <= ymax) {
 				if (includeWalls || terrain.get(x, y) !== TERRAIN_MASK_WALL) {
 					adjPos.push(new RoomPosition(x, y, this.roomName));
 				}

@@ -494,8 +494,6 @@ export class MatrixLib {
 				y = pos.y + dy;
 				if (y < 0 || y > 49) continue;
 
-				const terrain = Game.map.getRoomTerrain(pos.roomName);
-
 				cost = matrix.get(x, y);
 				if (includeTerrain) {
 					if (cost === 0) {
