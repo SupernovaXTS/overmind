@@ -1,3 +1,4 @@
+import { DEFAULT_OVERMIND_SIGNATURE } from '~settings';
 import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
@@ -352,6 +353,8 @@ export class WorkerOverlord extends Overlord {
 
 	private upgradeActions(worker: Zerg): boolean {
 		// Sign controller if needed
+		// TODO: sign controller if text is different
+		// i tried already, but had cache issues
 		if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {
 			worker.task = Tasks.signController(this.colony.controller);
 			return true;

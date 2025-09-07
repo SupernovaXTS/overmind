@@ -142,6 +142,7 @@ export class Colony {
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
 	drops: { [resourceType: string]: Resource[] }; 		// | Dropped resources in all colony rooms
+	ruins: Ruin[]; 	                                  	// | Ruins in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
 	extractors: StructureExtractor[];					// | All extractors in owned and remote rooms
 	flags: Flag[];										// | Flags assigned to the colony
@@ -163,8 +164,8 @@ export class Colony {
 	// praiseSite: PraiseSite | undefined;
 	// Operational state
 	level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; 				// Level of the colony's main room
-	stage: number;										// The stage of the colony "lifecycle"
-	defcon: number;										//
+	stage: ColonyStage;									// The stage of the colony "lifecycle"
+	defcon: DEFCON;										//
 	state: {
 		bootstrapping?: boolean; 						// Whether colony is bootstrapping or recovering from crash
 		isIncubating?: boolean;							// If the colony is incubating
@@ -348,6 +349,7 @@ export class Colony {
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites))
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones))
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		this.ruins = _.flatten(_.map(this.rooms, room => room.ruins));
 
 		// Register assets
 		this.assets = this.computeAssets();
@@ -363,6 +365,7 @@ export class Colony {
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites))
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones))
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
+		this.ruins = _.flatten(_.map(this.rooms, room => room.ruins));
 		// Re-compute assets
 		this.assets = this.computeAssets();
 	}

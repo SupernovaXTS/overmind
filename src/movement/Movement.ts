@@ -478,15 +478,20 @@ export class Movement {
 
 	private static getPushPriority(creep: AnyCreep | AnyZerg): number {
 		if (!creep.memory) return MovePriorities.default;
+
 		if (creep.memory._go && creep.memory._go.priority) {
 			return creep.memory._go.priority;
-		} else {
-			if (isPowerZerg(creep)) {
-				return MovePriorities.powerCreep;
-			} else {
-				return (creep.memory.role in MovePriorities) ? MovePriorities[creep.memory.role] : MovePriorities.default;
-			}
 		}
+
+		if (isPowerZerg(creep)) {
+			return MovePriorities.powerCreep;
+		}
+		
+		if (creep.memory.role in MovePriorities) {
+			return MovePriorities[creep.memory.role]
+		}
+
+		return MovePriorities.default
 	}
 
 	private static shouldPush(pusher: AnyCreep | AnyZerg, pushee: AnyCreep | AnyZerg): boolean {

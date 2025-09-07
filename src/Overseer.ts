@@ -184,11 +184,22 @@ export class Overseer implements IOverseer {
 				}
 			}
 		}
+
+		// Pick up all nontrivial ruin resources
+		for (const ruin of colony.ruins) {
+			if (ruin.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
+			|| ruin.store.getUsedCapacity() > ruin.store.energy) {
+				if (colony.bunker && ruin.pos.isEqualTo(colony.bunker.anchor)) continue;
+				colony.logisticsNetwork.requestOutput(ruin, {resourceType: 'all'});
+			}
+		}
+
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (const tombstone of colony.tombstones) {
-			if (_.sum(tombstone.store) > LogisticsNetwork.settings.droppedEnergyThreshold
-				|| _.sum(tombstone.store) > tombstone.store.energy) {
-				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)) continue;
+			if (tombstone.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
+				|| tombstone.store.getUsedCapacity() > tombstone.store.energy) {
+				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)
+					|| tombstone.pos.lookForStructure(STRUCTURE_CONTAINER)) continue;
 				colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
 		}

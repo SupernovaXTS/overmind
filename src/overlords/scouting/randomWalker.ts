@@ -34,6 +34,13 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	private handleScout(scout: Zerg) {
+		// Check if room might be connected to newbie/respawn zone
+		if (this.hasIndestrucibleWalls(scout.room)) {
+			log.debug(`suiciding scout since newbie room discovered: ${this.room?.print}`)
+			scout.retire()
+			return
+		}
+
 		// Pick a new room
 		const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
 		const roomName = _.sample(neighboringRooms);
@@ -49,15 +56,6 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	run() {
-		for (const scout of this.scouts) {
-			// Check if room might be connected to newbie/respawn zone
-			if (this.hasIndestrucibleWalls(scout.room)) {
-				log.debug(`suiciding scout since newbie room discovered: ${this.room?.print}`)
-				scout.retire()
-				continue
-			}
-		}
-
 		this.autoRun(this.scouts, scout => this.handleScout(scout));
 	}
 }

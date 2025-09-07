@@ -72,6 +72,14 @@ export class BunkerQueenOverlord extends Overlord {
 		this.computeQueenAssignments();
 	}
 
+	static canFunction(colony: Colony): boolean {
+		return (colony.layout === "bunker"
+			&& insideBunkerBounds(colony.spawns[0].pos, colony)
+			&& (!!colony.storage || !!colony.terminal)
+			&& colony.assets[RESOURCE_ENERGY] > 10000
+			&& !colony.roomPlanner.memory.misplacedStructures)
+	}
+
 	/**
 	 * Computes "quadrants" of locally grouped structures (the arms on the Overmind spiral)
 	 * and assigns them to the attending queens.
@@ -325,7 +333,7 @@ export class BunkerQueenOverlord extends Overlord {
 											 Tasks.withdraw(this.colony.terminal, RESOURCE_GHODIUM, 1000),
 											 Tasks.generateSafeMode(this.colony.controller)
 										 ]);
-				log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes avaliable, ` +
+				log.alert(`${this.colony.print} has ${this.colony.controller.safeModeAvailable} safemodes available, ` +
 						  `generating a new one`);
 			}
 		}
