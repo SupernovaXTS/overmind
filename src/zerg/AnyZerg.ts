@@ -61,13 +61,15 @@ interface FleeOptions {
 	invalidateTask?: boolean;
 }
 
-const RANGES = {
-	BUILD   : 3,
-	REPAIR  : 3,
-	TRANSFER: 1,
-	WITHDRAW: 1,
-	HARVEST : 1,
-	DROP    : 0,
+export const RANGES = {
+	BUILD   	: 3,
+	REPAIR  	: 3,
+	RANGED_HEAL	: 3,
+	HEAL		: 1,
+	TRANSFER	: 1,
+	WITHDRAW	: 1,
+	HARVEST 	: 1,
+	DROP    	: 0,
 };
 
 /**
@@ -208,6 +210,14 @@ export abstract class AnyZerg {
 		}
 	}
 
+	goPickup(resource: Resource) {
+		if (this.pos.inRangeToPos(resource.pos, RANGES.DROP)) {
+			return this.pickup(resource);
+		} else {
+			return this.goTo(resource.pos);
+		}
+	}
+
 	move(direction: DirectionConstant, force = false) {
 		if (this.blockMovement && !force) return ERR_BUSY
 
@@ -333,6 +343,10 @@ export abstract class AnyZerg {
 
 	goTo(destination: RoomPosition | _HasRoomPosition, options: MoveOptions = {}) {
 		return Movement.goTo(this, destination, options);
+	}
+
+	goToSameRoom(destination: RoomPosition | _HasRoomPosition, options: MoveOptions = {}) {
+		return Movement.goToSameRoom(this, destination, options);
 	}
 
 	goToRoom(roomName: string, options: MoveOptions = {}) {

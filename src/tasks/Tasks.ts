@@ -10,7 +10,7 @@ import {fortifyTargetType, TaskFortify} from './instances/fortify';
 import {generateSafeModeTargetType, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
-import {goToTaskName} from './instances/goTo';
+import {goToTargetType, goToTaskName, TaskGoTo} from './instances/goTo';
 import {goToRoomTargetType, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, TaskHarvest} from './instances/harvest';
 import {healTargetType, TaskHeal} from './instances/heal';
@@ -102,6 +102,10 @@ export class Tasks {
 	// 		return new TaskGoToRoom({ref: '', pos: target}, options);
 	// 	}
 	// }
+
+	static goTo(target: goToTargetType, options = {} as TaskOptions): TaskGoTo {
+		return new TaskGoTo(target, options)
+	}
 
 	static goToRoom(roomName: string, options = {} as TaskOptions): TaskGoToRoom {
 		const fakeTargetPos = {ref: '', pos: new RoomPosition(25, 25, roomName)};

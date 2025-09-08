@@ -30,6 +30,9 @@ import {VersionMigration} from './versionMigration/migrator';
 
 // Main loop
 function main(): void {
+	// Bump stack trace limit so we see more of it
+	Error.stackTraceLimit = 20;
+
 	// Memory operations: load and clean memory, suspend operation as needed -------------------------------------------
 	Mem.load();									// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;				// Suspend operation if necessary
@@ -59,7 +62,7 @@ function main(): void {
 	Memory.tick++;								// Record successful tick
 
 	// Post-run code: handle sandbox code and error catching -----------------------------------------------------------
-	sandbox();									// Sandbox: run any testing code
+	// sandbox();		 						// Sandbox: run any testing code
 	Overmind.postRun();							// Throw errors at end of tick; anything after here might not get run
 }
 

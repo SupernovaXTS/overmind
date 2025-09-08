@@ -48,6 +48,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_PURPLE:
 					return new DirectiveOutpost(flag);
+				// case COLOR_CYAN:
+				// 	return new DirectiveNoOutpost(flag);
 				case COLOR_YELLOW:
 					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:

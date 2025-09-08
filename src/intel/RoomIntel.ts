@@ -131,8 +131,8 @@ export class RoomIntel {
 	 * comparing to false!
 	 */
 	static getExpansionData(roomName: string): ExpansionData | false | undefined {
-		if (!Memory.rooms[roomName] || !Memory.rooms[roomName][RMEM.EXPANSION_DATA]) {
-			return;
+		if (!Memory.rooms[roomName] || Memory.rooms[roomName][RMEM.EXPANSION_DATA] === undefined) {
+			return undefined;
 		}
 		const data = Memory.rooms[roomName][RMEM.EXPANSION_DATA] as SavedExpansionData | 0;
 		if (data === 0) {
@@ -850,7 +850,9 @@ export class RoomIntel {
 			// Record location of permanent objects in room and recompute score as needed
 			if (Game.time >= (room.memory[MEM.EXPIRATION] || 0)) {
 				this.recordPermanentObjects(room);
+
 				ExpansionEvaluator.computeExpansionData(room)
+
 				// Refresh cache
 				const recacheTime = room.owner ? OWNED_RECACHE_TIME : RECACHE_TIME;
 				room.memory[MEM.EXPIRATION] = getCacheExpiration(recacheTime, 250);

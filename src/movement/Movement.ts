@@ -125,6 +125,14 @@ export class Movement {
 	// Core creep movement functions ===================================================================================
 
 	/**
+	 * Handles creeps swapping rooms if they are on the edge
+	 */
+	static goToSameRoom(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
+		const options: MoveOptions = { ...opts, pathOpts: { ...opts.pathOpts, maxRooms: 1 } }
+		return Movement.goTo(creep, destination, options)
+	}
+
+	/**
 	 * Move a creep to a destination
 	 */
 	static goTo(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
@@ -781,9 +789,7 @@ export class Movement {
 		let outcome;
 		if (leader.room != follower.room) {
 			if (leader.pos.rangeToEdge == 0) {
-				// the maxRooms overwrite will prevent the leader from being stuck on the edge
-				// this happens if there is swamp right after the edge
-				outcome = leader.goTo(target, {...opts, pathOpts: {...opts.pathOpts, maxRooms: 1}});
+				outcome = leader.goToSameRoom(target);
 			}
 			follower.goTo(leader);
 			return outcome;

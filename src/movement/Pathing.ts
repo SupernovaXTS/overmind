@@ -181,7 +181,7 @@ export class Pathing {
 			});
 			// if the path is incomplete then we'll let it get handled at the end of this method
 			if (!path1ret.incomplete) {
-				const lastPosInPath = _.last(path1ret.path);
+				const lastPosInPath = _.last(path1ret.path) ?? origin;
 				const usedPortal = _.find(portals, portal => portal.pos.isEqualTo(lastPosInPath));
 				if (usedPortal) {
 					portalUsed = usedPortal;
@@ -1085,8 +1085,7 @@ export class Pathing {
 			Memory.pathing.distances[name1] = {};
 		}
 		if (!Memory.pathing.distances[name1][name2]) {
-			// NOTE: get path even through hostile terrority
-			const ret = this.findPath(pos1, pos2, { avoidSK: false, allowHostile: true });
+			const ret = this.findPath(pos1, pos2);
 			if (!ret.incomplete) {
 				Memory.pathing.distances[name1][name2] = ret.path.length;
 			} else {

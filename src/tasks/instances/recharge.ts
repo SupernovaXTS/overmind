@@ -113,7 +113,7 @@ export class TaskRecharge extends Task<rechargeTargetType> {
 			}
 		} else {
 			// if (creep.roleName == 'queen') {
-			log.debug(`No valid withdraw target for ${creep.print}!`);
+			// log.debug(`No valid withdraw target for ${creep.print}!`);
 			// }
 			creep.task = null;
 		}

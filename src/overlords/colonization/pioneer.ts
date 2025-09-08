@@ -55,7 +55,7 @@ export class PioneerOverlord extends Overlord {
 		if (!this.room.controller && this.directive.directiveName == DirectiveColonizeShard.directiveName) {
 			// this is a portal room, just go on the portal
 			// the creep is already in the room
-			pioneer.goTo(this.pos, {pathOpts: {maxRooms: 1}})
+			pioneer.goToSameRoom(this.pos)
 			return
 		}
 

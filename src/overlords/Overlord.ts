@@ -109,7 +109,7 @@ export abstract class Overlord {
 		this._zerg = {};
 		this._combatZerg = {};
 		this.recalculateCreeps();
-		this.creepUsageReport = _.mapValues(this._creeps, creep => undefined);
+		this.creepUsageReport = _.mapValues(this._creeps, _ => undefined);
 
 		// Register the overlord on the colony overseer and on the overmind
 		Overmind.overlords[this.ref] = this;
@@ -482,7 +482,7 @@ export abstract class Overlord {
 
 		// A bug in outpostDefenseOverlord caused infinite requests and cost me two botarena rounds before I found it...
 		if (spawnQuantity > MAX_SPAWN_REQUESTS) {
-			log.error(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
+			log.error(`Too many requests (${spawnQuantity}) for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);
 		} else {
 			for (let i = 0; i < spawnQuantity; i++) {
 				if (i >= 1 && opts.spawnOneAtATime) break;

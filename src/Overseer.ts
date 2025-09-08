@@ -1,7 +1,7 @@
 import {Colony, ColonyStage, getAllColonies, OutpostDisableReason} from './Colony';
 import {log} from './console/log';
 import {bodyCost} from './creepSetups/CreepSetup';
-import {Roles} from './creepSetups/setups';
+import {Roles, Setups} from './creepSetups/setups';
 import {DirectiveColonize} from './directives/colony/colonize';
 import {DirectiveOutpost} from './directives/colony/outpost';
 import {DirectivePoisonRoom} from './directives/colony/poisonRoom';
@@ -248,19 +248,18 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
-		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
-		if (!colony.state.isIncubating) {
-			const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
-			if (noQueen && colony.hatchery && !colony.spawnGroup) {
-				const setup = colony.hatchery.overlord.queenSetup;
-				const energyToMakeQueen = bodyCost(setup.generateBody(colony.room.energyCapacityAvailable));
-				if (colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
-					const result = DirectiveBootstrap.createIfNotPresent(colony.hatchery.pos, 'pos');
-					if (typeof result == 'string' || result == OK) { // successfully made flag
-						colony.hatchery.settings.suppressSpawning = true;
-					}
+		if (colony.state.isIncubating) return
+
+		const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
+		if (noQueen && colony.hatchery && !colony.spawnGroup) {
+			const energyToMakeQueen = bodyCost(Setups.queens.early.generateBody(colony.room.energyCapacityAvailable));
+			if (colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
+				const result = DirectiveBootstrap.createIfNotPresent(colony.hatchery.pos, 'pos');
+				if (typeof result == 'string' || result == OK) { // successfully made flag
+					colony.hatchery.settings.suppressSpawning = true;
 				}
 			}
 		}
@@ -698,7 +697,7 @@ export class Overseer implements IOverseer {
 		this.placeDirectives();
 	}
 
-	getCreepReport(colony: Colony): string[][] {
+	getCreepReport(colony: Colony): { [role: string]: [number, number] } {
 		const roleOccupancy: { [role: string]: [number, number] } = {};
 
 		for (const overlord of this.overlordsByColony[colony.name]) {
@@ -715,24 +714,11 @@ export class Overseer implements IOverseer {
 					}
 					roleOccupancy[role][0] += report[0];
 					roleOccupancy[role][1] += report[1];
-					//log.debug(`report: ${JSON.stringify(report)}`);
-					//log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
 				}
 			}
 		}
 
-
-		// let padLength = _.max(_.map(_.keys(roleOccupancy), str => str.length)) + 2;
-		const roledata: string[][] = [];
-		for (const role in roleOccupancy) {
-			const [current, needed] = roleOccupancy[role];
-			// if (needed > 0) {
-			// 	stringReport.push('| ' + `${role}:`.padRight(padLength) +
-			// 					  `${Math.floor(100 * current / needed)}%`.padLeft(4));
-			// }
-			roledata.push([role, `${current}/${needed}`]);
-		}
-		return roledata;
+		return roleOccupancy;
 	}
 
 	visuals(): void {

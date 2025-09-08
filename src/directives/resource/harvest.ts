@@ -75,7 +75,7 @@ export class DirectiveHarvest extends Directive {
 	}
 
 	init() {
-		const harvestPos = this.overlords.mine.harvestPos ?? this.pos;
+		const harvestPos = this.overlords.mine?.harvestPos ?? this.pos;
 		this.colony.destinations.push({pos: harvestPos, order: this.memory[MEM.TICK] || Game.time});
 	}
 

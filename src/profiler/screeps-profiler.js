@@ -243,30 +243,31 @@ const Profiler = {
     },
 
     callgrind() {
-        const elapsedTicks = Game.time - Memory.screepsProfiler.enabledTick + 1;
-        Memory.screepsProfiler.map['(tick)'].calls = elapsedTicks;
-        Memory.screepsProfiler.map['(tick)'].time = Memory.screepsProfiler.totalTime;
-        Profiler.checkMapItem('(root)');
-        Memory.screepsProfiler.map['(root)'].calls = 1;
-        Memory.screepsProfiler.map['(root)'].time = Memory.screepsProfiler.totalTime;
-        Profiler.checkMapItem('(tick)', Memory.screepsProfiler.map['(root)'].subs);
-        Memory.screepsProfiler.map['(root)'].subs['(tick)'].calls = elapsedTicks;
-        Memory.screepsProfiler.map['(root)'].subs['(tick)'].time = Memory.screepsProfiler.totalTime;
-        let body = `events: ns\nsummary: ${Math.round(Memory.screepsProfiler.totalTime * 1000000)}\n`;
-        for (const fnName of Object.keys(Memory.screepsProfiler.map)) {
-            const fn = Memory.screepsProfiler.map[fnName];
-            let callsBody = '';
-            let callsTime = 0;
-            for (const callName of Object.keys(fn.subs)) {
-                const call = fn.subs[callName];
-                const ns = Math.round(call.time * 1000000);
-                callsBody += `cfn=${callName}\ncalls=${call.calls} 1\n1 ${ns}\n`;
-                callsTime += call.time;
-            }
-            body += `\nfn=${fnName}\n1 ${Math.round((fn.time - callsTime) * 1000000)}\n${callsBody}`;
-        }
-        return body;
+        setupMemory('callgrind', duration || 100, filter);
     },
+
+    downloadCallgrind() {
+		const id = `id${Math.random()}`;
+		/* eslint-disable */
+		const download = `
+<script>
+var element = document.getElementById('${id}');
+if (!element) {
+element = document.createElement('a');
+element.setAttribute('id', '${id}');
+element.setAttribute('href', 'data:text/plain;charset=utf-8,${encodeURIComponent(Profiler.callgrind())}');
+element.setAttribute('download', 'callgrind.out.${Game.time}');
+
+element.style.display = 'none';
+document.body.appendChild(element);
+
+element.click();
+}
+</script>
+  `;
+		/* eslint-enable */
+		console.log(download.split('\n').map((s) => s.trim()).join(''));
+	},
 
     output(passedOutputLengthLimit) {
         const outputLengthLimit = passedOutputLengthLimit || 1000;
@@ -275,8 +276,8 @@ const Profiler = {
         }
 
         const endTick = Math.min(Memory.screepsProfiler.disableTick || Game.time, Game.time);
-        const startTick = Memory.screepsProfiler.enabledTick + 1;
-        const elapsedTicks = endTick - startTick;
+        const startTick = Memory.screepsProfiler.enabledTick;
+        const elapsedTicks = endTick - startTick + 1;
         const header = 'calls\t\ttime\t\tavg\t\tfunction';
         const footer = [
             `Ticks: ${elapsedTicks}`,
@@ -404,6 +405,8 @@ const Profiler = {
             Profiler.printProfile();
         } else if (Profiler.shouldEmail()) {
             Profiler.emailProfile();
+        } else if (Profiler.shouldCallgrind()) {
+            Profiler.downloadCallgrind();
         }
     },
 
@@ -428,6 +431,10 @@ const Profiler = {
     shouldEmail() {
         return Profiler.type() === 'email' && Memory.screepsProfiler.disableTick === Game.time;
     },
+
+	shouldCallgrind() {
+		return Profiler.type() === 'callgrind' && Memory.screepsProfiler.disableTick === Game.time;
+	}
 };
 
 module.exports = {

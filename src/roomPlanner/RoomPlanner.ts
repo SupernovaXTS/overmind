@@ -764,7 +764,7 @@ export class RoomPlanner {
 		}
 
 		// Build extractor on mineral deposit if not already present
-		const mineral = this.colony.room.find(FIND_MINERALS)[0];
+		const mineral = this.colony.room.mineral
 		if (mineral) {
 			const extractor = mineral.pos.lookForStructure(STRUCTURE_EXTRACTOR);
 			if (!extractor) {

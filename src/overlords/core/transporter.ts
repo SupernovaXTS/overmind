@@ -10,6 +10,8 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, OverlordMemory} from '../Overlord';
 
+const MAX_TRANSPORTER = 10;
+
 export interface TransportOverlordMemory extends OverlordMemory {
 	transporterSaturation: number;
 }
@@ -37,7 +39,6 @@ export class TransportOverlord extends Overlord {
 	 * Returns the total number of CARRY bodyparts needed to fully saturate all energy sources in the colony
 	 */
 	private neededTransportPower(): number {
-
 		if (!this.colony.storage
 			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
 			&& !this.colony.upgradeSite.battery) {
@@ -45,7 +46,7 @@ export class TransportOverlord extends Overlord {
 		}
 
 		let transportPower = 0;
-		const scaling = this.colony.stage == ColonyStage.Larva ? 1.2 : 2.0; // aggregate round-trip multiplier
+		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0; // aggregate round-trip multiplier
 
 		// Add contributions to transport power from hauling energy from mining sites
 		for (const flagName in this.colony.miningSites) {
@@ -62,7 +63,7 @@ export class TransportOverlord extends Overlord {
 		// Add transport power needed to move to upgradeSite
 		if (this.colony.upgradeSite.battery) {
 			transportPower += UPGRADE_CONTROLLER_POWER * this.colony.upgradeSite.upgradePowerNeeded * scaling *
-							  (Pathing.distance(this.colony.pos, this.colony.upgradeSite.battery.pos) || 0);
+							  (Pathing.distance(this.colony.pos, this.colony.upgradeSite.battery.pos) ?? 0);
 		}
 
 
@@ -85,7 +86,10 @@ export class TransportOverlord extends Overlord {
 		const currentTransportPower = _.sum(this.transporters, t => t.bodypartCounts[CARRY]);
 		this.memory.transporterSaturation = currentTransportPower / neededTransportPower;
 
-		const numTransporters = Math.ceil(1.2 * neededTransportPower / transportPowerEach + 0.1); // div by zero error
+		// prevent div by zero
+		let numTransporters = transportPowerEach ? Math.ceil(neededTransportPower / transportPowerEach) : 0
+		// when bootstrapping a colony, sometimes we request way too many small sized transporter
+		numTransporters = Math.min(numTransporters, MAX_TRANSPORTER)
 
 		if (this.transporters.length == 0) {
 			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});
@@ -225,6 +229,10 @@ export class TransportOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRun(this.transporters, transporter => this.handleSmolTransporter(transporter));
+		this.autoRun(
+			this.transporters,
+			transporter => this.handleSmolTransporter(transporter),
+			transporter => transporter.avoidDanger({ timer: 5, dropEnergy: true }),
+		);
 	}
 }

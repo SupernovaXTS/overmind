@@ -23,6 +23,8 @@ export class TaskGoToRoom extends Task<goToRoomTargetType> {
 	}
 
 	isValidTarget() {
+		// TODO: maybe set it to this.creep.room.name != this.targetPos.roomName
+		// but we also need to check if creep is on the edge?
 		return true;
 	}
 

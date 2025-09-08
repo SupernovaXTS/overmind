@@ -3,7 +3,7 @@
  */
 export let OverlordPriority = {
 	emergency: {				// Colony-wide emergencies such as a catastrohic crash
-		bootstrap: 0
+		bootstrap: 1
 	},
 
 	core: {						// Functionality related to spawning more creeps
@@ -50,9 +50,16 @@ export let OverlordPriority = {
 		mine          : 501,
 		work          : 502,
 		mineralRCL8   : 503,
-		transport     : 510,		// Spawn the rest of the transporters
-		mineral       : 520
+		transport     : 504,		// Spawn the rest of the transporters
+		mineral       : 505,
 	},
+
+	// NOTE: only use this prio if your colony is 
+	// colonization: { 			// Colonizing new rooms
+	// 	claim          : 550, // after claimed, reduce this priority so pioneers spawn
+	// 	pioneer        : 551,
+	// 	remoteUpgrading: 552,
+	// },
 
 	outpostOffense: {
 		harass      : 560,

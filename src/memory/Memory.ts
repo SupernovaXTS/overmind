@@ -35,10 +35,10 @@ export function getAutonomyLevel(): number {
 let lastMemory: any;
 let lastTime: number = 0;
 
-const MAX_BUCKET = 1000;
+const MAX_BUCKET = 2000;
 const HEAP_CLEAN_FREQUENCY = 200;
 const BUCKET_CLEAR_CACHE = 7000;
-const BUCKET_CPU_HALT = 4000;
+const BUCKET_CPU_HALT = 1000;
 
 /**
  * This module contains a number of low-level memory clearing and caching functions
@@ -56,7 +56,7 @@ export class Mem {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
 
-		// only run the reset Bucke on shard3
+		// only run the reset Bucket on shard3 so we can generate pixels on the others
 		if (Game.cpu.bucket < 500 && Game.shard.name == "shard3") {
 			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
@@ -68,6 +68,7 @@ export class Mem {
 			}
 			shouldRun = false;
 		}
+
 		if (Memory.resetBucket) {
 			if (Game.cpu.bucket < MAX_BUCKET - Game.cpu.limit) {
 				log.info(`Operation suspended until bucket recovery. Bucket: ${Game.cpu.bucket}/${MAX_BUCKET}`);
@@ -76,6 +77,7 @@ export class Mem {
 				delete Memory.resetBucket;
 			}
 		}
+
 		if (Memory.haltTick) {
 			if (Memory.haltTick == Game.time) {
 				if (Game.cpu.halt) { // this is undefined on non-IVM

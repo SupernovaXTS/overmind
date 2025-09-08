@@ -5,6 +5,7 @@ import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
 import {Zerg} from './Zerg';
+import {RANGES} from './AnyZerg';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -105,7 +106,7 @@ export class CombatZerg extends Zerg {
 			// Approach the target
 			const range = this.pos.getRangeTo(target);
 			if (range > 1) {
-				this.goTo(target, {movingTarget: true});
+				this.goToSameRoom(target, {movingTarget: true});
 			}
 
 			// Heal or ranged-heal the target
@@ -141,14 +142,10 @@ export class CombatZerg extends Zerg {
 			// Move in the direction of the creep to prevent it from running away
 			this.move(this.pos.getDirectionTo(target));
 			return ret;
-		} else {
-			if (this.pos.getRangeTo(target.pos) > 10 && target instanceof Creep) {
-				this.goTo(target, {movingTarget: true});
-			} else {
-				this.goTo(target);
-			}
-			return ERR_NOT_IN_RANGE;
 		}
+
+		this.goToSameRoom(target, {movingTarget: (this.pos.getRangeTo(target.pos) > 10 && target instanceof Creep)});
+		return ERR_NOT_IN_RANGE;
 	}
 
 	// Standard action sequences for engaging small numbers of enemies in a neutral room ===============================
@@ -201,18 +198,19 @@ export class CombatZerg extends Zerg {
 	/**
 	 * Automatically heal the best creep in range
 	 */
-	autoHeal(allowRangedHeal = true, friendlies = this.room.creeps) {
-		const target = CombatTargeting.findBestHealingTargetInRange(this, allowRangedHeal ? 3 : 1, friendlies);
-		this.debug(`Heal target: ${target}`);
-		if (target) {
-			if (this.pos.getRangeTo(target) <= 1) {
-				return this.heal(target);
-			} else if (allowRangedHeal && this.pos.getRangeTo(target) <= 3) {
-				return this.rangedHeal(target);
-			}
-		}
+	autoHeal(allowRangedHeal = true, friendlies = this.room.friendlies) {
+		const target = CombatTargeting.findBestHealingTargetInRange(
+			this, allowRangedHeal ? RANGES.RANGED_HEAL : RANGES.HEAL, friendlies,
+		);
 
-		return undefined
+		if (!target) return undefined
+
+		this.debug(`Heal target: ${target}`);
+		if (this.pos.getRangeTo(target) <= RANGES.HEAL) {
+			return this.heal(target);
+		} else if (allowRangedHeal && this.pos.getRangeTo(target) <= RANGES.RANGED_HEAL) {
+			return this.rangedHeal(target);
+		}
 	}
 
 	/**
@@ -281,7 +279,7 @@ export class CombatZerg extends Zerg {
 		const target = CombatTargeting.findTarget(this);
 		const preferRanged = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK);
 		const targetRange = preferredRange || preferRanged ? 3 : 1;
-		this.debug(`${target}, ${targetRange}`);
+		this.debug(`Fighting: ${target}, Range: ${targetRange}`);
 		if (target) {
 			const avoid = [];
 			// Avoid melee hostiles if you are a ranged creep

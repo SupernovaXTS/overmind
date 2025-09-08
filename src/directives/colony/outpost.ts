@@ -4,6 +4,8 @@ import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
+import {Setups} from '../../creepSetups/setups';
+import {patternCost} from '../../creepSetups/CreepSetup';
 import {Directive} from '../Directive';
 
 /**
@@ -22,9 +24,12 @@ export class DirectiveOutpost extends Directive {
 
 	spawnMoarOverlords() {
 		if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER &&
-			this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL) {
+			this.colony.level >= DirectiveOutpost.settings.canSpawnReserversAtRCL &&
+			// only use this overlord if the extensions are alrady built
+			patternCost(Setups.infestors.reserve) <= this.colony.room.energyCapacityAvailable
+		) {
 			this.overlords.reserve = new ReservingOverlord(this);
-			return
+			return;
 		}
 
 		this.overlords.scout = new StationaryScoutOverlord(this);

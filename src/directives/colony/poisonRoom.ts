@@ -28,12 +28,13 @@ export class DirectivePoisonRoom extends Directive {
 		roomPoisoner: RoomPoisonerOverlord;
 	};
 
-	static settings: {
-		runFrequency: 12;
+	static settings = {
+		runFrequency: 12,
 	};
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectivePoisonRoom.requiredRCL);
+
 		// Remove if misplaced
 		let remove = false;
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {

@@ -56,7 +56,7 @@ export class ClaimingOverlord extends Overlord {
 		if (!this.room.controller && this.directive.directiveName == DirectiveColonizeShard.directiveName) {
 			// this is a portal room, just go on the portal
 			// the creep is already in the room
-			claimer.goTo(this.pos, {pathOpts: {maxRooms: 1}})
+			claimer.goToSameRoom(this.pos)
 			return
 		}
 

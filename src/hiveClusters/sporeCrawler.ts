@@ -6,6 +6,7 @@ import {WorkerOverlord} from '../overlords/core/worker';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {HiveCluster} from './_HiveCluster';
+import {Mem} from "memory/Memory";
 
 
 /**
@@ -24,11 +25,15 @@ export class SporeCrawler extends HiveCluster {
 
 	constructor(colony: Colony, tower: StructureTower) {
 		super(colony, tower, 'sporeCrawler');
+		this.memory = Mem.wrap(this.colony.memory, 'sporeCrawler');
+
 		// Register structure components
 		this.towers = this.colony.towers;
 	}
 
 	refresh() {
+		this.memory = Mem.wrap(this.colony.memory, 'sporeCrawler');
+
 		$.refreshRoom(this);
 		$.refresh(this, 'towers');
 	}
@@ -63,6 +68,7 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	private scatterShot(targets: Creep[]): void {
+		if (!targets) return
 		for (const tower of this.towers) {
 			const target = _.sample(targets);
 			const result = tower.attack(target);
@@ -176,7 +182,7 @@ export class SporeCrawler extends HiveCluster {
 			}
 		}
 
-		const closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.creeps,
+		const closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.friendlies,
 																		creep => creep.hits < creep.hitsMax));
 		if (closestDamagedAlly) {
 			for (const tower of this.towers) {

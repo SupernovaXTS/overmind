@@ -639,12 +639,24 @@ export class Colony {
 			Stats.log(`colonies.${this.name}.threatLevel`, this.room.threatLevel);
 			const avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
 			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
+
+			const report = Overmind.overseer.getCreepReport(this);
+			for (const [role, [current, needed]] of Object.entries(report)) {
+				Stats.log(`colonies.${this.name}.creeps.${role}.current`, current);
+				Stats.log(`colonies.${this.name}.creeps.${role}.needed`, needed);
+			}
 		}
 	}
 
 	private drawCreepReport(coord: Coord): Coord {
+		const report = Overmind.overseer.getCreepReport(this);
+		const roledata: string[][] = [];
+		for (const role in report) {
+			const [current, needed] = report[role];
+			roledata.push([role, `${current}/${needed}`]);
+		}
+
 		let {x, y} = coord;
-		const roledata = Overmind.overseer.getCreepReport(this);
 		const tablePos = new RoomPosition(x, y, this.room.name);
 		y = Visualizer.infoBox(`${this.name} Creeps`, roledata, tablePos, 7);
 		return {x, y};

@@ -9,6 +9,7 @@ import {Visualizer} from '../visuals/Visualizer';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
+import {RANGES} from '../zerg/AnyZerg';
 
 @profile
 export class CombatTargeting {
@@ -112,15 +113,15 @@ export class CombatTargeting {
 	}
 
 	static findClosestHurtFriendly(healer: Zerg): Creep | null {
-		return healer.pos.findClosestByRange(_.filter(healer.room.creeps, creep => creep.hits < creep.hitsMax));
+		return healer.pos.findClosestByRange(_.filter(healer.room.friendlies, creep => creep.hits < creep.hitsMax));
 	}
 
 	/**
 	 * Finds the best (friendly) target in range that a zerg can currently heal
 	 */
-	static findBestHealingTargetInRange(healer: Zerg, range = 3, friendlies = healer.room.creeps): Creep | undefined {
+	static findBestHealingTargetInRange(healer: Zerg, range = RANGES.RANGED_HEAL, friendlies = healer.room.friendlies): Creep | undefined {
 		const tempHitsPredicted: { [id: string]: number } = {};
-		return maxBy(_.filter(friendlies, f => healer.pos.getRangeTo(f) <= range), friend => {
+		return maxBy(_.filter(friendlies, f => f.hits < f.hitsMax && healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;
 			const attackProbability = 0.5;
 			tempHitsPredicted[friend.id] = friend.hitsPredicted;
