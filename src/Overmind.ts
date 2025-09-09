@@ -254,7 +254,7 @@ export default class _Overmind implements IOvermind {
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
 
-		if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3") {
+		if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
 			Game.cpu.generatePixel();
 			log.info("Generating Pixel...")
 		}

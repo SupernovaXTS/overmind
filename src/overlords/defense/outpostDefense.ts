@@ -87,10 +87,10 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const needRanged = enemyPotentials.ranged * 1.3;
 		const needHeal = enemyPotentials.heal * 1.2;
 
-		// NOTE: i want to fight it!
-		// if (needAttack > 100 || needRanged > 100 || needHeal > 100) {
-		// 	return; // fuck it let's not fight this
-		// }
+		if (needAttack > 100 || needRanged > 100 || needHeal > 100) {
+			log.alert(`${this.print}: too much firepower needed to fight: ${JSON.stringify(enemyPotentials)}`);
+			return; // fuck it let's not fight this
+		}
 
 		// Only try to obtain one additional creep at a time
 		if (this.reassignIdleCreeps(Roles.melee, 1)) return;

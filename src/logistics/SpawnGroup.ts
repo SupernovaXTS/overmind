@@ -123,26 +123,19 @@ export class SpawnGroup {
 		coloniesInRange = _.filter(coloniesInRange,
 								   colony => maxColonyLevel - colony.level <= this.settings.maxLevelDifference);
 
-		const colonyNames = [] as string[];
-		// const routes = {} as { [colonyName: string]: { [roomName: string]: boolean } };
-		// let paths = {} as { [colonyName: string]: { startPos: RoomPosition, path: string[] } };
-		const distances = {} as { [colonyName: string]: number };
+		const colonyNames: string[] = [];
+		const distances: { [colonyName: string]: number } = {};
 		for (const colony of coloniesInRange) {
 			const spawn = colony.room.spawns[0];
-			if (spawn) {
-				// const route = Pathing.findRoute(colony.room.name, this.roomName);
-				const path = Pathing.findPathToRoom(spawn.pos, this.roomName);
-				if (!path.incomplete && path.path.length <= DEFAULT_MAX_PATH_LENGTH + 25) {
-					colonyNames.push(colony.room.name);
-					// routes[colony.room.name] = route;
-					// paths[room.name] = path.path;
-					distances[colony.room.name] = path.path.length;
-				}
+			if (!spawn) continue
+
+			const path = Pathing.findPathToRoom(spawn.pos, this.roomName, { useFindRoute: true });
+			if (!path.incomplete && path.path.length <= DEFAULT_MAX_PATH_LENGTH + 25) {
+				colonyNames.push(colony.room.name);
+				distances[colony.room.name] = path.path.length;
 			}
 		}
 		this.memory.colonies = colonyNames;
-		// this.memory.routes = routes;
-		// this.memory.paths = TODO
 		this.memory.distances = distances;
 		this.memory.expiration = getCacheExpiration(DEFAULT_RECACHE_TIME, 25);
 	}
