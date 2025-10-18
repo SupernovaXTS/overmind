@@ -3,7 +3,6 @@ screeps.json
 
 # Ignore basic folders
 
-# Pull from dist needs this to be commited
 /dist 
 /node_modules
 /typings
