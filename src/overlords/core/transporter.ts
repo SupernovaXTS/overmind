@@ -1,3 +1,4 @@
+import { CarrierSetup } from 'creepSetups/CombatCreepSetup';
 import {Colony, ColonyStage} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
@@ -69,10 +70,11 @@ export class TransportOverlord extends Overlord {
 			transportPower *= 0.5;
 		}
 		
+		var minTransportPower = 6
 		if (!this.colony.storage
 			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
 			&& !this.colony.upgradeSite.battery) {
-			return 2; // If we are operating without containers then we should spawn a minimum of two transporters for direct deposit
+			return minTransportPower ; // If we are operating without containers, we should only spawn 4 carry parts worth of transporters
 		}
 		return transportPower / CARRY_CAPACITY;
 	}
