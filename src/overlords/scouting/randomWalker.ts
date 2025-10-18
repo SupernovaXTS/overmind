@@ -13,9 +13,12 @@ const DEFAULT_NUM_SCOUTS = 1;
 /**
  * Sends out scouts which randomly traverse rooms to uncover possible expansion locations and gather intel
  */
+
+// Global toggle for controlling if we scout in newbie or respawn zones
+// Realistically should only be used when WE are in a respawn area
+var zoneController = true
 @profile
 export class RandomWalkerScoutOverlord extends Overlord {
-
 	scouts: Zerg[];
 
 	constructor(colony: Colony, priority = OverlordPriority.scouting.randomWalker) {
@@ -24,7 +27,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	init() {
-		if (this.room && this.hasIndestrucibleWalls(this.room)) {
+		if ( !zoneController && this.room && this.hasIndestrucibleWalls(this.room)) {
 			// do not spawn random scouts if we have walls in our room
 			// FIXME: just navigate to another room
 			return
@@ -35,7 +38,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 
 	private handleScout(scout: Zerg) {
 		// Check if room might be connected to newbie/respawn zone
-		if (this.hasIndestrucibleWalls(scout.room)) {
+		if (!zoneController && this.hasIndestrucibleWalls(scout.room)) {
 			log.debug(`suiciding scout since newbie room discovered: ${this.room?.print}`)
 			scout.retire()
 			return

@@ -2,7 +2,9 @@
 screeps.json
 
 # Ignore basic folders
-/dist
+
+# Pull from dist needs this to be commited
+#/dist 
 /node_modules
 /typings
 /.rpt2_cache
