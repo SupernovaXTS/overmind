@@ -21240,11 +21240,6 @@ let TransportOverlord = class TransportOverlord extends Overlord {
     }
     neededTransportPower() {
         var _a;
-        if (!this.colony.storage
-            && !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
-            && !this.colony.upgradeSite.battery) {
-            return 0;
-        }
         let transportPower = 0;
         const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0;
         for (const flagName in this.colony.miningSites) {
@@ -21261,6 +21256,11 @@ let TransportOverlord = class TransportOverlord extends Overlord {
         }
         if (this.colony.state.lowPowerMode) {
             transportPower *= 0.5;
+        }
+        if (!this.colony.storage
+            && !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
+            && !this.colony.upgradeSite.battery) {
+            return 2;
         }
         return transportPower / CARRY_CAPACITY;
     }
