@@ -3,7 +3,11 @@ import {profile} from '../../profiler/decorator';
 import {CombatPlanner, SiegeAnalysis} from '../../strategy/CombatPlanner';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
-
+import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
+import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
+import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
+import {OutpostDefenseOverlord } from 'overlords/defense/outpostDefense';
+import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
 interface DirectiveAutoSiegeMemory extends FlagMemory {
 	siegeAnalysis?: SiegeAnalysis;
 }
@@ -21,12 +25,12 @@ export class DirectiveAutoSiege extends Directive {
 
 	memory: DirectiveAutoSiegeMemory;
 
-	// overlords: {
-	// 	scout?: StationaryScoutOverlord;
-	// 	destroy?: SwarmDestroyerOverlord | PairDestroyerOverlord;
-	// 	guard?: OutpostDefenseOverlord;
-	// 	controllerAttack?: ControllerAttackerOverlord;
-	// };
+	overlords: {
+		scout?: StationaryScoutOverlord;
+		destroy?: SwarmDestroyerOverlord | PairDestroyerOverlord;
+		guard?: OutpostDefenseOverlord;
+		controllerAttack?: ControllerAttackerOverlord;
+	};
 
 	constructor(flag: Flag) {
 		super(flag);
@@ -34,6 +38,9 @@ export class DirectiveAutoSiege extends Directive {
 
 	spawnMoarOverlords() {
 		// this.overlords.destroy = new SwarmDestroyerOverlord(this);
+		// this.overlords.scout = new StationaryScoutOverlord(this); 
+		// this.overlords.guard = new OutpostDefenseOverlord();
+		// this.overlords.controllerAttack = new ControllerAttackerOverlord(this);
 	}
 
 	init(): void {

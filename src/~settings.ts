@@ -43,14 +43,15 @@ export const SUPPRESS_INVALID_DIRECTIVE_ALERTS: boolean = false;
  * Operation will be penalized by skipping every 3rd tick for using a signature that does not contain the substring
  * "overmind" or the small-caps variant.
  */
-export const OVERMIND_SMALL_CAPS = 'learning by doing';
+export const OVERMIND_SMALL_CAPS = 'NOVAMIND';
 export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote;
 global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 
 /**
  * If this is enabled, Memory.bot will default to true. This will not change the mode if already set - use setMode().
  */
-export const DEFAULT_OPERATION_MODE: operationMode = 'semiautomatic';
+export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';
+// I AM FUCKING BLIND
 
 /**
  * Limit how many rooms you can claim (for any shard)

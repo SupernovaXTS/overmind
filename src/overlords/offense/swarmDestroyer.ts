@@ -11,7 +11,7 @@ import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Swarm} from '../../zerg/Swarm';
 import {SwarmOverlord} from '../SwarmOverlord';
-
+import {DirectiveAutoSiege} from 'directives/offense/autoSiege';
 const DEBUG = false;
 
 /**

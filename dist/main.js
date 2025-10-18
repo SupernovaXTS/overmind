@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 "use strict";
 global.__VERSION__ = '0.7.0';
 global.deref = function (ref) {
@@ -935,10 +937,10 @@ const PROFILER_COLONY_LIMIT = Math.ceil(Game.gcl.level / 2);
 const PROFILER_INCLUDE_COLONIES = ['W7N7', 'W3N7', 'W7N4'];
 const USE_TRY_CATCH = false;
 const SUPPRESS_INVALID_DIRECTIVE_ALERTS = false;
-const OVERMIND_SMALL_CAPS = 'learning by doing';
+const OVERMIND_SMALL_CAPS = 'NOVAMIND';
 const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote;
 global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
-const DEFAULT_OPERATION_MODE = 'semiautomatic';
+const DEFAULT_OPERATION_MODE = 'automatic';
 const MAX_OWNED_ROOMS = Infinity;
 const SHARD3_MAX_OWNED_ROOMS = 2;
 const RESERVE_CREDITS = onPublicServer() ? (Game.gcl.level >= 10 ? 1e6 : 1e5) : 1000;
