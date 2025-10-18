@@ -39,11 +39,8 @@ export class TransportOverlord extends Overlord {
 	 * Returns the total number of CARRY bodyparts needed to fully saturate all energy sources in the colony
 	 */
 	private neededTransportPower(): number {
-		if (!this.colony.storage
-			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
-			&& !this.colony.upgradeSite.battery) {
-			return 0;
-		}
+		
+		
 
 		let transportPower = 0;
 		const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0; // aggregate round-trip multiplier
@@ -71,7 +68,12 @@ export class TransportOverlord extends Overlord {
 			// Reduce needed transporters when colony is in low power mode
 			transportPower *= 0.5;
 		}
-
+		
+		if (!this.colony.storage
+			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
+			&& !this.colony.upgradeSite.battery) {
+			return 2; // If we are operating without containers then we should spawn a minimum of two transporters for direct deposit
+		}
 		return transportPower / CARRY_CAPACITY;
 	}
 
