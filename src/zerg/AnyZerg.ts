@@ -349,7 +349,7 @@ export abstract class AnyZerg {
 		}
 	}
 	towersAvaliable(colony: Colony) {
-		if (colony.towers.length >= 1) {
+		if (colony && colony.towers.length >= 1) {
 			return true
 		}
 		return false

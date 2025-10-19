@@ -5873,11 +5873,6 @@ let OverlordPriority = {
         siege: 302,
         controllerAttack: 399,
     },
-    colonization: {
-        claim: 400,
-        pioneer: 401,
-        remoteUpgrading: 410,
-    },
     priorityOwnedRoom: {
         priorityUpgrade: 450,
         priorityTransport: 451,
@@ -5889,6 +5884,11 @@ let OverlordPriority = {
         mineralRCL8: 503,
         transport: 504,
         mineral: 505,
+    },
+    colonization: {
+        claim: 550,
+        pioneer: 551,
+        remoteUpgrading: 552,
     },
     outpostOffense: {
         harass: 560,
@@ -12193,13 +12193,20 @@ let AnyZerg = class AnyZerg {
         return Overmind.colonyMap[this.room.name] == this.memory["C"];
     }
     get inFriendlyRoom() {
-        return Overmind.colonyMap[this.room.name] != undefined;
+        var room = this.room;
+        return (room.isColony || room.isOutpost);
     }
     getCurrentColony() {
-        var colony = Overmind.colonyMap[this.room.name];
+        var colony = Overmind.colonies[this.room.name];
         if (colony) {
             return colony;
         }
+    }
+    towersAvaliable(colony) {
+        if (colony.towers.length >= 1) {
+            return true;
+        }
+        return false;
     }
     goTo(destination, options = {}) {
         return Movement.goTo(this, destination, options);
@@ -23654,7 +23661,8 @@ let OutpostDefenseOverlord = class OutpostDefenseOverlord extends CombatOverlord
         }
     }
     handleHealer(healer) {
-        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
+        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
             if (this.colony.towers.length > 0) {
                 return healer.goToRoom(this.colony.room.name);
             }
@@ -24797,7 +24805,8 @@ let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlor
         }
     }
     handleHealer(healer) {
-        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
+        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
             if (this.colony.towers.length > 0) {
                 healer.goToRoom(this.colony.room.name);
             }
