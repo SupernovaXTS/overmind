@@ -5872,7 +5872,7 @@ let OverlordPriority = {
         destroy: 300,
         healPoint: 301,
         siege: 302,
-        controllerAttack: 401,
+        controllerAttack: 399,
     },
     colonization: {
         claim: 400,
