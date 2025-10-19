@@ -121,6 +121,7 @@ export const Setups = {
 	pioneer: new CreepSetup(Roles.pioneer, {
 		pattern  : [WORK, CARRY, MOVE, MOVE],
 		sizeLimit: Infinity,
+		prefix: [MOVE,MOVE] // Pseudo armor for avoiding loosing ability to work
 	}),
 
 
