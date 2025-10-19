@@ -6,7 +6,7 @@ Rooms of Interest
     Reserved []
     Colonized []
 - E2S21: Good Expansion area, LV4, Medium Target (Low overall energy generation compared to us)
-    Killed []
+    Killed [Y]
     Controller Unclaimed []
     Reserved []
     Colonized []

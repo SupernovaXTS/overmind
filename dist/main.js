@@ -5886,7 +5886,7 @@ let OverlordPriority = {
         mineral: 505,
     },
     colonization: {
-        claim: 550,
+        claim: 400,
         pioneer: 551,
         remoteUpgrading: 552,
     },

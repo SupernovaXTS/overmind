@@ -22,7 +22,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	constructor(directive: DirectiveControllerAttack, priority = OverlordPriority.offense.controllerAttack) {
 		super(directive, 'controllerAttack', priority);
 		this.controllerAttackers = this.zerg(Roles.claim);
-		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 4});
+		this.spawnGroup = new SpawnGroup(this, {requiredRCL: 3});
 		this.refresh();
 	}
 
