@@ -31,12 +31,12 @@ export let OverlordPriority = {
 		destroy         : 300,
 		healPoint       : 301,
 		siege           : 302,
-		controllerAttack: 402, // This should be lower then claiming unclaimed rooms as it takes longer
+		controllerAttack: 401, // This should be lower then claiming unclaimed rooms as it takes longer
 	},
 
 	colonization: { 			// Colonizing new rooms
 		claim          : 400,
-		pioneer        : 402,
+		pioneer        : 403,
 		remoteUpgrading: 610,
 	},
 
