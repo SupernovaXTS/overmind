@@ -5887,8 +5887,8 @@ let OverlordPriority = {
         priorityTransport: 451,
     },
     ownedRoom: {
-        firstTransport: 500,
-        mine: 501,
+        firstTransport: 400,
+        mine: 401,
         work: 503,
         mineralRCL8: 503,
         transport: 504,
@@ -5911,7 +5911,7 @@ let OverlordPriority = {
     },
     remoteRoom: {
         reserve: 520,
-        mine: 502,
+        mine: 402,
         roomIncrement: 5,
     },
     remoteSKRoom: {
