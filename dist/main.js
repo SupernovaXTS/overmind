@@ -5873,6 +5873,11 @@ let OverlordPriority = {
         siege: 302,
         controllerAttack: 399,
     },
+    colonization: {
+        claim: 400,
+        pioneer: 401,
+        remoteUpgrading: 410,
+    },
     priorityOwnedRoom: {
         priorityUpgrade: 450,
         priorityTransport: 451,
@@ -5884,11 +5889,6 @@ let OverlordPriority = {
         mineralRCL8: 503,
         transport: 504,
         mineral: 505,
-    },
-    colonization: {
-        claim: 400,
-        pioneer: 551,
-        remoteUpgrading: 552,
     },
     outpostOffense: {
         harass: 560,
@@ -23764,7 +23764,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
     constructor(directive, priority = OverlordPriority.offense.controllerAttack) {
         super(directive, 'controllerAttack', priority);
         this.controllerAttackers = this.zerg(Roles.claim);
-        this.spawnGroup = new SpawnGroup(this, { requiredRCL: 4 });
+        this.spawnGroup = new SpawnGroup(this, { requiredRCL: 3 });
         this.refresh();
     }
     refresh() {

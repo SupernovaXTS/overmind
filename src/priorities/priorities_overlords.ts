@@ -33,13 +33,12 @@ export let OverlordPriority = {
 		siege           : 302,
 		controllerAttack: 399,
 	},
-	/*
+	
 	colonization: { 			// Colonizing new rooms
 		claim          : 400,
 		pioneer        : 401,
 		remoteUpgrading: 410,
 	},
-	*/
 	priorityOwnedRoom: {		// Situationally prioritized in-room operations
 		priorityUpgrade  : 450,
 		priorityTransport: 451,
@@ -55,13 +54,15 @@ export let OverlordPriority = {
 	},
 
 	
+	/*
 	// NOTE: only use this prio if your colony is 
+	
 	colonization: { 			// Colonizing new rooms
 		claim          : 400, // after claimed, reduce this priority so pioneers spawn
 	 	pioneer        : 551,
 		remoteUpgrading: 552,
 		},
-
+	*/
 	outpostOffense: {
 		harass      : 560,
 		roomPoisoner: 561,
