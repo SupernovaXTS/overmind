@@ -100,7 +100,8 @@ export class PairDestroyerOverlord extends Overlord {
 
 	private handleHealer(healer: CombatZerg): void {
 		// If we can't heal we should either return to the colony or suicide
-		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+		var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()))
+		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
             if (this.colony.towers.length > 0) {
                 healer.goToRoom(this.colony.room.name);
             }

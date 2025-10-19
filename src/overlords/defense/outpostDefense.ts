@@ -35,7 +35,8 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleHealer(healer: CombatZerg) {
-		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+		var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()))
+		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
 			if (this.colony.towers.length > 0) {
 				return healer.goToRoom(this.colony.room.name); // go get healed
 			} else {
