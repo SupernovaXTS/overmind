@@ -339,13 +339,20 @@ export abstract class AnyZerg {
 		return Overmind.colonyMap[this.room.name] == this.memory[MEM.COLONY];
 	}
 	get inFriendlyRoom(): boolean {
-		return Overmind.colonyMap[this.room.name] != undefined
+		var room = this.room
+		return (room.isColony || room.isOutpost)
 	}
 	getCurrentColony() {
-		var colony = Overmind.colonyMap[this.room.name]
+		var colony = Overmind.colonies[this.room.name]
 		if (colony) {
 			return colony
 		}
+	}
+	towersAvaliable(colony: Colony) {
+		if (colony.towers.length >= 1) {
+			return true
+		}
+		return false
 	}
 	// Movement and location -------------------------------------------------------------------------------------------
 

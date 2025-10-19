@@ -12192,6 +12192,15 @@ let AnyZerg = class AnyZerg {
     get inColonyRoom() {
         return Overmind.colonyMap[this.room.name] == this.memory["C"];
     }
+    get inFriendlyRoom() {
+        return Overmind.colonyMap[this.room.name] != undefined;
+    }
+    getCurrentColony() {
+        var colony = Overmind.colonyMap[this.room.name];
+        if (colony) {
+            return colony;
+        }
+    }
     goTo(destination, options = {}) {
         return Movement.goTo(this, destination, options);
     }
@@ -21257,10 +21266,11 @@ let TransportOverlord = class TransportOverlord extends Overlord {
         if (this.colony.state.lowPowerMode) {
             transportPower *= 0.5;
         }
+        var minTransportPower = 6;
         if (!this.colony.storage
             && !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
             && !this.colony.upgradeSite.battery) {
-            return 2;
+            return minTransportPower;
         }
         return transportPower / CARRY_CAPACITY;
     }
@@ -24787,6 +24797,14 @@ let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlor
         }
     }
     handleHealer(healer) {
+        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+            if (this.colony.towers.length > 0) {
+                healer.goToRoom(this.colony.room.name);
+            }
+            else {
+                healer.suicide();
+            }
+        }
         if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
             healer.doMedicActions(this.room.name);
             return;
