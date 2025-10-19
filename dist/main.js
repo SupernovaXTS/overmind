@@ -5114,7 +5114,7 @@ const Setups = {
     pioneer: new CreepSetup(Roles.pioneer, {
         pattern: [MOVE, WORK, CARRY, MOVE],
         sizeLimit: Infinity,
-        prefix: [MOVE, MOVE],
+        prefix: [MOVE],
         proportionalPrefixSuffix: true,
         ordered: false
     }),
