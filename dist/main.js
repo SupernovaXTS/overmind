@@ -5877,6 +5877,11 @@ let OverlordPriority = {
         siege: 302,
         controllerAttack: 399,
     },
+    colonization: {
+        claim: 400,
+        pioneer: 403,
+        remoteUpgrading: 610,
+    },
     priorityOwnedRoom: {
         priorityUpgrade: 450,
         priorityTransport: 451,
@@ -5888,11 +5893,6 @@ let OverlordPriority = {
         mineralRCL8: 503,
         transport: 504,
         mineral: 505,
-    },
-    colonization: {
-        claim: 401,
-        pioneer: 551,
-        remoteUpgrading: 552,
     },
     outpostOffense: {
         harass: 560,
