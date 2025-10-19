@@ -10,7 +10,6 @@ import {profile} from '../../profiler/decorator';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Overlord} from '../Overlord';
-
 /**
  *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
  */
@@ -100,6 +99,15 @@ export class PairDestroyerOverlord extends Overlord {
 	}
 
 	private handleHealer(healer: CombatZerg): void {
+		// If we can't heal we should either return to the colony or suicide
+		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0) {
+            if (this.colony.towers.length > 0) {
+                healer.goToRoom(this.colony.room.name);
+            }
+            else {
+                healer.suicide();
+            }
+        }
 		// If there are no hostiles in the designated room, run medic actions
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			healer.doMedicActions(this.room.name);
