@@ -47,7 +47,8 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
-		if (pioneer.getActiveBodyparts(WORK) <= 0)
+		var viable = true
+		if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable)
 			// If we don't have any active work parts we retire
 			pioneer.retire()
 		if (pioneer.room != this.room || pioneer.pos.isEdge) {
@@ -72,15 +73,25 @@ export class PioneerOverlord extends Overlord {
 		}
 		// Build and recharge
 		if (pioneer.carry.energy == 0) {
+			
 			pioneer.task = Tasks.recharge();
+			if (!pioneer.task.isValidTask()) {
+				viable = false
+			}	
 		} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
 															(0.1 * CONTROLLER_DOWNGRADE[this.room.controller.level])
 															|| !this.spawnSite)
 					&& !(this.room.controller.upgradeBlocked > 0)) {
 			// Save controller if it's about to downgrade or if you have nothing else to do
 			pioneer.task = Tasks.upgrade(this.room.controller);
+			if (!pioneer.task.isValidTask()) {
+				viable = false
+			}
 		} else if (this.spawnSite) {
 			pioneer.task = Tasks.build(this.spawnSite);
+			if (!pioneer.task.isValidTask()) {
+				viable = false
+			}
 		}
 	}
 

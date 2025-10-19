@@ -5112,7 +5112,7 @@ const Setups = {
         }),
     },
     pioneer: new CreepSetup(Roles.pioneer, {
-        pattern: [WORK, CARRY, MOVE, MOVE],
+        pattern: [MOVE, WORK, CARRY, MOVE],
         sizeLimit: Infinity,
         prefix: [MOVE, MOVE],
         proportionalPrefixSuffix: true,
@@ -23108,6 +23108,9 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
     }
     handlePioneer(pioneer) {
+        var viable = true;
+        if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable)
+            pioneer.retire();
         if (pioneer.room != this.room || pioneer.pos.isEdge) {
             pioneer.goTo(this.pos, { pathOpts: { ensurePath: true, avoidSK: true } });
             return;
@@ -23125,15 +23128,24 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
         if (pioneer.carry.energy == 0) {
             pioneer.task = Tasks.recharge();
+            if (!pioneer.task.isValidTask()) {
+                viable = false;
+            }
         }
         else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
             (0.1 * CONTROLLER_DOWNGRADE[this.room.controller.level])
             || !this.spawnSite)
             && !(this.room.controller.upgradeBlocked > 0)) {
             pioneer.task = Tasks.upgrade(this.room.controller);
+            if (!pioneer.task.isValidTask()) {
+                viable = false;
+            }
         }
         else if (this.spawnSite) {
             pioneer.task = Tasks.build(this.spawnSite);
+            if (!pioneer.task.isValidTask()) {
+                viable = false;
+            }
         }
     }
     run() {
