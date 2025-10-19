@@ -5906,8 +5906,8 @@ let OverlordPriority = {
         randomWalker: 801
     },
     remoteRoom: {
-        reserve: 900,
-        mine: 901,
+        reserve: 520,
+        mine: 521,
         roomIncrement: 5,
     },
     remoteSKRoom: {

@@ -81,10 +81,11 @@ export let OverlordPriority = {
 		stationary  : 800,
 		randomWalker: 801
 	},
-
+	// Nova Edit: We need remotes before we make new colonies
+	// Changed from: 900 to 520
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 900,
-		mine         : 901,
+		reserve      : 520,
+		mine         : 521,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 
