@@ -57,7 +57,7 @@ export let OverlordPriority = {
 	
 	// NOTE: only use this prio if your colony is 
 	colonization: { 			// Colonizing new rooms
-		claim          : 550, // after claimed, reduce this priority so pioneers spawn
+		claim          : 400, // after claimed, reduce this priority so pioneers spawn
 	 	pioneer        : 551,
 		remoteUpgrading: 552,
 		},
