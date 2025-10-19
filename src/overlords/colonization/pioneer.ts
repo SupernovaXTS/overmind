@@ -47,6 +47,9 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
+		if (pioneer.getActiveBodyparts(WORK) <= 0)
+			// If we don't have any active work parts we retire
+			pioneer.retire()
 		if (pioneer.room != this.room || pioneer.pos.isEdge) {
 			pioneer.goTo(this.pos, {pathOpts: {ensurePath: true, avoidSK: true}});
 			return
