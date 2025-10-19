@@ -5879,7 +5879,7 @@ let OverlordPriority = {
     },
     colonization: {
         claim: 400,
-        pioneer: 403,
+        pioneer: 450,
         remoteUpgrading: 610,
     },
     priorityOwnedRoom: {
