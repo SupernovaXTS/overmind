@@ -108,7 +108,8 @@ export class BootstrappingOverlord extends Overlord {
 				this.wishlist(1, Setups.filler);
 			}
 		}
-
+		// bugfix
+		//this.wishlist(2,Setups.filler)
 		// Then spawn the rest of the needed miners
 		this.spawnBootstrapMiners();
 	}
