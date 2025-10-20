@@ -5895,10 +5895,10 @@ let OverlordPriority = {
     },
     ownedRoom: {
         firstTransport: 400,
-        mine: 401,
+        mine: 402,
         work: 503,
         mineralRCL8: 503,
-        transport: 504,
+        transport: 401,
         mineral: 505,
     },
     outpostOffense: {
