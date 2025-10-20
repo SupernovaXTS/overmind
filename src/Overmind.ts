@@ -256,10 +256,10 @@ export default class _Overmind implements IOvermind {
         var cpuTime = Game.cpu.unlockedTime;
         var cpuTimeWanted = 1
         var cpuTimeCalc = (cpuTimeWanted * 1000) * (3600 * 24)
+        var checkCpuTime = (cpuTime && ((cpuTime - Date.now()) < cpuTimeCalc))
         var cpuTimeCount = Game.resources.cpuTime
-        if (cpuTimeCount >= cpuTimeWanted) {
-            if(cpuTime && ((cpuTime - Date.now()) < cpuTimeCalc)) {
-            
+        if ((cpuTimeCount >= cpuTimeWanted) && checkCpuTime) {
+            if (checkCpuTime) {
                 var result = Game.cpu.unlock();
                 if (result == 0) {
                     log.info("CPU Unlock Successful")
@@ -270,7 +270,10 @@ export default class _Overmind implements IOvermind {
             }
         }
         else {
-            log.alert("Attempted to unlock CPU, Insufficent CPU Unlocks")
+            if (cpuTime && cpuTime <= 0) {
+                log.alert("Attempted to unlock CPU, Insufficent CPU Unlocks")
+            }
+            
         }
 		if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
 			Game.cpu.generatePixel();
