@@ -932,10 +932,12 @@ function cyclicListPermutation(list, offset) {
 }
 
 const MY_USERNAME = getMyUsername();
+var user = getMyUsername();
 const USE_SCREEPS_PROFILER = false;
+var ALLIES;
 const PROFILER_COLONY_LIMIT = Math.ceil(Game.gcl.level / 2);
 const PROFILER_INCLUDE_COLONIES = ['W7N7', 'W3N7', 'W7N4'];
-const USE_TRY_CATCH = false;
+const USE_TRY_CATCH = true;
 const SUPPRESS_INVALID_DIRECTIVE_ALERTS = false;
 const OVERMIND_SMALL_CAPS = 'NOVAMIND';
 const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote;
@@ -5688,7 +5690,7 @@ let Mem = Mem_1 = class Mem {
                 log: {},
                 enableVisuals: true,
                 resourceCollectionMode: 0,
-                allies: [MY_USERNAME],
+                allies: ALLIES,
                 powerCollection: {
                     enabled: true,
                     maxRange: 5,
@@ -24034,7 +24036,7 @@ let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Di
         flag.memory.allowPortals = true;
         super(flag, colony => colony.level >= DirectiveColonize_1.requiredRCL
             && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
-        this.type = 'armored';
+        this.type = 'default';
         this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
         if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
             log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
@@ -29651,6 +29653,24 @@ let _Overmind = class _Overmind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
+        var cpuTime = Game.cpu.unlockedTime;
+        var cpuTimeWanted = 1;
+        var cpuTimeCalc = (cpuTimeWanted * 1000) * (3600 * 24);
+        var cpuTimeCount = Game.resources.cpuTime;
+        if (cpuTimeCount >= cpuTimeWanted) {
+            if (cpuTime && ((cpuTime - Date.now()) < cpuTimeCalc)) {
+                var result = Game.cpu.unlock();
+                if (result == 0) {
+                    log.info("CPU Unlock Successful");
+                }
+                else {
+                    log.error("Unable to unlock CPU");
+                }
+            }
+        }
+        else {
+            log.alert("Attempted to unlock CPU, Insufficent CPU Unlocks");
+        }
         if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
             Game.cpu.generatePixel();
             log.info("Generating Pixel...");
