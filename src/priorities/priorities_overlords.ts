@@ -86,7 +86,7 @@ export let OverlordPriority = {
 	// Changed from: 900 to 520
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
 		reserve      : 520,
-		mine         : 402,
+		mine         : 403,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 

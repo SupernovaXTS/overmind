@@ -5918,7 +5918,7 @@ let OverlordPriority = {
     },
     remoteRoom: {
         reserve: 520,
-        mine: 402,
+        mine: 403,
         roomIncrement: 5,
     },
     remoteSKRoom: {
