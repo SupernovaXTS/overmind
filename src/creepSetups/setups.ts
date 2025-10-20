@@ -157,7 +157,7 @@ export const Setups = {
 	},
 
 	queens: {
-
+		
 		default: new CreepSetup(Roles.queen, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: Infinity,

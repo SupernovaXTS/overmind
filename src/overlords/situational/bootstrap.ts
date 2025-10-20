@@ -103,6 +103,7 @@ export class BootstrappingOverlord extends Overlord {
 				// reassign transporter to be queen
 				transporter.reassign(this.colony.hatchery.overlord, Roles.queen);
 			} else {
+				
 				// wish for a filler
 				this.wishlist(1, Setups.filler);
 			}

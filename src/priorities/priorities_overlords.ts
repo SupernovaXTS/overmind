@@ -50,7 +50,7 @@ export let OverlordPriority = {
 		mine          : 401,
 		work          : 503,
 		mineralRCL8   : 503,
-		transport     : 504,		// Spawn the rest of the transporters
+		transport     : 403,		// Spawn the rest of the transporters
 		mineral       : 505,
 	},
 
