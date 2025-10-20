@@ -23846,6 +23846,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
             }
             if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
                 controllerAttacker.retire();
+                continue;
             }
             if (attackPos.inRangeTo(controllerAttacker.pos, 0)) {
                 ready += 1;

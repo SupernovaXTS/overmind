@@ -87,6 +87,7 @@ export class ControllerAttackerOverlord extends Overlord {
 			}
 			if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
 				controllerAttacker.retire()
+				continue
 				// We got attacked on the way and cant use all of our parts, suicide
 			}
 			if (attackPos.inRangeTo(controllerAttacker.pos,0)) {
