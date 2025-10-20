@@ -122,7 +122,6 @@ export const Setups = {
 			pattern  : [MOVE,WORK, CARRY, MOVE],
 			sizeLimit: Infinity,
 			prefix: [MOVE,MOVE], // Pseudo armor for avoiding loosing ability to work
-			suffix: [MOVE],
 			proportionalPrefixSuffix: true,
 			ordered: false
 		}),
