@@ -23811,7 +23811,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
     }
     init() {
         if (this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) {
-            this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, { noLifetimeFilter: true });
+            this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, { noLifetimeFilter: true, reassignIdle: true });
         }
     }
     controllerIsNeutral() {

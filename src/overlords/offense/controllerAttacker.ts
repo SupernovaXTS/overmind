@@ -51,7 +51,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	init() {
 		if (this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) {
 			// spawn one infestor for each tile that is close to the controller
-			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true});
+			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true, reassignIdle: true});
 		}
 	}
 
