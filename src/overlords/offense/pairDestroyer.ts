@@ -45,7 +45,7 @@ export class PairDestroyerOverlord extends Overlord {
 				const creepTarget = CombatTargeting.findClosestHostile(attacker, {
 					checkReachable    : true,
 					ignoreCreepsAtEdge: true,
-					playerOnly        : true,
+					playerOnly        : false,
 					onlyUnramparted   : true
 				});
 				if (creepTarget) return creepTarget;

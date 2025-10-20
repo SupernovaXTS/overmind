@@ -5895,10 +5895,10 @@ let OverlordPriority = {
     },
     ownedRoom: {
         firstTransport: 400,
-        mine: 402,
+        mine: 401,
         work: 503,
         mineralRCL8: 503,
-        transport: 401,
+        transport: 402,
         mineral: 505,
     },
     outpostOffense: {
@@ -24781,7 +24781,7 @@ let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlor
                 const creepTarget = CombatTargeting.findClosestHostile(attacker, {
                     checkReachable: true,
                     ignoreCreepsAtEdge: true,
-                    playerOnly: true,
+                    playerOnly: false,
                     onlyUnramparted: true
                 });
                 if (creepTarget)

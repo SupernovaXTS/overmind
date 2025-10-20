@@ -7,6 +7,7 @@ import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import { getMyUsername } from 'utilities/utils';
+import { max } from 'lodash';
 
 /**
  * Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
@@ -67,7 +68,7 @@ export class ControllerAttackerOverlord extends Overlord {
 
 		// TODO sign controller
 		//(infestor.signController(this.room.controller, 'this is mine!') == OK);
-
+		var ready = 0
 		for (const controllerAttacker of this.controllerAttackers) {
 			const attackPos = this.assignments[controllerAttacker.name];
 			if (!attackPos) {
@@ -84,21 +85,32 @@ export class ControllerAttackerOverlord extends Overlord {
 				log.debug(`Controller already neutral: ${this.room?.name}`)
 				return
 			}
-
-			const ret = controllerAttacker.attackController(this.room.controller);
-			// FIXME: type it
-			if (ret == -12) {
-				// creep got attacked on the way and is not able to claim
-				// produce new one
-				controllerAttacker.suicide()
-				continue
+			if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
+				controllerAttacker.retire()
+				// We got attacked on the way and cant use all of our parts, suicide
+			}
+			if (attackPos.inRangeTo(controllerAttacker.pos,0)) {
+				ready += 1
 			}
 
-			// FIXME: type it
-			if (ret != 0 && ret != -11) {
-				log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`)
-				continue
-			}
+
+			if (ready == this.controllerAttackers.length) {
+				const ret = controllerAttacker.attackController(this.room.controller);
+				// FIXME: type it
+				/* This shouldn't be needed since we are checking before we claim instead of after
+				if (ret == -12) {
+					// creep got attacked on the way and is not able to claim
+					// produce new one
+					controllerAttacker.suicide()
+					continue
+				}
+				*/
+				// FIXME: type it
+				if (ret != 0 && ret != -11) {
+					log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`)
+					continue
+				}
+			}	
 		}
 	}
 }
