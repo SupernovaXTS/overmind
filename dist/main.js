@@ -23829,6 +23829,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         var _a;
         if (!this.room || !this.room.controller)
             return;
+        var ready = 0;
         for (const controllerAttacker of this.controllerAttackers) {
             const attackPos = this.assignments[controllerAttacker.name];
             if (!attackPos) {
@@ -23843,14 +23844,18 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
                 log.debug(`Controller already neutral: ${(_a = this.room) === null || _a === void 0 ? void 0 : _a.name}`);
                 return;
             }
-            const ret = controllerAttacker.attackController(this.room.controller);
-            if (ret == -12) {
-                controllerAttacker.suicide();
-                continue;
+            if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
+                controllerAttacker.retire();
             }
-            if (ret != 0 && ret != -11) {
-                log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
-                continue;
+            if (attackPos.inRangeTo(controllerAttacker.pos, 0)) {
+                ready += 1;
+            }
+            if (ready == this.controllerAttackers.length) {
+                const ret = controllerAttacker.attackController(this.room.controller);
+                if (ret != 0 && ret != -11) {
+                    log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
+                    continue;
+                }
             }
         }
     }
