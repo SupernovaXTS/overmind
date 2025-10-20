@@ -47,10 +47,10 @@ export let OverlordPriority = {
 
 	ownedRoom: { 				// Operation of an owned room
 		firstTransport: 400,		// High priority to spawn the first transporter
-		mine          : 402,
+		mine          : 401,
 		work          : 503,
 		mineralRCL8   : 503,
-		transport     : 401,		// Spawn the rest of the transporters
+		transport     : 402,		// Spawn the rest of the transporters
 		mineral       : 505,
 	},
 
