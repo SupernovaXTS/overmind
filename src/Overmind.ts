@@ -253,6 +253,7 @@ export default class _Overmind implements IOvermind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
+        /* Broken?
         var cpuTime = Game.cpu.unlockedTime;
         var cpuTimeWanted = 1
         var cpuTimeCalc = (cpuTimeWanted * 1000) * (3600 * 24)
@@ -275,6 +276,7 @@ export default class _Overmind implements IOvermind {
             }
             
         }
+        */
 		if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
 			Game.cpu.generatePixel();
 			log.info("Generating Pixel...")

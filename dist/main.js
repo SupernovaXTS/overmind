@@ -29653,27 +29653,6 @@ let _Overmind = class _Overmind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
-        var cpuTime = Game.cpu.unlockedTime;
-        var cpuTimeWanted = 1;
-        var cpuTimeCalc = (cpuTimeWanted * 1000) * (3600 * 24);
-        var checkCpuTime = (cpuTime && ((cpuTime - Date.now()) < cpuTimeCalc));
-        var cpuTimeCount = Game.resources.cpuTime;
-        if ((cpuTimeCount >= cpuTimeWanted) && checkCpuTime) {
-            if (checkCpuTime) {
-                var result = Game.cpu.unlock();
-                if (result == 0) {
-                    log.info("CPU Unlock Successful");
-                }
-                else {
-                    log.error("Unable to unlock CPU");
-                }
-            }
-        }
-        else {
-            if (cpuTime && cpuTime <= 0) {
-                log.alert("Attempted to unlock CPU, Insufficent CPU Unlocks");
-            }
-        }
         if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
             Game.cpu.generatePixel();
             log.info("Generating Pixel...");
