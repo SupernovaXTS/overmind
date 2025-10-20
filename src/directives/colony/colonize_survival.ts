@@ -14,14 +14,14 @@ import {Directive} from '../Directive';
  * Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
  */
 @profile
-export class DirectiveColonize extends Directive {
+export class DirectiveColonizeSurvival extends Directive {
 
 	static directiveName = 'colonize';
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_GREY;
 
 	static requiredRCL = 3;
-	type = 'default';
+	type = 'armored'
 	toColonize: Colony | undefined;
 	overlords: {
 		claim: ClaimingOverlord;
@@ -30,8 +30,7 @@ export class DirectiveColonize extends Directive {
 
 	constructor(flag: Flag) {
 		flag.memory.allowPortals = true;
-		
-		super(flag, colony => colony.level >= DirectiveColonize.requiredRCL
+		super(flag, colony => colony.level >= DirectiveColonizeSurvival.requiredRCL
 							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
@@ -76,7 +75,7 @@ export class DirectiveColonize extends Directive {
 			this.remove();
 		}
 		if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
-			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
+			log.notify(`Removing Colonize (Survival) directive in ${this.pos.roomName}: room already owned by another player.`);
 			this.remove();
 		}
 	}

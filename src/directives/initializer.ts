@@ -35,7 +35,7 @@ import {DirectiveModularDismantle} from './targeting/modularDismantle';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
-
+import { DirectiveColonizeSurvival } from './colony/colonize_survival';
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
  */
@@ -62,6 +62,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveClearRoom(flag);
 				case COLOR_RED:
 					return new DirectivePoisonRoom(flag);
+				case COLOR_GREEN:
+					return new DirectiveColonizeSurvival(flag);
 				case COLOR_BROWN:
 					// used when settling on a new shard as the controller ref
 					// must be placed manually

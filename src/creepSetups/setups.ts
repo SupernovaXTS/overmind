@@ -117,16 +117,21 @@ export const Setups = {
 		}),
 
 	},
+	pioneers: {
+		armored: new CreepSetup(Roles.pioneer, {
+			pattern  : [MOVE,WORK, CARRY, MOVE],
+			sizeLimit: Infinity,
+			prefix: [MOVE,MOVE], // Pseudo armor for avoiding loosing ability to work
+			suffix: [MOVE],
+			proportionalPrefixSuffix: true,
+			ordered: false
+		}),
 
-	pioneer: new CreepSetup(Roles.pioneer, {
-		pattern  : [MOVE,WORK, CARRY, MOVE],
-		sizeLimit: Infinity,
-		prefix: [MOVE,MOVE], // Pseudo armor for avoiding loosing ability to work
-		suffix: [MOVE],
-		proportionalPrefixSuffix: true,
-		ordered: false
-	}),
-
+		default: new CreepSetup(Roles.pioneer, {
+			pattern  : [WORK, CARRY, MOVE,MOVE],
+			sizeLimit: Infinity,
+		}),
+	},
 
 	managers: {
 

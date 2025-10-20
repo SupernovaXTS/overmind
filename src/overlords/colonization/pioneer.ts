@@ -8,6 +8,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import { property } from 'lodash';
 
 /**
  * Spawn pioneers - early workers which help to build a spawn in a new colony, then get converted to workers or drones
@@ -34,7 +35,8 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(4, Setups.pioneer);
+		var type = this.directive.type as 'armored' | 'default';
+		this.wishlist(4, Setups.pioneers[type]);
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
