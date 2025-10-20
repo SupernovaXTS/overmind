@@ -7,7 +7,8 @@ import {
 	DEFAULT_OVERMIND_SIGNATURE,
 	MY_USERNAME,
 	PROFILER_COLONY_LIMIT,
-	USE_SCREEPS_PROFILER
+	USE_SCREEPS_PROFILER,
+	ALLIES
 } from '../~settings';
 
 export enum Autonomy {
@@ -193,7 +194,7 @@ export class Mem {
 				log                   : {},
 				enableVisuals         : true,
 				resourceCollectionMode: 0,
-				allies                : [MY_USERNAME],
+				allies                : ALLIES,
 				powerCollection       : {
 					enabled : true,
 					maxRange: 5,

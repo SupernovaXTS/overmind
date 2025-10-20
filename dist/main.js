@@ -5116,7 +5116,6 @@ const Setups = {
             pattern: [MOVE, WORK, CARRY, MOVE],
             sizeLimit: Infinity,
             prefix: [MOVE, MOVE],
-            suffix: [MOVE],
             proportionalPrefixSuffix: true,
             ordered: false
         }),
@@ -24035,7 +24034,7 @@ let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Di
         flag.memory.allowPortals = true;
         super(flag, colony => colony.level >= DirectiveColonize_1.requiredRCL
             && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
-        this.type = 'default';
+        this.type = 'armored';
         this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
         if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
             log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
@@ -27612,62 +27611,6 @@ DirectiveTerminalEvacuateState = __decorate([
     profile
 ], DirectiveTerminalEvacuateState);
 
-var DirectiveColonizeSurvival_1;
-let DirectiveColonizeSurvival = DirectiveColonizeSurvival_1 = class DirectiveColonizeSurvival extends Directive {
-    constructor(flag) {
-        flag.memory.allowPortals = true;
-        super(flag, colony => colony.level >= DirectiveColonizeSurvival_1.requiredRCL
-            && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
-        this.type = 'armored';
-        this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
-        if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
-            log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
-                `removing directive!`);
-            this.remove(true);
-            return;
-        }
-    }
-    spawnMoarOverlords() {
-        this.overlords.claim = new ClaimingOverlord(this);
-        this.overlords.pioneer = new PioneerOverlord(this);
-    }
-    init() {
-        this.alert(`Colonization in progress`);
-    }
-    run(verbose = false) {
-        if (this.toColonize && this.toColonize.spawns.length > 0) {
-            const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
-            for (const pioneer of this.overlords.pioneer.pioneers) {
-                const miningOverlord = miningOverlords.shift();
-                if (miningOverlord) {
-                    if (verbose) {
-                        log.debug(`Reassigning: ${pioneer.print} to mine: ${miningOverlord.print}`);
-                    }
-                    pioneer.reassign(miningOverlord, Roles.drone);
-                }
-                else {
-                    if (verbose) {
-                        log.debug(`Reassigning: ${pioneer.print} to work: ${this.toColonize.overlords.work.print}`);
-                    }
-                    pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
-                }
-            }
-            this.remove();
-        }
-        if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
-            log.notify(`Removing Colonize (Survival) directive in ${this.pos.roomName}: room already owned by another player.`);
-            this.remove();
-        }
-    }
-};
-DirectiveColonizeSurvival.directiveName = 'colonize';
-DirectiveColonizeSurvival.color = COLOR_PURPLE;
-DirectiveColonizeSurvival.secondaryColor = COLOR_GREY;
-DirectiveColonizeSurvival.requiredRCL = 3;
-DirectiveColonizeSurvival = DirectiveColonizeSurvival_1 = __decorate([
-    profile
-], DirectiveColonizeSurvival);
-
 function DirectiveWrapper(flag) {
     switch (flag.color) {
         case COLOR_PURPLE:
@@ -27686,8 +27629,6 @@ function DirectiveWrapper(flag) {
                     return new DirectiveClearRoom(flag);
                 case COLOR_RED:
                     return new DirectivePoisonRoom(flag);
-                case COLOR_GREEN:
-                    return new DirectiveColonizeSurvival(flag);
                 case COLOR_BROWN:
                     return undefined;
             }

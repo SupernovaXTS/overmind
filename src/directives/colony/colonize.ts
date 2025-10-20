@@ -21,8 +21,9 @@ export class DirectiveColonize extends Directive {
 	static secondaryColor = COLOR_GREY;
 
 	static requiredRCL = 3;
-	type = 'armored';
-		
+	type = 'default';
+	// Types: Default, Armored
+	// Use armored when the path to the colony is dangerous
 	toColonize: Colony | undefined;
 	overlords: {
 		claim: ClaimingOverlord;

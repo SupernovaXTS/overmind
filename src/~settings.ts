@@ -10,11 +10,14 @@ import {
  * Your username - you shouldn't need to change this.
  */
 export const MY_USERNAME: string = getMyUsername();
-
 /**
  * Enable this to build from source including screeps-profiler. (This is separate from Overmind-Profiler.)
  */
+var user = getMyUsername()
 export const USE_SCREEPS_PROFILER: boolean = false;
+export var ALLIES: [
+	user: string
+]
 
 /**
  * Profiling is incredibly expensive and can cause the script to time out. By setting this option, you can limit the
@@ -30,7 +33,7 @@ export const PROFILER_INCLUDE_COLONIES: string[] = ['W7N7', 'W3N7', 'W7N4'];
 /**
  * Enable this to wrap evaluations of constructor, init, and run phase for each colony in try...catch statemenets.
  */
-export const USE_TRY_CATCH: boolean = false;
+export const USE_TRY_CATCH: boolean = true;
 
 /**
  * Enable this to suppress alerts of invalid flag color codes. (Don't do this unless you know what you're doing.)
