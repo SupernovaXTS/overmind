@@ -100,10 +100,12 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else if (this.spawnSite) {
 			pioneer.task = Tasks.build(this.spawnSite);
-			if (pioneer.task && !pioneer.task.isValidTask()) {
-				viable = false
-			}
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
+		} else if (this.room.spawns?.length > 0) { 
+			pioneer.task = Tasks.transfer(this.room.spawns[0])
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
 		}
+		
 	}
 
 	run() {
