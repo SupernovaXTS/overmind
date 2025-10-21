@@ -112,8 +112,10 @@ export class ControllerAttackerOverlord extends Overlord {
 				if (ret != 0 && ret != -11) {
 					log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`)
 					continue
+				
 				}
-			}	
+				this.finish(false)
+			}
 		}
 	}
 }
