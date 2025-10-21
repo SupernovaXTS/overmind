@@ -23858,6 +23858,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
                     log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
                     continue;
                 }
+                this.finish(false);
             }
         }
     }
@@ -23879,8 +23880,7 @@ let DirectiveControllerAttack = class DirectiveControllerAttack extends Directiv
         this.alert(`Downgrading controller (RCL${level})`);
     }
     run() {
-        if (this.room && this.room.controller && (this.room.controller.level == 0 && (!this.room.controller.reservation
-            || this.room.controller.reservation.ticksToEnd < 5))) {
+        if (this.room && this.room.controller && (this.room.controller.level == 0 && (!this.room.controller.reservation || this.room.controller.reservation.ticksToEnd < 5))) {
             log.notify(`Removing ${this.name} since controller has reached level 0.`);
             this.remove();
         }
