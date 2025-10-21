@@ -5906,7 +5906,7 @@ let OverlordPriority = {
         roomPoisoner: 561,
     },
     upgrading: {
-        upgrade: 600,
+        upgrade: 410,
     },
     collectionUrgent: {
         haul: 700
@@ -20141,10 +20141,10 @@ let UpgradingOverlord = class UpgradingOverlord extends Overlord {
             const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
             const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
             this.wishlist(upgradersNeeded, setup);
-            return;
         }
-        this.wishlist(0, setup);
-        return;
+        else {
+            this.wishlist(0, setup);
+        }
     }
     handleUpgrader(upgrader) {
         if (upgrader.carry.energy > 0) {
