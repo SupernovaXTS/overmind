@@ -55,11 +55,10 @@ export class UpgradingOverlord extends Overlord {
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
 			log.info("success?")
 			this.wishlist(upgradersNeeded, setup);
+			return
 		}
-		else {
-			log.info("Failed to spawn upgraders")
 			this.wishlist(0, setup);
-		}
+			return
 		
 	}
 
