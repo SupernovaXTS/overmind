@@ -36,7 +36,16 @@ export class PioneerOverlord extends Overlord {
 
 	init() {
 		var type = this.directive.type as 'armored' | 'default';
-		this.wishlist(4, Setups.pioneers[type]);
+		var numSources = this.room?.sources
+		var numPos = 0
+		
+		if (numSources) {
+			for (var source of numSources) {
+				numPos += source.pos.availableNeighbors(true).length
+			}
+		}
+		
+		this.wishlist(numPos * 2, Setups.pioneers[type]);
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {

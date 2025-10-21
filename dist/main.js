@@ -23810,8 +23810,16 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         this.spawnSite = this.room ? _.filter(this.room.constructionSites, s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
     }
     init() {
+        var _a;
         var type = this.directive.type;
-        this.wishlist(4, Setups.pioneers[type]);
+        var numSources = (_a = this.room) === null || _a === void 0 ? void 0 : _a.sources;
+        var numPos = 0;
+        if (numSources) {
+            for (var source of numSources) {
+                numPos += source.pos.availableNeighbors(true).length;
+            }
+        }
+        this.wishlist(numPos * 2, Setups.pioneers[type]);
     }
     findStructureBlockingController(pioneer) {
         const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller.pos, _.filter(pioneer.room.structures, s => !s.isWalkable));
