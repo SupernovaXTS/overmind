@@ -23792,6 +23792,8 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
             this.attackPositions = [];
             return;
         }
+        if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)
+            return;
         this.attackPositions = this.room.controller.pos.availableNeighbors(true);
         this.assignments = this.getPositionAssignments();
     }
@@ -23845,7 +23847,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
             }
             if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
                 controllerAttacker.retire();
-                continue;
+                return;
             }
             if (attackPos.inRangeTo(controllerAttacker.pos, 0)) {
                 ready += 1;
