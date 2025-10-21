@@ -113,8 +113,7 @@ export class ControllerAttackerOverlord extends Overlord {
 					continue
 				
 				}
-				// Don't enable, this causes alert spam
-				//this.finish(false)
+				this.finish(false)
 			}
 		}
 	}
