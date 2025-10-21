@@ -5,7 +5,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-
+import { log } from 'console/log';
 /**
  * Spawns an upgrader to upgrade the room controller
  */
@@ -27,12 +27,13 @@ export class UpgradingOverlord extends Overlord {
 
 	init() {
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
+			log.info("Aborting")
 			return;
 		}
 
 		let setup = Setups.upgraders.default;
-		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
-			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
+		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer || this.upgradeSite.controller.ticksToDowngrade < 500) {
+			log.info("Attempting to spawn upgraders")
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
 				if (this.colony.labs.length == 10 &&
@@ -45,12 +46,13 @@ export class UpgradingOverlord extends Overlord {
 				this.wishlist(1, setup);
 				return
 			}
-
+			
 			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
+			log.info("success?")
 			this.wishlist(upgradersNeeded, setup);
 		}
-
+		log.alert("Failed to spawn upgraders")
 		this.wishlist(0, setup);
 	}
 

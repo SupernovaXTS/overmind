@@ -20120,11 +20120,12 @@ let UpgradingOverlord = class UpgradingOverlord extends Overlord {
     }
     init() {
         if (this.colony.level < 3) {
+            log.info("Aborting");
             return;
         }
         let setup = Setups.upgraders.default;
-        if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
-            || this.upgradeSite.controller.ticksToDowngrade < 500) {
+        if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer || this.upgradeSite.controller.ticksToDowngrade < 500) {
+            log.info("Attempting to spawn upgraders");
             if (this.colony.level == 8) {
                 setup = Setups.upgraders.rcl8;
                 if (this.colony.labs.length == 10 &&
@@ -20138,8 +20139,10 @@ let UpgradingOverlord = class UpgradingOverlord extends Overlord {
             }
             const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
             const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
+            log.info("success?");
             this.wishlist(upgradersNeeded, setup);
         }
+        log.alert("Failed to spawn upgraders");
         this.wishlist(0, setup);
     }
     handleUpgrader(upgrader) {
@@ -30224,6 +30227,37 @@ ExpansionPlanner = __decorate([
     profile
 ], ExpansionPlanner);
 
+class accountResources {
+    constructor() {
+        this.settings = {
+            pixelAmt: 0
+        };
+    }
+    generatePixel() {
+        if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
+            Game.cpu.generatePixel();
+            log.info("Generating Pixel...");
+            return true;
+        }
+        return false;
+    }
+    buyPixel(num) {
+    }
+    sellPixel(num) {
+    }
+    handlePixel() {
+        this.generatePixel();
+    }
+    buyCPUUnlock(num) {
+    }
+    sellCPUUnlock(num) {
+    }
+    useCPUUnlock(num) {
+    }
+    handleCPUUnlock() {
+    }
+}
+
 let _Overmind = class _Overmind {
     constructor() {
         this.memory = Memory.Overmind;
@@ -30241,8 +30275,12 @@ let _Overmind = class _Overmind {
         this.spawnGroups = {};
         this.colonyMap = {};
         this.terminalNetwork = new TerminalNetworkV2();
+        this.accountResources = new accountResources();
+        global.accountResources = this.accountResources;
         global.TerminalNetwork = this.terminalNetwork;
         this.tradeNetwork = new TraderJoe();
+        this.tradeNetworkIntershard = new TraderJoeIntershard();
+        global.tradeNetworkIntershard = this.tradeNetworkIntershard;
         global.TradeNetwork = this.tradeNetwork;
         this.expansionPlanner = new ExpansionPlanner();
         this.roomIntel = new RoomIntel();
@@ -30407,10 +30445,7 @@ let _Overmind = class _Overmind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
-        if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
-            Game.cpu.generatePixel();
-            log.info("Generating Pixel...");
-        }
+        this.accountResources.handlePixel();
     }
     postRun() {
         this.handleExceptions();
