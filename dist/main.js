@@ -24037,14 +24037,266 @@ DirectivePoisonRoom = DirectivePoisonRoom_1 = __decorate([
     profile
 ], DirectivePoisonRoom);
 
+let DirectiveTargetSiege = class DirectiveTargetSiege extends Directive {
+    constructor(flag) {
+        super(flag);
+    }
+    spawnMoarOverlords() {
+    }
+    getTarget() {
+        const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES);
+        for (const structure of targetedStructures) {
+            for (const structureType of AttackStructurePriorities) {
+                if (structure.structureType == structureType) {
+                    return structure;
+                }
+            }
+        }
+    }
+    init() {
+    }
+    run() {
+        if (this.pos.isVisible && !this.getTarget()) {
+            this.remove();
+        }
+    }
+    visuals() {
+        Visualizer.marker(this.pos, { color: 'orange' });
+    }
+};
+DirectiveTargetSiege.directiveName = 'target:siege';
+DirectiveTargetSiege.color = COLOR_GREY;
+DirectiveTargetSiege.secondaryColor = COLOR_ORANGE;
+DirectiveTargetSiege = __decorate([
+    profile
+], DirectiveTargetSiege);
+
+var PairDestroyerOverlord_1;
+let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlord extends Overlord {
+    constructor(directive, priority = OverlordPriority.offense.destroy) {
+        super(directive, 'destroy', priority);
+        this.directive = directive;
+        this.attackers = this.combatZerg(Roles.melee, { notifyWhenAttacked: false });
+        this.healers = this.combatZerg(Roles.healer, { notifyWhenAttacked: false });
+    }
+    findTarget(attacker) {
+        if (this.room) {
+            const targetingDirectives = DirectiveTargetSiege.find(this.room.flags);
+            const targetedStructures = _.compact(_.map(targetingDirectives, directive => directive.getTarget()));
+            if (targetedStructures.length > 0) {
+                return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
+            }
+            else {
+                const creepTarget = CombatTargeting.findClosestHostile(attacker, {
+                    checkReachable: true,
+                    ignoreCreepsAtEdge: true,
+                    playerOnly: false,
+                    onlyUnramparted: true
+                });
+                if (creepTarget)
+                    return creepTarget;
+                const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
+                if (structureTarget)
+                    return structureTarget;
+            }
+        }
+    }
+    attackActions(attacker, healer) {
+        const target = this.findTarget(attacker);
+        if (target) {
+            if (attacker.pos.isNearTo(target)) {
+                attacker.attack(target);
+            }
+            else {
+                Movement.pairwiseMove(attacker, healer, target);
+                attacker.autoMelee();
+            }
+        }
+    }
+    handleSquad(attacker) {
+        const healer = attacker.findPartner(this.healers);
+        if (!healer || healer.spawning || healer.needsBoosts) {
+            if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
+                attacker.goTo(this.colony.controller, { range: 5 });
+            }
+            else {
+                attacker.park();
+            }
+        }
+        else {
+            if (attacker.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent) ||
+                healer.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent)) {
+                Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
+            }
+            else {
+                if (!attacker.inSameRoomAs(this)) {
+                    Movement.pairwiseMove(attacker, healer, this.pos);
+                }
+                else {
+                    this.attackActions(attacker, healer);
+                }
+            }
+        }
+    }
+    handleHealer(healer) {
+        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
+        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
+            if (this.colony.towers.length > 0) {
+                healer.goToRoom(this.colony.room.name);
+            }
+            else {
+                healer.suicide();
+            }
+        }
+        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+            healer.doMedicActions(this.room.name);
+            return;
+        }
+        const attacker = healer.findPartner(this.attackers);
+        if (!attacker || attacker.spawning || attacker.needsBoosts) {
+            if (healer.hits < healer.hitsMax) {
+                healer.heal(healer);
+            }
+            if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
+                healer.goTo(this.colony.controller, { range: 5 });
+            }
+            else {
+                healer.park();
+            }
+        }
+        else {
+            if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
+                healer.heal(attacker);
+            }
+            else {
+                healer.heal(healer);
+            }
+        }
+    }
+    init() {
+        let amount;
+        if (this.directive.memory.amount) {
+            amount = this.directive.memory.amount;
+        }
+        else {
+            amount = 1;
+        }
+        if (RoomIntel.inSafeMode(this.pos.roomName)) {
+            amount = 0;
+        }
+        const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+        const attackerSetup = CombatSetups.zerglings.boosted.armored;
+        this.wishlist(amount, attackerSetup, { priority: attackerPriority });
+        const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
+        const healerSetup = CombatSetups.transfusers.boosted.default;
+        this.wishlist(amount, healerSetup, { priority: healerPriority });
+    }
+    run() {
+        this.reassignIdleCreeps(Roles.healer);
+        this.reassignIdleCreeps(Roles.melee);
+        for (const attacker of this.attackers) {
+            if (attacker.hasValidTask) {
+                attacker.run();
+            }
+            else {
+                if (attacker.needsBoosts) {
+                    this.handleBoosting(attacker);
+                }
+                else {
+                    this.handleSquad(attacker);
+                }
+            }
+        }
+        for (const healer of this.healers) {
+            if (healer.hasValidTask) {
+                healer.run();
+            }
+            else {
+                if (healer.needsBoosts) {
+                    this.handleBoosting(healer);
+                }
+                else {
+                    this.handleHealer(healer);
+                }
+            }
+        }
+    }
+};
+PairDestroyerOverlord.settings = {
+    retreatHitsPercent: 0.85,
+    reengageHitsPercent: 0.95,
+};
+PairDestroyerOverlord = PairDestroyerOverlord_1 = __decorate([
+    profile
+], PairDestroyerOverlord);
+
+let DirectivePairDestroy = class DirectivePairDestroy extends Directive {
+    constructor(flag) {
+        super(flag);
+    }
+    spawnMoarOverlords() {
+        this.overlords.destroy = new PairDestroyerOverlord(this);
+    }
+    init() {
+        this.alert(`Pair destroyer directive active`);
+    }
+    run() {
+        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+            log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
+            this.remove();
+        }
+    }
+    visuals() {
+        Visualizer.marker(this.pos, { color: 'red' });
+        const fallback = CombatIntel.getFallbackFrom(this.pos);
+        Visualizer.marker(fallback, { color: 'green' });
+    }
+};
+DirectivePairDestroy.directiveName = 'destroy';
+DirectivePairDestroy.color = COLOR_RED;
+DirectivePairDestroy.secondaryColor = COLOR_CYAN;
+DirectivePairDestroy = __decorate([
+    profile
+], DirectivePairDestroy);
+
 var DirectiveColonize_1;
 let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Directive {
     constructor(flag) {
+        var _a, _b, _c;
         flag.memory.allowPortals = true;
         super(flag, colony => colony.level >= DirectiveColonize_1.requiredRCL
             && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
         this.type = 'default';
         this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
+        if (this.room) {
+            var intel = RoomIntel.getAllRoomObjectInfo(this.room.name);
+        }
+        if (this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+            log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
+            var scan = true;
+            if (scan) {
+                var intel = RoomIntel.getAllRoomObjectInfo(this.room.name);
+                var spawns = (_a = intel === null || intel === void 0 ? void 0 : intel.importantStructures) === null || _a === void 0 ? void 0 : _a.spawnPositions;
+                var towers = (_b = intel === null || intel === void 0 ? void 0 : intel.importantStructures) === null || _b === void 0 ? void 0 : _b.towerPositions;
+                var controller = intel === null || intel === void 0 ? void 0 : intel.controller;
+                var owner = controller === null || controller === void 0 ? void 0 : controller.owner;
+                var safemode = (_c = intel === null || intel === void 0 ? void 0 : intel.controller) === null || _c === void 0 ? void 0 : _c.safemode;
+                var safemodeActive = (safemode && safemode > 0);
+                var spawnP = ((spawns === null || spawns === void 0 ? void 0 : spawns.length) && (spawns === null || spawns === void 0 ? void 0 : spawns.length) <= 0);
+                var towerP = ((towers === null || towers === void 0 ? void 0 : towers.length) && (towers === null || towers === void 0 ? void 0 : towers.length) <= 0);
+                var viableRoom = (spawnP && towerP && !safemode);
+                if (viableRoom && (this.room.controller)) {
+                    DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+                if ((this.room.controller) && this.room.playerHostiles.length > 0) {
+                    DirectiveOutpostDefense.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+                if ((this.room.controller) && this.room.dangerousPlayerHostiles.length > 0) {
+                    DirectivePairDestroy.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+            }
+            this.remove(true);
+        }
         if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
             log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
                 `removing directive!`);
@@ -24079,7 +24331,7 @@ let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Di
             }
             this.remove();
         }
-        if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+        if (Game.time % 10 == 2 && (this.room && !!this.room.owner && this.room.owner != MY_USERNAME)) {
             log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
             this.remove();
         }
@@ -24186,40 +24438,6 @@ let GuardSwarmOverlord = class GuardSwarmOverlord extends Overlord {
 GuardSwarmOverlord = __decorate([
     profile
 ], GuardSwarmOverlord);
-
-let DirectiveTargetSiege = class DirectiveTargetSiege extends Directive {
-    constructor(flag) {
-        super(flag);
-    }
-    spawnMoarOverlords() {
-    }
-    getTarget() {
-        const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES);
-        for (const structure of targetedStructures) {
-            for (const structureType of AttackStructurePriorities) {
-                if (structure.structureType == structureType) {
-                    return structure;
-                }
-            }
-        }
-    }
-    init() {
-    }
-    run() {
-        if (this.pos.isVisible && !this.getTarget()) {
-            this.remove();
-        }
-    }
-    visuals() {
-        Visualizer.marker(this.pos, { color: 'orange' });
-    }
-};
-DirectiveTargetSiege.directiveName = 'target:siege';
-DirectiveTargetSiege.color = COLOR_GREY;
-DirectiveTargetSiege.secondaryColor = COLOR_ORANGE;
-DirectiveTargetSiege = __decorate([
-    profile
-], DirectiveTargetSiege);
 
 let DefenseNPCOverlord = class DefenseNPCOverlord extends Overlord {
     constructor(directive, priority = OverlordPriority.outpostDefense.guard) {
@@ -24768,194 +24986,6 @@ DirectiveHarass.secondaryColor = COLOR_WHITE;
 DirectiveHarass = __decorate([
     profile
 ], DirectiveHarass);
-
-var PairDestroyerOverlord_1;
-let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlord extends Overlord {
-    constructor(directive, priority = OverlordPriority.offense.destroy) {
-        super(directive, 'destroy', priority);
-        this.directive = directive;
-        this.attackers = this.combatZerg(Roles.melee, { notifyWhenAttacked: false });
-        this.healers = this.combatZerg(Roles.healer, { notifyWhenAttacked: false });
-    }
-    findTarget(attacker) {
-        if (this.room) {
-            const targetingDirectives = DirectiveTargetSiege.find(this.room.flags);
-            const targetedStructures = _.compact(_.map(targetingDirectives, directive => directive.getTarget()));
-            if (targetedStructures.length > 0) {
-                return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
-            }
-            else {
-                const creepTarget = CombatTargeting.findClosestHostile(attacker, {
-                    checkReachable: true,
-                    ignoreCreepsAtEdge: true,
-                    playerOnly: false,
-                    onlyUnramparted: true
-                });
-                if (creepTarget)
-                    return creepTarget;
-                const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
-                if (structureTarget)
-                    return structureTarget;
-            }
-        }
-    }
-    attackActions(attacker, healer) {
-        const target = this.findTarget(attacker);
-        if (target) {
-            if (attacker.pos.isNearTo(target)) {
-                attacker.attack(target);
-            }
-            else {
-                Movement.pairwiseMove(attacker, healer, target);
-                attacker.autoMelee();
-            }
-        }
-    }
-    handleSquad(attacker) {
-        const healer = attacker.findPartner(this.healers);
-        if (!healer || healer.spawning || healer.needsBoosts) {
-            if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-                attacker.goTo(this.colony.controller, { range: 5 });
-            }
-            else {
-                attacker.park();
-            }
-        }
-        else {
-            if (attacker.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent) ||
-                healer.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent)) {
-                Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
-            }
-            else {
-                if (!attacker.inSameRoomAs(this)) {
-                    Movement.pairwiseMove(attacker, healer, this.pos);
-                }
-                else {
-                    this.attackActions(attacker, healer);
-                }
-            }
-        }
-    }
-    handleHealer(healer) {
-        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
-        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
-            if (this.colony.towers.length > 0) {
-                healer.goToRoom(this.colony.room.name);
-            }
-            else {
-                healer.suicide();
-            }
-        }
-        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-            healer.doMedicActions(this.room.name);
-            return;
-        }
-        const attacker = healer.findPartner(this.attackers);
-        if (!attacker || attacker.spawning || attacker.needsBoosts) {
-            if (healer.hits < healer.hitsMax) {
-                healer.heal(healer);
-            }
-            if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-                healer.goTo(this.colony.controller, { range: 5 });
-            }
-            else {
-                healer.park();
-            }
-        }
-        else {
-            if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
-                healer.heal(attacker);
-            }
-            else {
-                healer.heal(healer);
-            }
-        }
-    }
-    init() {
-        let amount;
-        if (this.directive.memory.amount) {
-            amount = this.directive.memory.amount;
-        }
-        else {
-            amount = 1;
-        }
-        if (RoomIntel.inSafeMode(this.pos.roomName)) {
-            amount = 0;
-        }
-        const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-        const attackerSetup = CombatSetups.zerglings.boosted.armored;
-        this.wishlist(amount, attackerSetup, { priority: attackerPriority });
-        const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-        const healerSetup = CombatSetups.transfusers.boosted.default;
-        this.wishlist(amount, healerSetup, { priority: healerPriority });
-    }
-    run() {
-        this.reassignIdleCreeps(Roles.healer);
-        this.reassignIdleCreeps(Roles.melee);
-        for (const attacker of this.attackers) {
-            if (attacker.hasValidTask) {
-                attacker.run();
-            }
-            else {
-                if (attacker.needsBoosts) {
-                    this.handleBoosting(attacker);
-                }
-                else {
-                    this.handleSquad(attacker);
-                }
-            }
-        }
-        for (const healer of this.healers) {
-            if (healer.hasValidTask) {
-                healer.run();
-            }
-            else {
-                if (healer.needsBoosts) {
-                    this.handleBoosting(healer);
-                }
-                else {
-                    this.handleHealer(healer);
-                }
-            }
-        }
-    }
-};
-PairDestroyerOverlord.settings = {
-    retreatHitsPercent: 0.85,
-    reengageHitsPercent: 0.95,
-};
-PairDestroyerOverlord = PairDestroyerOverlord_1 = __decorate([
-    profile
-], PairDestroyerOverlord);
-
-let DirectivePairDestroy = class DirectivePairDestroy extends Directive {
-    constructor(flag) {
-        super(flag);
-    }
-    spawnMoarOverlords() {
-        this.overlords.destroy = new PairDestroyerOverlord(this);
-    }
-    init() {
-        this.alert(`Pair destroyer directive active`);
-    }
-    run() {
-        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-            log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
-            this.remove();
-        }
-    }
-    visuals() {
-        Visualizer.marker(this.pos, { color: 'red' });
-        const fallback = CombatIntel.getFallbackFrom(this.pos);
-        Visualizer.marker(fallback, { color: 'green' });
-    }
-};
-DirectivePairDestroy.directiveName = 'destroy';
-DirectivePairDestroy.color = COLOR_RED;
-DirectivePairDestroy.secondaryColor = COLOR_CYAN;
-DirectivePairDestroy = __decorate([
-    profile
-], DirectivePairDestroy);
 
 let SwarmOverlord = class SwarmOverlord extends CombatOverlord {
     swarmWishlist(swarmQuantity, config) {
