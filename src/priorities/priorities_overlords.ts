@@ -77,10 +77,10 @@ export let OverlordPriority = {
 	},
 
 	throttleThreshold: 799,  	// Everything past this may be throttled in the event of low CPU
-
+	// Scouts are cheap and should be done first
 	scouting: {
-		stationary  : 800,
-		randomWalker: 801
+		stationary  : 400,
+		randomWalker: 401
 	},
 	// Nova Edit: We need remotes before we make new colonies
 	// Changed from: 900 to 520
