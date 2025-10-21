@@ -23841,7 +23841,7 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
         if (pioneer.carry.energy == 0) {
             pioneer.task = Tasks.recharge();
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
@@ -23850,13 +23850,13 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
             || !this.spawnSite)
             && !(this.room.controller.upgradeBlocked > 0)) {
             pioneer.task = Tasks.upgrade(this.room.controller);
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
         else if (this.spawnSite) {
             pioneer.task = Tasks.build(this.spawnSite);
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
