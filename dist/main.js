@@ -23805,7 +23805,7 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         return assignments;
     }
     init() {
-        if (this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) {
+        if ((this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) && !(this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)) {
             this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, { noLifetimeFilter: true, reassignIdle: true });
         }
     }
@@ -23824,9 +23824,13 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         var _a;
         if (!this.room || !this.room.controller)
             return;
+        if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)
+            return;
         var ready = 0;
         for (const controllerAttacker of this.controllerAttackers) {
             const attackPos = this.assignments[controllerAttacker.name];
+            if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)
+                return;
             if (!attackPos) {
                 log.error(`No attack position for ${controllerAttacker.print}!`);
                 continue;

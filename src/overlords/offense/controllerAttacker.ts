@@ -49,7 +49,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	init() {
-		if (this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) {
+		if ((this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) && !(this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)) {
 			// spawn one infestor for each tile that is close to the controller
 			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true, reassignIdle: true});
 		}
@@ -65,12 +65,13 @@ export class ControllerAttackerOverlord extends Overlord {
 
 	run() {
 		if (!this.room || !this.room.controller) return
-
+		if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0) return
 		// TODO sign controller
 		//(infestor.signController(this.room.controller, 'this is mine!') == OK);
 		var ready = 0
 		for (const controllerAttacker of this.controllerAttackers) {
 			const attackPos = this.assignments[controllerAttacker.name];
+			if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0) return
 			if (!attackPos) {
 				log.error(`No attack position for ${controllerAttacker.print}!`);
 				continue
@@ -93,7 +94,7 @@ export class ControllerAttackerOverlord extends Overlord {
 			if (attackPos.inRangeTo(controllerAttacker.pos,0)) {
 				ready += 1
 			}
-
+			
 
 			if (ready == this.controllerAttackers.length) {
 				const ret = controllerAttacker.attackController(this.room.controller);
