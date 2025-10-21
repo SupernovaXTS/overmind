@@ -85,7 +85,7 @@ export let OverlordPriority = {
 	// Nova Edit: We need remotes before we make new colonies
 	// Changed from: 900 to 520
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 520,
+		reserve      : 402,
 		mine         : 403,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
