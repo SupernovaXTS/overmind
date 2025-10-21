@@ -44,7 +44,7 @@ export class ClaimingOverlord extends Overlord {
 			return 1
 		});
 		const setup = this.colony.level > 4 ? Setups.infestors.fastClaim : Setups.infestors.claim;
-		this.wishlist(amount, setup);
+		this.wishlist(amount, setup, {reassignIdle: true});
 	}
 
 	private handleClaimer(claimer: Zerg): void {
@@ -71,10 +71,12 @@ export class ClaimingOverlord extends Overlord {
 
 	run() {
 		this.autoRun(this.claimers, claimer => this.handleClaimer(claimer));
+		/* We can wait for the claimer to timeout, it also allows for reassignment to a reserver
 		if (this.room && this.room.controller && this.room.controller.my && this.room.controller.signedByMe) {
 			for (const claimer of this.claimers) {
 				claimer.suicide();
 			}
 		}
+		*/
 	}
 }
