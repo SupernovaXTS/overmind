@@ -27,17 +27,14 @@ export class UpgradingOverlord extends Overlord {
 
 	init() {
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
-			log.info("Aborting")
 			return;
 		}
 
 		let setup = Setups.upgraders.default;
 		if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
-			log.info("Don't have enough energy")
 			return
 		}
 		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) || (this.upgradeSite.controller.ticksToDowngrade < 500)) {
-			log.info("Attempting to spawn upgraders")
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
 				if (this.colony.labs.length == 10 &&
@@ -53,7 +50,6 @@ export class UpgradingOverlord extends Overlord {
 			
 			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
-			log.info("success?")
 			this.wishlist(upgradersNeeded, setup);
 			return
 		}
