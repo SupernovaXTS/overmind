@@ -1,16 +1,29 @@
 import { TraderJoeIntershard } from "logistics/TradeNetwork";
-
+import { log } from "../console/log";
 
 // Wrapper class for managing account resources
 export class accountResources {
-    generatePixel() {
-
+    settings = {
+        pixelAmt: 0
     }
+    
+    generatePixel() {
+        if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
+			Game.cpu.generatePixel();
+			log.info("Generating Pixel...")
+            return true
+        }
+        return false
+    }
+    
     buyPixel(num: number) {
 
     }
     sellPixel(num: number) {
 
+    }
+    handlePixel() {
+        this.generatePixel()
     }
     buyCPUUnlock(num: number) {
 
@@ -22,5 +35,8 @@ export class accountResources {
     }
     useCPUUnlock(num: number) {
 
+    }
+    handleCPUUnlock () {
+        // handler for doing cpu unlock shit
     }
 }
