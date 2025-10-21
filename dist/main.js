@@ -23856,7 +23856,6 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
                     log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
                     continue;
                 }
-                this.finish(false);
             }
         }
     }
