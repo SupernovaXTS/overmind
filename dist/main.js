@@ -5906,7 +5906,7 @@ let OverlordPriority = {
         roomPoisoner: 561,
     },
     upgrading: {
-        upgrade: 410,
+        upgrade: 402,
     },
     collectionUrgent: {
         haul: 700

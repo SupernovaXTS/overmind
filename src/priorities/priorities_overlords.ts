@@ -69,7 +69,7 @@ export let OverlordPriority = {
 	},
 
 	upgrading: {				// Spawning upgraders
-		upgrade: 410,
+		upgrade: 402,
 	},
 
 	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground
