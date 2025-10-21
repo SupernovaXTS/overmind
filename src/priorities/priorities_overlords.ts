@@ -36,7 +36,7 @@ export let OverlordPriority = {
 	
 	colonization: { 			// Colonizing new rooms
 		claim          : 400,
-		pioneer        : 450,
+		pioneer        : 401,
 		remoteUpgrading: 610,
 	},
 
