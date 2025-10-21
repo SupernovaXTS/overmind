@@ -1,3 +1,4 @@
+import { TaskUpgrade } from 'tasks/instances/upgrade';
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
@@ -8,8 +9,10 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-
-
+import { DirectiveControllerAttack } from 'directives/offense/controllerAttack';
+import { RoomIntel } from 'intel/RoomIntel';
+import { DirectiveOutpostDefense } from 'directives/defense/outpostDefense';
+import { DirectivePairDestroy } from 'directives/offense/pairDestroy';
 /**
  * Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
  */
@@ -38,6 +41,36 @@ export class DirectiveColonize extends Directive {
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		// Remove if misplaced
+		if (this.room) {var intel = RoomIntel.getAllRoomObjectInfo(this.room.name)}
+		if (this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
+			var scan = true
+			if (scan) {
+				var intel = RoomIntel.getAllRoomObjectInfo(this.room.name)
+				var spawns = intel?.importantStructures?.spawnPositions
+				var towers = intel?.importantStructures?.towerPositions
+				var controller = intel?.controller
+				var owner = controller?.owner
+				var safemode = intel?.controller?.safemode
+				var safemodeActive = (safemode && safemode > 0)
+				var spawnP = (spawns?.length && spawns?.length <= 0)
+				var towerP = (towers?.length && towers?.length <= 0)
+				var viableRoom = (spawnP && towerP && !safemode)
+				if (viableRoom && (this.room.controller)) {
+					DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room')
+				}
+				// if room is occupied outpost defense
+				if ((this.room.controller) && this.room.playerHostiles.length > 0) {
+					DirectiveOutpostDefense.createIfNotPresent(this.room.controller.pos, 'room');
+				}
+				
+				// Unsure if this is needed?
+				if ((this.room.controller) && this.room.dangerousPlayerHostiles.length > 0) {
+					DirectivePairDestroy.createIfNotPresent(this.room.controller.pos,'room')
+				}
+			}
+			this.remove(true);
+		}
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
@@ -77,8 +110,9 @@ export class DirectiveColonize extends Directive {
 			// Remove the directive
 			this.remove();
 		}
-		if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+		if (Game.time % 10 == 2 && (this.room && !!this.room.owner && this.room.owner != MY_USERNAME)) {
 			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
+			
 			this.remove();
 		}
 	}
