@@ -23829,6 +23829,7 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
     }
     handlePioneer(pioneer) {
+        var _a;
         var viable = true;
         if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable)
             pioneer.retire();
@@ -23864,6 +23865,12 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
         else if (this.spawnSite) {
             pioneer.task = Tasks.build(this.spawnSite);
+            if (pioneer.task && !pioneer.task.isValidTask()) {
+                viable = false;
+            }
+        }
+        else if (((_a = this.room.spawns) === null || _a === void 0 ? void 0 : _a.length) > 0) {
+            pioneer.task = Tasks.transfer(this.room.spawns[0]);
             if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
