@@ -105,6 +105,7 @@ export class DirectiveColonize extends Directive {
 						log.debug(`Reassigning: ${pioneer.print} to work: ${this.toColonize.overlords.work.print}`);
 					}
 					pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
+				
 				}
 			}
 			// Remove the directive

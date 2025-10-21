@@ -224,7 +224,7 @@ export class BunkerQueenOverlord extends Overlord {
 	 */
 	private buildWithdrawTaskManifest(queen: Zerg): Task<any> | null {
 		const tasks: Task<any>[] = [];
-		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
+		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0]; 
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		if (_.sum(queen.carry) > 0) {
 			if (transferTarget) {

@@ -292,6 +292,7 @@ export class OvermindConsole {
 		}
 		return msg;
 	}
+	
 
 	// Room planner control ============================================================================================
 
