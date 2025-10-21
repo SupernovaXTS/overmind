@@ -1,3 +1,4 @@
+import { RemoteUpgradingOverlord } from 'overlords/situational/remoteUpgrader';
 import {Pathing} from '../../movement/Pathing';
 import {MiningOverlord} from '../../overlords/mining/miner';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -84,6 +85,9 @@ export class DirectiveHarvest extends Directive {
 	}
 
 	private computeStats() {
+		if (!(this.overlords.mine.source)) {
+			return
+		}
 		const source = this.overlords.mine.source;
 		if (source && source.ticksToRegeneration == 1) {
 			this.memory[HARVEST_MEM.USAGE] = (source.energyCapacity - source.energy) / source.energyCapacity;
