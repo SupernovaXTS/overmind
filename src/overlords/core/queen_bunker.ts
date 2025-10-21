@@ -311,6 +311,9 @@ export class BunkerQueenOverlord extends Overlord {
 	// }
 
 	private handleQueen(queen: Zerg): void {
+		var canWork = (queen.getActiveBodyparts(CARRY) > 0)
+		var towers = (queen.colony && queen.colony.towers?.length > 0)
+		if (!canWork && !towers) {queen.retire()}
 		// Does something need withdrawing?
 		if (this.colony.transportRequests.needsWithdrawing() &&
 			_.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.withdrawByID[id])) {

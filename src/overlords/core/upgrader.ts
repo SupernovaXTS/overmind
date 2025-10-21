@@ -50,8 +50,11 @@ export class UpgradingOverlord extends Overlord {
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
 			this.wishlist(upgradersNeeded, setup);
 		}
-
-		this.wishlist(0, setup);
+		else {
+			// This was always being executed
+			this.wishlist(0, setup);
+		}
+		
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

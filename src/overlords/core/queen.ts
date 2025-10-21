@@ -96,6 +96,9 @@ export class QueenOverlord extends Overlord {
 	}
 
 	private handleQueen(queen: Zerg): void {
+		var canWork = (queen.getActiveBodyparts(CARRY) > 0)
+		var towers = (queen.colony && queen.colony.towers?.length > 0)
+		if (!canWork && !towers) {queen.retire()}
 		if (queen.carry.energy > 0) {
 			this.supplyActions(queen);
 		} else {
