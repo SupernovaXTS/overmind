@@ -48,7 +48,7 @@ export let OverlordPriority = {
 	ownedRoom: { 				// Operation of an owned room
 		firstTransport: 400,		// High priority to spawn the first transporter
 		mine          : 401,
-		work          : 503,
+		work          : 403,
 		mineralRCL8   : 503,
 		transport     : 402,		// Spawn the rest of the transporters
 		mineral       : 505,
@@ -85,7 +85,7 @@ export let OverlordPriority = {
 	// Nova Edit: We need remotes before we make new colonies
 	// Changed from: 900 to 520
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 402,
+		reserve      : 405,
 		mine         : 403,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
