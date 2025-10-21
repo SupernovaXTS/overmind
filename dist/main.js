@@ -23794,8 +23794,6 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         }
         this.attackPositions = this.room.controller.pos.availableNeighbors(true);
         this.assignments = this.getPositionAssignments();
-        if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0)
-            return;
     }
     getPositionAssignments() {
         const assignments = {};
