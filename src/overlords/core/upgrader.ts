@@ -32,7 +32,11 @@ export class UpgradingOverlord extends Overlord {
 		}
 
 		let setup = Setups.upgraders.default;
-		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer || this.upgradeSite.controller.ticksToDowngrade < 500) {
+		if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
+			log.info("Don't have enough energy")
+			return
+		}
+		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) || (this.upgradeSite.controller.ticksToDowngrade < 500)) {
 			log.info("Attempting to spawn upgraders")
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
@@ -52,8 +56,11 @@ export class UpgradingOverlord extends Overlord {
 			log.info("success?")
 			this.wishlist(upgradersNeeded, setup);
 		}
-		log.alert("Failed to spawn upgraders")
-		this.wishlist(0, setup);
+		else {
+			log.info("Failed to spawn upgraders")
+			this.wishlist(0, setup);
+		}
+		
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {
