@@ -22963,7 +22963,7 @@ let ReservingOverlord = class ReservingOverlord extends Overlord {
             RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
             amount = 1;
         }
-        this.wishlist(amount, Setups.infestors.reserve);
+        this.wishlist(amount, Setups.infestors.reserve, { reassignIdle: true });
     }
     handleReserver(reserver) {
         if (reserver.avoidDanger())
@@ -23221,7 +23221,7 @@ let ClaimingOverlord = class ClaimingOverlord extends Overlord {
             return 1;
         });
         const setup = this.colony.level > 4 ? Setups.infestors.fastClaim : Setups.infestors.claim;
-        this.wishlist(amount, setup);
+        this.wishlist(amount, setup, { reassignIdle: true });
     }
     handleClaimer(claimer) {
         if (claimer.room != this.room || claimer.pos.isEdge) {
@@ -23240,11 +23240,6 @@ let ClaimingOverlord = class ClaimingOverlord extends Overlord {
     }
     run() {
         this.autoRun(this.claimers, claimer => this.handleClaimer(claimer));
-        if (this.room && this.room.controller && this.room.controller.my && this.room.controller.signedByMe) {
-            for (const claimer of this.claimers) {
-                claimer.suicide();
-            }
-        }
     }
 };
 ClaimingOverlord = __decorate([
