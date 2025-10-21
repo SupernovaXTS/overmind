@@ -5906,7 +5906,7 @@ let OverlordPriority = {
         roomPoisoner: 561,
     },
     upgrading: {
-        upgrade: 402,
+        upgrade: 401,
     },
     collectionUrgent: {
         haul: 700
@@ -21979,7 +21979,7 @@ let TransportOverlord = class TransportOverlord extends Overlord {
         const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0;
         for (const flagName in this.colony.miningSites) {
             const miningOverlord = this.colony.miningSites[flagName].overlords.mine;
-            if (!miningOverlord.isSuspended && miningOverlord.miners.length > 0) {
+            if (miningOverlord && !miningOverlord.isSuspended && miningOverlord.miners.length > 0) {
                 if ((miningOverlord.container && !miningOverlord.link) || miningOverlord.allowDropMining) {
                     transportPower += miningOverlord.energyPerTick * scaling * miningOverlord.distance;
                 }
@@ -26840,6 +26840,9 @@ let DirectiveHarvest = class DirectiveHarvest extends Directive {
         this.computeStats();
     }
     computeStats() {
+        if (!(this.overlords.mine.source)) {
+            return;
+        }
         const source = this.overlords.mine.source;
         if (source && source.ticksToRegeneration == 1) {
             this.memory["u"] = (source.energyCapacity - source.energy) / source.energyCapacity;
