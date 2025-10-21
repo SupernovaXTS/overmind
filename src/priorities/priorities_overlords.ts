@@ -80,7 +80,7 @@ export let OverlordPriority = {
 	// Scouts are cheap and should be done first
 	scouting: {
 		stationary  : 400,
-		randomWalker: 401
+		randomWalker: 400
 	},
 	// Nova Edit: We need remotes before we make new colonies
 	// Changed from: 900 to 520

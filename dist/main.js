@@ -5914,7 +5914,7 @@ let OverlordPriority = {
     throttleThreshold: 799,
     scouting: {
         stationary: 400,
-        randomWalker: 401
+        randomWalker: 400
     },
     remoteRoom: {
         reserve: 402,
