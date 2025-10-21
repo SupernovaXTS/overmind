@@ -33,9 +33,10 @@ export class ControllerAttackerOverlord extends Overlord {
 			this.attackPositions = [];
 			return
 		}
-		
+		if (this.room && this.room.controller && this.room.controller.upgradeBlocked > 0) return
 		this.attackPositions = this.room.controller.pos.availableNeighbors(true);
 		this.assignments = this.getPositionAssignments();
+		
 	}
 
 	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {
