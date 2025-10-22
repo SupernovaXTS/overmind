@@ -73,6 +73,8 @@ export class OvermindConsole {
 		global.requestEnergyOk = this.requestEnergyOk;
 		global.requestResource = this.requestResource;
 		global.requestResourceOk = this.requestResourceOk;
+		global.requestFromPairs = this.requestFromPairs;
+		global.requestFromPairsOk = this.requestFromPairsOk;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -130,6 +132,8 @@ export class OvermindConsole {
 		descr['requestEnergyOk(roomName, amount)'] = 'same as requestEnergy but returns boolean success';
 		descr['requestResource(roomName, resource, amount)'] = 'queues a haul request for a resource for the colony';
 		descr['requestResourceOk(roomName, resource, amount)'] = 'boolean variant of requestResource';
+		descr['requestFromPairs(roomName, pairs)'] = 'queues a haul request using [[resource, amount], ...]';
+		descr['requestFromPairsOk(roomName, pairs)'] = 'boolean variant of requestFromPairs';
 		descr['getZerg(creepName)'] = 'returns the Zerg instance associated with the specified creep name';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -180,6 +184,31 @@ export class OvermindConsole {
 		const res = resource as ResourceConstant;
 		if (!((RESOURCES_ALL as ResourceConstant[]).includes(res))) return false;
 		return col.logisticsSector.requestFromPairsOk([[res, amt]]);
+	}
+
+	static requestFromPairs(roomName: string, pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]): number | string | undefined | false {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		let normalized: Array<[ResourceConstant, number]>;
+		if (Array.isArray(pairs) && pairs.length === 2 && typeof (pairs as any)[0] === 'string') {
+			// single tuple passed: [res, amt]
+			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
+		} else {
+			normalized = pairs as Array<[ResourceConstant, number]>;
+		}
+		return col.logisticsSector.requestFromPairs(normalized);
+	}
+
+	static requestFromPairsOk(roomName: string, pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]): boolean {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		let normalized: Array<[ResourceConstant, number]>;
+		if (Array.isArray(pairs) && pairs.length === 2 && typeof (pairs as any)[0] === 'string') {
+			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
+		} else {
+			normalized = pairs as Array<[ResourceConstant, number]>;
+		}
+		return col.logisticsSector.requestFromPairsOk(normalized);
 	}
 
 	static getZerg(input:string): Zerg | undefined {
