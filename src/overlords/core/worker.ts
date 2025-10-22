@@ -443,3 +443,4 @@ export class WorkerOverlord extends Overlord {
 						worker => worker.flee(worker.room.fleeDefaults, { invalidateTask: true }));
 				}
 			}
+		}
