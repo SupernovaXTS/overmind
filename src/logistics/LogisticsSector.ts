@@ -1,6 +1,7 @@
 // Acts as a way to transfer resources from one colony with surplus to another colony in need
 
 import { Colony } from "Colony";
+import { log } from "console/log";
 import { DirectiveHaulRequest } from "directives/resource/haulRequest";
 
 export class LogisticsSector { 
@@ -15,6 +16,8 @@ export class LogisticsSector {
     };
     static defaultBuffer: number = 100000;
     static rangeLimit: number = 4; // Maximum range to consider for transfers
+    static maxHaulRequestRetries: number = 5; // Max retries for queued directive creations
+    static maxQueueAge: number = 5000; // Optional pruning age in ticks
     // Populate buffer with all ResourceConstants, applying defaults where unspecified
     
     static initializeBuffers(): void {
@@ -70,10 +73,10 @@ export class LogisticsSector {
     }
 
     // In-memory queue (per colony) for deferring directive creation to the run phase
-    private get haulRequestQueue(): Array<{ source: string; manifest: StoreDefinitionUnlimited }> {
+    private get haulRequestQueue(): Array<{ source: string; manifest: StoreDefinitionUnlimited; retries?: number; createdAt?: number }> {
         const mem = this.colony.memory as any;
         if (!mem.haulRequestQueue) mem.haulRequestQueue = [];
-        return mem.haulRequestQueue as Array<{ source: string; manifest: StoreDefinitionUnlimited }>;
+        return mem.haulRequestQueue as Array<{ source: string; manifest: StoreDefinitionUnlimited; retries?: number; createdAt?: number }>;
     }
 
     // Nearby colonies within rangeLimit, excluding self
@@ -125,7 +128,11 @@ export class LogisticsSector {
         const { colony: sourceColony, manifest } = result;
 
         // Defer directive creation to run phase to comply with engine restrictions
-        this.haulRequestQueue.push({ source: sourceColony.name, manifest });
+        const item = { source: sourceColony.name, manifest, retries: 0, createdAt: Game.time };
+        this.haulRequestQueue.push(item);
+        if (this.colony.memory.debug) {
+            log.debug(`${this.colony.print} queued haul request from ${sourceColony.name}: ${JSON.stringify(manifest)}`);
+        }
         return 'queued';
     }
 
@@ -206,15 +213,25 @@ export class LogisticsSector {
      */
     public run(): void {
         const mem = (this.colony.memory as any);
-        const queue: Array<{ source: string; manifest: StoreDefinitionUnlimited }> = mem.haulRequestQueue || [];
+        const queue: Array<{ source: string; manifest: StoreDefinitionUnlimited; retries?: number; createdAt?: number }> = mem.haulRequestQueue || [];
         if (!queue.length) return;
 
         const nextQueue: typeof queue = [];
         for (const item of queue) {
+            // Prune by age
+            if (item.createdAt && (Game.time - item.createdAt) > LogisticsSector.maxQueueAge) {
+                log.warning(`${this.colony.print} pruning stale haul request from ${item.source}`);
+                continue;
+            }
             const sourceColony = Overmind.colonies[item.source] as Colony | undefined;
             if (!sourceColony) {
-                // Source colony missing; skip but keep for retry next tick
-                nextQueue.push(item);
+                // Source colony missing; increment retry and keep if under limit
+                item.retries = (item.retries || 0) + 1;
+                if (item.retries <= LogisticsSector.maxHaulRequestRetries) {
+                    nextQueue.push(item);
+                } else {
+                    log.warning(`${this.colony.print} dropping haul request from ${item.source} after ${item.retries} retries (source missing)`);
+                }
                 continue;
             }
             const pos: RoomPosition = (sourceColony.storage?.pos
@@ -229,7 +246,19 @@ export class LogisticsSector {
             const res = DirectiveHaulRequest.createIfNotPresent(pos, 'room', { memory });
             // If creation failed (e.g., room not visible), keep it queued to retry next tick
             if (res !== OK && typeof res !== 'string') {
-                nextQueue.push(item);
+                item.retries = (item.retries || 0) + 1;
+                if (item.retries <= LogisticsSector.maxHaulRequestRetries) {
+                    nextQueue.push(item);
+                    if (this.colony.memory.debug) {
+                        log.debug(`${this.colony.print} retry ${item.retries}/${LogisticsSector.maxHaulRequestRetries} for haul request from ${sourceColony.name}`);
+                    }
+                } else {
+                    log.warning(`${this.colony.print} dropping haul request from ${sourceColony.name} after ${item.retries} retries (res=${res})`);
+                }
+            } else {
+                if (this.colony.memory.debug) {
+                    log.info(`${this.colony.print} created haul directive from ${sourceColony.name}: ${typeof res === 'string' ? res : 'OK'}`);
+                }
             }
         }
         mem.haulRequestQueue = nextQueue;
