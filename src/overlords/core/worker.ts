@@ -437,10 +437,10 @@ export class WorkerOverlord extends Overlord {
 						if (this.upgradeActions(worker)) return;
 					}
 				}
+			}
 
 				run() {
 					this.autoRun(this.workers, worker => this.handleWorker(worker),
 						worker => worker.flee(worker.room.fleeDefaults, { invalidateTask: true }));
 				}
 			}
-		}
