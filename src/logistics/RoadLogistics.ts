@@ -39,6 +39,7 @@ export class RoadLogistics {
 	 * Whether a road in the network needs repair
 	 */
 	private workerShouldRepaveRoom(worker: Zerg, room: Room): boolean {
+		let repaveEnergy = this.energyToRepave(room.name)
 		// Room should be repaved if there is a road with critical HP or if energy to repave >= worker carry capacity
 		const otherAssignedWorkers = _.filter(this.assignedWorkers(room), name => name != worker.name);
 		if (otherAssignedWorkers.length < RoadLogistics.settings.allowedPaversPerRoom) {
@@ -47,7 +48,8 @@ export class RoadLogistics {
 				return this.repairableRoads(room).length > 0;
 			} else {
 				// If worker is not already assigned, repair if critical roads or repaving energy >= carry capacity
-				return this.criticalRoads(room).length > 0 || this.energyToRepave(room.name) >= worker.carryCapacity;
+				// Only pave if we have enough energy in the colony to repave
+				return this.criticalRoads(room).length > 0 || (repaveEnergy >= worker.carryCapacity && this.colony.assets.energy >= repaveEnergy);
 			}
 		} else {
 			return false;
