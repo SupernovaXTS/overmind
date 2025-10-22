@@ -239,4 +239,13 @@ export class AccountResources {
 		}
 	}
 
+	/**
+	 * Main method that runs the entire account resources management system.
+	 * Handles both pixel and CPU unlock management in a single call.
+	 */
+	main(): void {
+		this.handlePixel();
+		this.handleCPUUnlock();
+	}
+
 }
