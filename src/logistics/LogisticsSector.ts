@@ -27,6 +27,29 @@ export class LogisticsSector {
             }
         }
     }
+
+    /**
+     * Helper: create a StoreDefinition from [resource, amount] pairs.
+     * Example: LogisticsSector.storeFromPairs([RESOURCE_ENERGY, 50000], [RESOURCE_OPS, 100])
+     */
+    storeFromPairs(...pairs: Array<[ResourceConstant, number]>): StoreDefinition {
+        const store: StoreDefinition = {} as StoreDefinition;
+        for (const [resource, amount] of pairs) {
+            if (!resource) continue;
+            const amt = Math.floor(amount || 0);
+            if (amt <= 0) continue;
+            store[resource] = ((store[resource] as number) || 0) + amt;
+        }
+        return store;
+    }
+
+    /**
+     * Helper: create a StoreDefinition from an array of [resource, amount] pairs.
+     * Example: LogisticsSector.storeFromPairArray([[RESOURCE_ENERGY, 50000], [RESOURCE_OPS, 100]])
+     */
+    storeFromPairArray(pairs: Array<[ResourceConstant, number]>): StoreDefinition {
+        return this.storeFromPairs(...pairs);
+    }
     
     constructor(colony: Colony) {
         this.colony = colony;
