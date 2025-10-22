@@ -227,7 +227,11 @@ export class WorkerOverlord extends Overlord {
 		if (this.useBoostedRepair) {
 			setup = CreepSetup.boosted(setup, ['construct']);
 		}
-		this.wishlist(numWorkers, setup);
+		if (!this.colony.state.bootstrapping)
+			this.wishlist(numWorkers, setup);
+		else {
+			this.wishlist(0,setup)
+		}
 	}
 
 	/**
