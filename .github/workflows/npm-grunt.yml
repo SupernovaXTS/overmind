@@ -23,6 +23,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Build
+      env:
+        SCREEPS_EMAIL: ${{ vars.SCREEPS_EMAIL }}
+        SCREEPS_TOKEN: ${{ secrets.SCREEPS_TOKEN }}
+        SCREEPS_BRANCH: ${{ vars.SCREEPS_BRANCH || 'default' }}
+        SCREEPS_PTR: ${{ vars.SCREEPS_PTR || 'false' }}
       run: |
         npm install
-        grunt
+        grunt --email="$SCREEPS_EMAIL" --token="$SCREEPS_TOKEN" --branch="$SCREEPS_BRANCH" --ptr="$SCREEPS_PTR"
