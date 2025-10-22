@@ -406,7 +406,7 @@ export class WorkerOverlord extends Overlord {
 			if (this.dismantleActions(worker)) return;
 		}
 		// Fortify walls and ramparts
-		if (this.fortifyBarriers.length > 0) {
+		if (this.fortifyBarriers.length > 0 && !this.colony.state.bootstrapping) {
 			if (this.fortifyActions(worker, this.fortifyBarriers)) return;
 		}
 		// Upgrade controller if less than RCL8 or no upgraders
