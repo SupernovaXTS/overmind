@@ -33,7 +33,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
-
+import { LogisticsSector } from 'logistics/LogisticsSector';
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
 	Pupa  = 1,		// Has storage but RCL < 8
@@ -184,6 +184,7 @@ export class Colony {
 	linkNetwork: LinkNetwork;
 	logisticsNetwork: LogisticsNetwork;
 	transportRequests: TransportRequestGroup;
+	logisticsSector: LogisticsSector;
 	// Overlords
 	overlords: {
 		default: DefaultOverlord;
@@ -430,6 +431,7 @@ export class Colony {
 		this.linkNetwork = new LinkNetwork(this);
 		this.logisticsNetwork = new LogisticsNetwork(this);
 		this.transportRequests = new TransportRequestGroup();
+		this.logisticsSector = new LogisticsSector(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
 		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
