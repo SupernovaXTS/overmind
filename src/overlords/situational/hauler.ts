@@ -1,3 +1,4 @@
+import { CreepSetup } from 'creepSetups/CreepSetup';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveHaul} from '../../directives/resource/haul';
@@ -16,14 +17,15 @@ import {Overlord} from '../Overlord';
 export class HaulingOverlord extends Overlord {
 
 	haulers: Zerg[];
+	haulerSetup: CreepSetup;
 	directive: DirectiveHaul;
-
+	static haulerSetup = Setups.transporters.default;
 	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
 													 OverlordPriority.tasks.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
-	}
+		this.haulerSetup = HaulingOverlord.haulerSetup;}
 
 	init() {
 		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
@@ -34,15 +36,15 @@ export class HaulingOverlord extends Overlord {
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		const tripDistance = 2 * (Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos) || 0);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
-											this.colony.storage.storeCapacity
+											this.colony.storage.store.capacity
 											- _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
-		const haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
+		const haulerCarryParts = this.haulerSetup.getBodyPotential(CARRY, this.colony);
 		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		// Calculate number of haulers
 		const numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
 		// Request the haulers
-		this.wishlist(numHaulers, Setups.transporters.early);
+		this.wishlist(numHaulers, this.haulerSetup);
 	}
 
 	private handleHauler(hauler: Zerg) {
