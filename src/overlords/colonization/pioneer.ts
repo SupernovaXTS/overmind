@@ -36,7 +36,16 @@ export class PioneerOverlord extends Overlord {
 
 	init() {
 		var type = this.directive.type as 'armored' | 'default';
-		this.wishlist(4, Setups.pioneers[type]);
+		var numSources = this.room?.sources
+		var numPos = 0
+		
+		if (numSources) {
+			for (var source of numSources) {
+				numPos += source.pos.availableNeighbors(true).length
+			}
+		}
+		
+		this.wishlist(numPos * 2, Setups.pioneers[type]);
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {
@@ -77,7 +86,7 @@ export class PioneerOverlord extends Overlord {
 		if (pioneer.carry.energy == 0) {
 			
 			pioneer.task = Tasks.recharge();
-			if (!pioneer.task.isValidTask()) {
+			if (pioneer.task && !pioneer.task.isValidTask()) {
 				viable = false
 			}	
 		} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
@@ -86,15 +95,17 @@ export class PioneerOverlord extends Overlord {
 					&& !(this.room.controller.upgradeBlocked > 0)) {
 			// Save controller if it's about to downgrade or if you have nothing else to do
 			pioneer.task = Tasks.upgrade(this.room.controller);
-			if (!pioneer.task.isValidTask()) {
+			if (pioneer.task && !pioneer.task.isValidTask()) {
 				viable = false
 			}
 		} else if (this.spawnSite) {
 			pioneer.task = Tasks.build(this.spawnSite);
-			if (!pioneer.task.isValidTask()) {
-				viable = false
-			}
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
+		} else if (this.room.spawns?.length > 0) { 
+			pioneer.task = Tasks.transfer(this.room.spawns[0])
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
 		}
+		
 	}
 
 	run() {

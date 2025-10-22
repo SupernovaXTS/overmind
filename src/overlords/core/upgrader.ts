@@ -5,7 +5,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-
+import { log } from 'console/log';
 /**
  * Spawns an upgrader to upgrade the room controller
  */
@@ -31,8 +31,10 @@ export class UpgradingOverlord extends Overlord {
 		}
 
 		let setup = Setups.upgraders.default;
-		if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
-			|| this.upgradeSite.controller.ticksToDowngrade < 500) {
+		if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
+			return
+		}
+		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) || (this.upgradeSite.controller.ticksToDowngrade < 500)) {
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
 				if (this.colony.labs.length == 10 &&
@@ -45,13 +47,15 @@ export class UpgradingOverlord extends Overlord {
 				this.wishlist(1, setup);
 				return
 			}
-
+			
 			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
 			this.wishlist(upgradersNeeded, setup);
+	
 		}
-
-		this.wishlist(0, setup);
+		else {
+			this.wishlist(0, setup);
+		}
 	}
 
 	private handleUpgrader(upgrader: Zerg): void {

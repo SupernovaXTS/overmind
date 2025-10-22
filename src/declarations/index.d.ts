@@ -218,6 +218,26 @@ interface ITradeNetwork {
 	run(): void;
 }
 
+interface IIntershardTradeNetwork {
+	memory: any;
+
+	refresh(): void;
+
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: InterShardResourceConstant | 'any'): Order[];
+
+	priceOf(resource: InterShardResourceConstant): number;
+
+	ordersProcessedThisTick(): boolean;
+
+	buy(resource: InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
+
+	sell(resource: InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
+
+	init(): void;
+
+	run(): void;
+}
+
 declare var Overmind: IOvermind;
 
 declare var _cache: IGlobalCache;

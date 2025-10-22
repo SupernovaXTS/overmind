@@ -37,7 +37,7 @@ export class ReservingOverlord extends Overlord {
 				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
 			amount = 1;
 		}
-		this.wishlist(amount, Setups.infestors.reserve);
+		this.wishlist(amount, Setups.infestors.reserve, {reassignIdle: true});
 	}
 
 	private handleReserver(reserver: Zerg): void {

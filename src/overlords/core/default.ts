@@ -27,7 +27,10 @@ export class DefaultOverlord extends Overlord {
 			zerg.refresh();
 		}
 	}
-
+	refresh() {
+	
+	}
+	
 	run() {
 
 	}

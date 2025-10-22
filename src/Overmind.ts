@@ -8,7 +8,7 @@ import { DirectiveWrapper } from './directives/initializer';
 import { NotifierPriority } from './directives/Notifier';
 import { RoomIntel } from './intel/RoomIntel';
 import { TerminalNetworkV2 } from './logistics/TerminalNetwork_v2';
-import { TraderJoe } from './logistics/TradeNetwork';
+import { TraderJoe, TraderJoeIntershard } from './logistics/TradeNetwork';
 import { Mem } from './memory/Memory';
 import { Overseer } from './Overseer';
 import { profile } from './profiler/decorator';
@@ -21,7 +21,7 @@ import { Directive } from 'directives/Directive';
 import { PowerZerg } from 'zerg/PowerZerg';
 import { Overlord } from 'overlords/Overlord';
 import { SpawnGroup } from 'logistics/SpawnGroup';
-
+import { AccountResources } from 'logistics/accountResources';
 @profile
 export default class _Overmind implements IOvermind {
 	memory: Mem
@@ -40,6 +40,8 @@ export default class _Overmind implements IOvermind {
 	colonyMap: { [roomName: string]: string };
 	terminalNetwork: TerminalNetworkV2;
 	tradeNetwork: TraderJoe;
+	tradeNetworkIntershard: TraderJoeIntershard;
+	accountResources: AccountResources;
 	expansionPlanner: ExpansionPlanner;
 	exceptions: Error[];
 	roomIntel: RoomIntel;
@@ -61,8 +63,12 @@ export default class _Overmind implements IOvermind {
         this.spawnGroups = {};
         this.colonyMap = {};
         this.terminalNetwork = new TerminalNetworkV2();
-        global.TerminalNetwork = this.terminalNetwork;
         this.tradeNetwork = new TraderJoe();
+        this.tradeNetworkIntershard = new TraderJoeIntershard();
+        this.accountResources = new AccountResources(this.tradeNetworkIntershard);
+        global.accountResources = this.accountResources;
+        global.TerminalNetwork = this.terminalNetwork;
+        global.tradeNetworkIntershard = this.tradeNetworkIntershard;
         global.TradeNetwork = this.tradeNetwork;
         this.expansionPlanner = new ExpansionPlanner();
         this.roomIntel = new RoomIntel();
@@ -248,11 +254,14 @@ export default class _Overmind implements IOvermind {
         for (const colonyName in this.colonies) {
             this.try(() => this.colonies[colonyName].run(), colonyName);
         }
-
         this.try(() => this.terminalNetwork.run());
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
+        this.try(() => this.accountResources.handleCPUUnlock());
+        this.try(() => this.accountResources.handlePixel());
+        //this.try(() => this.accountResources.main());
+
         /* Broken?
         var cpuTime = Game.cpu.unlockedTime;
         var cpuTimeWanted = 1
@@ -277,10 +286,7 @@ export default class _Overmind implements IOvermind {
             
         }
         */
-		if(Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
-			Game.cpu.generatePixel();
-			log.info("Generating Pixel...")
-		}
+		
     }
 
     postRun() {

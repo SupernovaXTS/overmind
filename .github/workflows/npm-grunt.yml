@@ -1,0 +1,34 @@
+name: NodeJS with Grunt
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: grunt
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build
+      env:
+        SCREEPS_EMAIL: ${{ vars.EMAIL }}
+        SCREEPS_TOKEN: ${{ secrets.SCREEPSTOKEN }}
+        SCREEPS_BRANCH: ${{ vars.BRANCH || 'default' }}
+        SCREEPS_PTR: ${{ vars.PTR || 'false' }}
+      run: |
+        npm install
+        grunt --email="$SCREEPS_EMAIL" --token="$SCREEPS_TOKEN" --branch="$SCREEPS_BRANCH" --ptr="$SCREEPS_PTR"

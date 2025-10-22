@@ -23,7 +23,7 @@ screeps.json
 
 # Screeps config file
 /config.json
-
+/.screeps.json
 # Numerous always-ignore extensions
 *.diff
 *.err

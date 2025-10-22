@@ -10,6 +10,7 @@ import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, USE_SCREEPS_PROFILER} from '../~settings';
 import {log} from './log';
+import { Directives } from '../directives/directives';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -19,6 +20,8 @@ type RecursiveObject = { [key: string]: number | RecursiveObject };
 export class OvermindConsole {
 
 	static init() {
+		global.directives = Directives;
+		global.directivesMap = Directives.all;
 		global.help = this.help();
 		global.info = this.info;
 		global.notifications = this.notifications;
@@ -292,6 +295,7 @@ export class OvermindConsole {
 		}
 		return msg;
 	}
+	
 
 	// Room planner control ============================================================================================
 

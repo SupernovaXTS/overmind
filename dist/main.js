@@ -5882,11 +5882,11 @@ let OverlordPriority = {
         destroy: 300,
         healPoint: 301,
         siege: 302,
-        controllerAttack: 399,
+        controllerAttack: 305,
     },
     colonization: {
         claim: 400,
-        pioneer: 450,
+        pioneer: 401,
         remoteUpgrading: 610,
     },
     priorityOwnedRoom: {
@@ -5895,10 +5895,10 @@ let OverlordPriority = {
     },
     ownedRoom: {
         firstTransport: 400,
-        mine: 402,
-        work: 503,
+        mine: 401,
+        work: 403,
         mineralRCL8: 503,
-        transport: 401,
+        transport: 402,
         mineral: 505,
     },
     outpostOffense: {
@@ -5906,18 +5906,18 @@ let OverlordPriority = {
         roomPoisoner: 561,
     },
     upgrading: {
-        upgrade: 600,
+        upgrade: 401,
     },
     collectionUrgent: {
         haul: 700
     },
     throttleThreshold: 799,
     scouting: {
-        stationary: 800,
-        randomWalker: 801
+        stationary: 400,
+        randomWalker: 400
     },
     remoteRoom: {
-        reserve: 520,
+        reserve: 405,
         mine: 403,
         roomIncrement: 5,
     },
@@ -5951,7 +5951,7 @@ const getDefaultTraderMemory = () => ({
         history: {},
         tick: 0,
     },
-    canceledOrders: []
+    canceledOrders: [],
 });
 const getDefaultTraderStats = () => ({
     credits: 0,
@@ -5989,18 +5989,18 @@ const defaultTradeOpts = {
 };
 let TraderJoe = TraderJoe_1 = class TraderJoe {
     constructor() {
-        this.name = 'TradeNetwork';
+        this.name = "TradeNetwork";
         this.refresh();
     }
     refresh() {
-        this.memory = Mem.wrap(Memory.Overmind, 'trader', getDefaultTraderMemory);
-        this.stats = Mem.wrap(Memory.stats.persistent, 'trader', getDefaultTraderStats);
+        this.memory = Mem.wrap(Memory.Overmind, "trader", getDefaultTraderMemory);
+        this.stats = Mem.wrap(Memory.stats.persistent, "trader", getDefaultTraderStats);
         this.notifications = [];
         this.ordersPlacedThisTick = 0;
     }
     debug(...args) {
         if (this.memory.debug) {
-            log.alert('TradeNetwork:', args);
+            log.alert("TradeNetwork:", args);
         }
     }
     notify(msg) {
@@ -6014,16 +6014,23 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             return Infinity;
         }
     }
+    priceOfIntershard(mineralType) {
+        if (this.memory.cache.history[mineralType]) {
+            return this.memory.cache.history[mineralType].avg;
+        }
+        else {
+            return Infinity;
+        }
+    }
     buildMarketCache(verbose = false, orderThreshold = 1000) {
-        this.debug('Building market cache');
+        this.debug("Building market cache");
         this.invalidateMarketCache();
-        const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
-        const allOrders = Game.market.getAllOrders(order => !myActiveOrderIDs.includes(order.id) &&
-            order.amount >= orderThreshold);
-        const groupedBuyOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_BUY), o => o.resourceType);
-        const groupedSellOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_SELL), o => o.resourceType);
+        const myActiveOrderIDs = _.map(_.filter(Game.market.orders, (order) => order.active), (order) => order.id);
+        const allOrders = Game.market.getAllOrders((order) => !myActiveOrderIDs.includes(order.id) && order.amount >= orderThreshold);
+        const groupedBuyOrders = _.groupBy(_.filter(allOrders, (o) => o.type == ORDER_BUY), (o) => o.resourceType);
+        const groupedSellOrders = _.groupBy(_.filter(allOrders, (o) => o.type == ORDER_SELL), (o) => o.resourceType);
         for (const resourceType in groupedBuyOrders) {
-            const prices = _.map(groupedBuyOrders[resourceType], o => o.price);
+            const prices = _.map(groupedBuyOrders[resourceType], (o) => o.price);
             const high = _.max(prices);
             const low = _.min(prices);
             if (verbose)
@@ -6031,7 +6038,7 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             this.memory.cache.buy[resourceType] = { high: high, low: low };
         }
         for (const resourceType in groupedSellOrders) {
-            const prices = _.map(groupedSellOrders[resourceType], o => o.price);
+            const prices = _.map(groupedSellOrders[resourceType], (o) => o.price);
             const high = _.max(prices);
             const low = _.min(prices);
             if (verbose)
@@ -6041,33 +6048,36 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         this.memory.cache.tick = Game.time;
     }
     buildMarketHistoryCache() {
-        this.debug('Building market history cache');
+        this.debug("Building market history cache");
         const history = Game.market.getHistory();
-        const historyByResource = _.groupBy(history, hist => hist.resourceType);
+        const historyByResource = _.groupBy(history, (hist) => hist.resourceType);
         for (const resource in historyByResource) {
-            const resourceHistory = _.sortBy(historyByResource[resource], hist => hist.date);
-            const prices = _.map(resourceHistory, hist => hist.avgPrice);
+            const resourceHistory = _.sortBy(historyByResource[resource], (hist) => hist.date);
+            const prices = _.map(resourceHistory, (hist) => hist.avgPrice);
             const avg = _.last(resourceHistory).avgPrice;
             const std = _.last(resourceHistory).stddevPrice;
-            const avg14 = _.sum(resourceHistory, hist => hist.avgPrice * hist.volume) /
-                _.sum(resourceHistory, hist => hist.volume);
-            const std14 = Math.sqrt(_.sum(resourceHistory, h => h.volume * (h.avgPrice - avg14) ** 2 + h.stddevPrice ** 2) /
-                _.sum(resourceHistory, h => h.volume));
+            const avg14 = _.sum(resourceHistory, (hist) => hist.avgPrice * hist.volume) /
+                _.sum(resourceHistory, (hist) => hist.volume);
+            const std14 = Math.sqrt(_.sum(resourceHistory, (h) => h.volume * (h.avgPrice - avg14) ** 2 + h.stddevPrice ** 2) / _.sum(resourceHistory, (h) => h.volume));
             this.memory.cache.history[resource] = {
-                avg, std, avg14, std14
+                avg,
+                std,
+                avg14,
+                std14,
             };
         }
     }
     computeEffectiveEnergyPrices() {
         const energyOrders = _(Game.market.getAllOrders({ resourceType: RESOURCE_ENERGY }))
-            .filter(order => order.amount >= 5000)
-            .groupBy(order => order.type).value();
+            .filter((order) => order.amount >= 5000)
+            .groupBy((order) => order.type)
+            .value();
         const sellOrders = energyOrders[ORDER_SELL];
         const buyOrders = energyOrders[ORDER_BUY];
         for (const colony of _.sample(getAllColonies(), 5)) {
             const room = colony.room.name;
-            const sellDirectPrice = maxBy(buyOrders, order => order.price - this.marginalTransactionPrice(order, room));
-            const buyDirectPrice = minBy(sellOrders, order => order.price + this.marginalTransactionPrice(order, room));
+            const sellDirectPrice = maxBy(buyOrders, (order) => order.price - this.marginalTransactionPrice(order, room));
+            const buyDirectPrice = minBy(sellOrders, (order) => order.price + this.marginalTransactionPrice(order, room));
             const sellOrderPrice = this.computeCompetitivePrice(ORDER_SELL, RESOURCE_ENERGY, room);
             const buyOrderPrice = this.computeCompetitivePrice(ORDER_BUY, RESOURCE_ENERGY, room);
         }
@@ -6078,16 +6088,16 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
     getExistingOrders(type, resource, roomName) {
         let orders;
         if (roomName) {
-            orders = _.filter(Game.market.orders, order => order.type == type &&
-                (order.resourceType == resource || resource == 'any') &&
+            orders = _.filter(Game.market.orders, (order) => order.type == type &&
+                (order.resourceType == resource || resource == "any") &&
                 order.roomName == roomName);
-            if (orders.length > 1 && resource != 'any') {
+            if (orders.length > 1 && resource != "any") {
                 log.error(`Multiple orders for ${resource} detected in ${printRoomName(roomName)}!`);
             }
         }
         else {
-            orders = _.filter(Game.market.orders, order => order.type == type &&
-                (order.resourceType == resource || resource == 'any'));
+            orders = _.filter(Game.market.orders, (order) => order.type == type &&
+                (order.resourceType == resource || resource == "any"));
         }
         return orders;
     }
@@ -6096,7 +6106,8 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
     }
     marginalTransactionPrice(order, dealerRoomName) {
         if (order.roomName) {
-            const transferCost = Game.market.calcTransactionCost(10000, order.roomName, dealerRoomName) / 10000;
+            const transferCost = Game.market.calcTransactionCost(10000, order.roomName, dealerRoomName) /
+                10000;
             const energyPriceGuess = 0.55 * this.memory.cache.history.energy.avg14;
             const energyToCreditMultiplier = Math.min(energyPriceGuess, 0.1);
             return transferCost * energyToCreditMultiplier;
@@ -6109,7 +6120,9 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
     getPriceForBaseIngredients(resource) {
         const ingredients = Abathur.enumerateReactionBaseIngredients(resource);
         if (ingredients.length > 0) {
-            return _.sum(ingredients, res => this.memory.cache.history[res] ? this.memory.cache.history[res].avg14 || Infinity : Infinity);
+            return _.sum(ingredients, (res) => this.memory.cache.history[res]
+                ? this.memory.cache.history[res].avg14 || Infinity
+                : Infinity);
         }
         else {
             if (this.memory.cache.history[resource]) {
@@ -6126,11 +6139,15 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             log.error(`Cannot get base ingredient price for ${resource}!`);
             return Infinity;
         }
-        const allOrdersOfResource = _.groupBy(Game.market.getAllOrders({ resourceType: resource }), 'type');
+        const allOrdersOfResource = _.groupBy(Game.market.getAllOrders({ resourceType: resource }), "type");
         const allBuyOrders = allOrdersOfResource[ORDER_BUY];
         const allSellOrders = allOrdersOfResource[ORDER_SELL];
-        const highestBuyOrder = maxBy(allBuyOrders, o => o.amount < 100 || this.isOrderMine(o) ? false : o.price - this.marginalTransactionPrice(o, room));
-        const lowestSellOrder = minBy(allSellOrders, o => o.amount < 100 || this.isOrderMine(o) ? false : o.price + this.marginalTransactionPrice(o, room));
+        const highestBuyOrder = maxBy(allBuyOrders, (o) => o.amount < 100 || this.isOrderMine(o)
+            ? false
+            : o.price - this.marginalTransactionPrice(o, room));
+        const lowestSellOrder = minBy(allSellOrders, (o) => o.amount < 100 || this.isOrderMine(o)
+            ? false
+            : o.price + this.marginalTransactionPrice(o, room));
         if (!highestBuyOrder || !lowestSellOrder) {
             log.error(`No buy orders or no sell orders for ${resource}!`);
             return Infinity;
@@ -6151,7 +6168,8 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             if (price > lowestSellOrder.price) {
             }
             if ((!Abathur.isBaseMineral(resource) && price < priceForBaseResources) ||
-                (Abathur.isBaseMineral(resource) && price < priceForBaseResources / 2) ||
+                (Abathur.isBaseMineral(resource) &&
+                    price < priceForBaseResources / 2) ||
                 price < 0) {
                 return Infinity;
             }
@@ -6189,7 +6207,8 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         else {
             amount = Math.min(amount, TraderJoe_1.settings.market.orders.maxSellOrderAmount);
         }
-        const minAmount = type == ORDER_BUY ? TraderJoe_1.settings.market.orders.minBuyOrderAmount
+        const minAmount = type == ORDER_BUY
+            ? TraderJoe_1.settings.market.orders.minBuyOrderAmount
             : TraderJoe_1.settings.market.orders.minSellOrderAmount;
         if (amount < minAmount && !opts.ignoreMinAmounts) {
             this.debug(`amount ${amount} less than min amount ${minAmount}; no action taken`);
@@ -6197,8 +6216,7 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         }
         const existingOrder = _.first(this.getExistingOrders(type, resource, terminal.room.name));
         if (existingOrder) {
-            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
-                .toFixed(3);
+            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name).toFixed(3);
             if (price == Infinity || price == 0) {
                 log.warning(`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
                     `in ${printRoomName(terminal.room.name)}!`);
@@ -6206,7 +6224,7 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             }
             const ratio = existingOrder.price / price;
             const tolerance = 0.03;
-            const normalFluctuation = (1 + tolerance > ratio && ratio > 1 - tolerance);
+            const normalFluctuation = 1 + tolerance > ratio && ratio > 1 - tolerance;
             if (amount > existingOrder.remainingAmount && normalFluctuation) {
                 const addAmount = amount - existingOrder.remainingAmount;
                 const ret = Game.market.extendOrder(existingOrder.id, addAmount);
@@ -6223,17 +6241,18 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             return OK;
         }
         else {
-            if (this.ordersPlacedThisTick > TraderJoe_1.settings.market.orders.maxOrdersPlacedPerTick) {
+            if (this.ordersPlacedThisTick >
+                TraderJoe_1.settings.market.orders.maxOrdersPlacedPerTick) {
                 return NO_ACTION;
             }
             const existingOrdersForThis = this.getExistingOrders(type, resource);
-            if (existingOrdersForThis.length > TraderJoe_1.settings.market.orders.maxOrdersForResource) {
+            if (existingOrdersForThis.length >
+                TraderJoe_1.settings.market.orders.maxOrdersForResource) {
                 this.notify(`${printRoomName(terminal.room.name, true)}: could not create ${type} order for ` +
                     `${Math.round(amount)} ${resource} - too many existing!`);
                 return ERR_TOO_MANY_ORDERS_OF_TYPE;
             }
-            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name)
-                .toFixed(3);
+            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name).toFixed(3);
             if (price == Infinity || price == 0) {
                 log.warning(`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
                     `${printRoomName(terminal.room.name)}!`);
@@ -6241,24 +6260,26 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
             }
             const brokersFee = price * amount * MARKET_FEE;
             if (Game.market.credits < brokersFee) {
-                amount = amount * Game.market.credits / brokersFee * 0.9;
+                amount = ((amount * Game.market.credits) / brokersFee) * 0.9;
             }
             const params = {
                 type: type,
                 resourceType: resource,
                 price: price,
                 totalAmount: amount,
-                roomName: terminal.room.name
+                roomName: terminal.room.name,
             };
             const ret = Game.market.createOrder(params);
-            let msg = '';
+            let msg = "";
             if (type == ORDER_BUY) {
-                msg += `${printRoomName(terminal.room.name, true)} creating buy order:  ` +
-                    `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+                msg +=
+                    `${printRoomName(terminal.room.name, true)} creating buy order:  ` +
+                        `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
             }
             else {
-                msg += `${printRoomName(terminal.room.name, true)} creating sell order: ` +
-                    `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+                msg +=
+                    `${printRoomName(terminal.room.name, true)} creating sell order: ` +
+                        `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
             }
             if (ret == OK) {
                 this.ordersPlacedThisTick++;
@@ -6272,12 +6293,12 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         }
     }
     cleanOrders() {
-        const ordersToClean = _.filter(Game.market.orders, order => {
+        const ordersToClean = _.filter(Game.market.orders, (order) => {
             if (order.active == false && order.remainingAmount == 0) {
                 return true;
             }
-            if (Game.time - order.created > TraderJoe_1.settings.market.orders.timeout
-                && order.remainingAmount < TraderJoe_1.settings.market.orders.cleanupAmount) {
+            if (Game.time - order.created > TraderJoe_1.settings.market.orders.timeout &&
+                order.remainingAmount < TraderJoe_1.settings.market.orders.cleanupAmount) {
                 return true;
             }
             if (order.roomName && !Overmind.colonies[order.roomName]) {
@@ -6302,16 +6323,19 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         if (!terminal.isReady && !opts.dryRun) {
             return NO_ACTION;
         }
-        if (amount < TraderJoe_1.settings.market.orders.minBuyDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
+        if (amount < TraderJoe_1.settings.market.orders.minBuyDirectAmount &&
+            !opts.ignoreMinAmounts &&
+            !opts.dryRun) {
             return NO_ACTION;
         }
         amount = Math.min(amount, terminal.store.getFreeCapacity(), TraderJoe_1.settings.market.orders.maxBuyDirectAmount);
-        const minAmount = opts.flexibleAmount ? Math.min(TraderJoe_1.settings.market.orders.minBuyDirectAmount, amount)
+        const minAmount = opts.flexibleAmount
+            ? Math.min(TraderJoe_1.settings.market.orders.minBuyDirectAmount, amount)
             : amount;
-        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL }), order => order.amount >= minAmount);
-        const order = minBy(validOrders, order => order.price
-            + this.marginalTransactionPrice(order, terminal.room.name)
-            - order.amount / 1000000000);
+        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL }), (order) => order.amount >= minAmount);
+        const order = minBy(validOrders, (order) => order.price +
+            this.marginalTransactionPrice(order, terminal.room.name) -
+            order.amount / 1000000000);
         if (!order) {
             if (!opts.dryRun) {
                 this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
@@ -6324,9 +6348,10 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         const maxPriceWillingToPay = priceForBaseIngredients * (1.5 + Game.market.credits / 2e6);
         this.debug(`Price: ${order.price}, Adjusted: ${adjustedPrice}, BaseCost: ${priceForBaseIngredients}, ` +
             `Max: ${maxPriceWillingToPay}`);
-        if (priceForBaseIngredients == Infinity
-            || (adjustedPrice > maxPriceWillingToPay && !opts.ignorePriceChecksForDirect)
-            || adjustedPrice > 100) {
+        if (priceForBaseIngredients == Infinity ||
+            (adjustedPrice > maxPriceWillingToPay &&
+                !opts.ignorePriceChecksForDirect) ||
+            adjustedPrice > 100) {
             if (!opts.dryRun) {
                 this.notify(`Buy direct call is too expenisive! Buy request: ${amount} ${resource} to ` +
                     `${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
@@ -6354,16 +6379,19 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         if (!terminal.isReady && !opts.dryRun) {
             return NO_ACTION;
         }
-        if (amount < TraderJoe_1.settings.market.orders.minSellDirectAmount && !opts.ignoreMinAmounts && !opts.dryRun) {
+        if (amount < TraderJoe_1.settings.market.orders.minSellDirectAmount &&
+            !opts.ignoreMinAmounts &&
+            !opts.dryRun) {
             return NO_ACTION;
         }
         amount = Math.min(amount, terminal.store[resource], TraderJoe_1.settings.market.orders.maxSellDirectAmount);
-        const minAmount = opts.flexibleAmount ? Math.min(amount, TraderJoe_1.settings.market.orders.minSellDirectAmount)
+        const minAmount = opts.flexibleAmount
+            ? Math.min(amount, TraderJoe_1.settings.market.orders.minSellDirectAmount)
             : amount;
-        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY }), order => order.amount >= minAmount);
-        const order = maxBy(validOrders, order => order.price
-            - this.marginalTransactionPrice(order, terminal.room.name)
-            + order.amount / 1000000000);
+        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY }), (order) => order.amount >= minAmount);
+        const order = maxBy(validOrders, (order) => order.price -
+            this.marginalTransactionPrice(order, terminal.room.name) +
+            order.amount / 1000000000);
         if (!order) {
             if (!opts.dryRun) {
                 this.notify(`No valid market order to sell to! Sell request: ${amount} ${resource} from ` +
@@ -6373,12 +6401,13 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         }
         const adjustedPrice = order.price - this.marginalTransactionPrice(order, terminal.room.name);
         const priceForBaseIngredients = this.getPriceForBaseIngredients(resource);
-        const minPriceWillingToSell = .5 * priceForBaseIngredients;
+        const minPriceWillingToSell = 0.5 * priceForBaseIngredients;
         this.debug(`Price: ${order.price}, Adjusted: ${adjustedPrice}, BaseCost: ${priceForBaseIngredients}, ` +
             `Min: ${minPriceWillingToSell}`);
-        if (priceForBaseIngredients == Infinity
-            || (adjustedPrice < minPriceWillingToSell && !opts.ignorePriceChecksForDirect)
-            || adjustedPrice < 0) {
+        if (priceForBaseIngredients == Infinity ||
+            (adjustedPrice < minPriceWillingToSell &&
+                !opts.ignorePriceChecksForDirect) ||
+            adjustedPrice < 0) {
             if (!opts.dryRun) {
                 this.notify(`Sell direct call is too cheap! Sell request: ${amount} ${resource} from ` +
                     `${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
@@ -6415,23 +6444,31 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                 `shouldn't be making this TradeNetwork.buy() request!`);
             return ERR_CREDIT_THRESHOLDS;
         }
-        if (Game.market.credits < TraderJoe_1.settings.market.credits.canBuyBoostsAbove && Abathur.isBoost(resource)) {
+        if (Game.market.credits <
+            TraderJoe_1.settings.market.credits.canBuyBoostsAbove &&
+            Abathur.isBoost(resource)) {
             log.error(`Credits insufficient to buy boost ${amount} ${resource} to ${terminal.room.print}; ` +
                 `shouldn't be making this TradeNetwork.buy() request!`);
             return ERR_CREDIT_THRESHOLDS;
         }
-        if (Game.market.credits < TraderJoe_1.settings.market.credits.canBuyEnergyAbove && resource == RESOURCE_ENERGY) {
+        if (Game.market.credits <
+            TraderJoe_1.settings.market.credits.canBuyEnergyAbove &&
+            resource == RESOURCE_ENERGY) {
             log.error(`Credits insufficient to buy ${amount} energy to ${terminal.room.print}; ` +
                 `shouldn't be making this TradeNetwork.buy() request!`);
             return ERR_CREDIT_THRESHOLDS;
         }
-        if (Abathur.isIntermediateReactant(resource) || resource == RESOURCE_GHODIUM) {
+        if (Abathur.isIntermediateReactant(resource) ||
+            resource == RESOURCE_GHODIUM) {
             log.error(`Shouldn't request reaction intermediate ${amount} ${resource} to ${terminal.room.print}!`);
             return ERR_DONT_BUY_REACTION_INTERMEDIATES;
         }
-        if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length == 0) {
+        if (opts.preferDirect &&
+            this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length ==
+                0) {
             const result = this.buyDirect(terminal, resource, amount, opts);
-            if (result != ERR_NO_ORDER_TO_BUY_FROM && result != ERR_BUY_DIRECT_PRICE_TOO_HIGH) {
+            if (result != ERR_NO_ORDER_TO_BUY_FROM &&
+                result != ERR_BUY_DIRECT_PRICE_TOO_HIGH) {
                 return result;
             }
             this.notify(`Buy direct request: ${amount} ${resource} to ${printRoomName(terminal.room.name)} ` +
@@ -6445,10 +6482,14 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
     }
     sell(terminal, resource, amount, opts = {}) {
         _.defaults(opts, defaultTradeOpts);
-        if (opts.preferDirect || Game.market.credits < TraderJoe_1.settings.market.credits.mustSellDirectBelow) {
-            if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name).length == 0) {
+        if (opts.preferDirect ||
+            Game.market.credits <
+                TraderJoe_1.settings.market.credits.mustSellDirectBelow) {
+            if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name)
+                .length == 0) {
                 const result = this.sellDirect(terminal, resource, amount, opts);
-                if (result != ERR_NO_ORDER_TO_SELL_TO && result != ERR_SELL_DIRECT_PRICE_TOO_LOW) {
+                if (result != ERR_NO_ORDER_TO_SELL_TO &&
+                    result != ERR_SELL_DIRECT_PRICE_TOO_LOW) {
                     return result;
                 }
                 this.notify(`Sell direct request: ${amount} ${resource} from ${printRoomName(terminal.room.name)} ` +
@@ -6458,7 +6499,8 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         if (opts.dryRun) {
             return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
         }
-        if (Game.market.credits >= TraderJoe_1.settings.market.credits.canPlaceSellOrdersAbove) {
+        if (Game.market.credits >=
+            TraderJoe_1.settings.market.credits.canPlaceSellOrdersAbove) {
             const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount, opts);
             return result;
         }
@@ -6467,7 +6509,8 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         }
     }
     init() {
-        if (Game.time - (this.memory.cache.tick || 0) > TraderJoe_1.settings.cache.timeout) {
+        if (Game.time - (this.memory.cache.tick || 0) >
+            TraderJoe_1.settings.cache.timeout) {
             this.buildMarketCache();
             this.buildMarketHistoryCache();
         }
@@ -6482,7 +6525,9 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
         if (Game.time % 10 == 0) {
             if (this.notifications.length > 0) {
                 this.notifications.sort();
-                log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+                log.info(`Trade network activity: ` +
+                    alignedNewline +
+                    this.notifications.join(alignedNewline));
             }
         }
         this.recordStats();
@@ -6495,10 +6540,12 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                 let msg;
                 const cost = (transaction.amount * transaction.order.price).toFixed(2);
                 if (transaction.order.type == ORDER_BUY) {
-                    const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
-                    msg = coststr + ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
-                        `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
-                        `${printRoomName(transaction.from, true)} `;
+                    const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+                            `${printRoomName(transaction.from, true)} `;
                     if (transaction.sender && transaction.recipient) {
                         const recipient = transaction.recipient.username;
                         msg += `(sold to: ${recipient})`;
@@ -6508,10 +6555,12 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                     }
                 }
                 else {
-                    const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
-                    msg = coststr + ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
-                        `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
-                        `${printRoomName(transaction.to, true)} `;
+                    const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+                            `${printRoomName(transaction.to, true)} `;
                     if (transaction.sender && transaction.recipient) {
                         const recipient = transaction.recipient.username;
                         msg += `(buyer: ${recipient})`;
@@ -6530,10 +6579,12 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                 let msg;
                 const cost = (transaction.amount * transaction.order.price).toFixed(2);
                 if (transaction.order.type == ORDER_SELL) {
-                    const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
-                    msg = coststr + ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
-                        `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
-                        `${printRoomName(transaction.from, true)} `;
+                    const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+                            `${printRoomName(transaction.from, true)} `;
                     if (transaction.sender && transaction.recipient) {
                         const sender = transaction.sender.username;
                         msg += `(bought from: ${sender})`;
@@ -6543,10 +6594,12 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                     }
                 }
                 else {
-                    const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
-                    msg = coststr + ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
-                        `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
-                        `${printRoomName(transaction.to, true)} `;
+                    const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+                            `${printRoomName(transaction.to, true)} `;
                     if (transaction.sender && transaction.recipient) {
                         const sender = transaction.sender.username;
                         msg += `(seller: ${sender})`;
@@ -6571,7 +6624,10 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                     const resourceType = transaction.resourceType;
                     const amount = transaction.amount;
                     const price = transaction.order.price;
-                    this.stats.bought[resourceType] = this.stats.bought[resourceType] || { amount: 0, credits: 0 };
+                    this.stats.bought[resourceType] = this.stats.bought[resourceType] || {
+                        amount: 0,
+                        credits: 0,
+                    };
                     this.stats.bought[resourceType].amount += amount;
                     this.stats.bought[resourceType].credits += amount * price;
                 }
@@ -6586,7 +6642,10 @@ let TraderJoe = TraderJoe_1 = class TraderJoe {
                     const resourceType = transaction.resourceType;
                     const amount = transaction.amount;
                     const price = transaction.order.price;
-                    this.stats.sold[resourceType] = this.stats.sold[resourceType] || { amount: 0, credits: 0 };
+                    this.stats.sold[resourceType] = this.stats.sold[resourceType] || {
+                        amount: 0,
+                        credits: 0,
+                    };
                     this.stats.sold[resourceType].amount += amount;
                     this.stats.sold[resourceType].credits += amount * price;
                 }
@@ -6625,12 +6684,655 @@ TraderJoe.settings = {
             maxBuyOrderAmount: 25000,
             minBuyDirectAmount: 500,
             maxBuyDirectAmount: 10000,
-        }
+        },
     },
 };
 TraderJoe = TraderJoe_1 = __decorate([
     profile
 ], TraderJoe);
+class TraderJoeIntershard {
+    constructor() {
+        this.name = "TradeNetwork";
+        this.refresh();
+    }
+    refresh() {
+        this.memory = Mem.wrap(Memory.Overmind, "trader", getDefaultTraderMemory);
+        this.stats = Mem.wrap(Memory.stats.persistent, "trader", getDefaultTraderStats);
+        this.notifications = [];
+        this.ordersPlacedThisTick = 0;
+    }
+    debug(...args) {
+        if (this.memory.debug) {
+            log.alert("TradeNetwork:", args);
+        }
+    }
+    notify(msg) {
+        this.notifications.push(bullet + msg);
+    }
+    buildMarketCache(verbose = false, orderThreshold = 1000) {
+        this.debug("Building market cache");
+        this.invalidateMarketCache();
+        const myActiveOrderIDs = _.map(_.filter(Game.market.orders, (order) => order.active), (order) => order.id);
+        const allOrders = Game.market.getAllOrders((order) => !myActiveOrderIDs.includes(order.id) && order.amount >= orderThreshold);
+        const groupedBuyOrders = _.groupBy(_.filter(allOrders, (o) => o.type == ORDER_BUY), (o) => o.resourceType);
+        const groupedSellOrders = _.groupBy(_.filter(allOrders, (o) => o.type == ORDER_SELL), (o) => o.resourceType);
+        for (const resourceType in groupedBuyOrders) {
+            const prices = _.map(groupedBuyOrders[resourceType], (o) => o.price);
+            const high = _.max(prices);
+            const low = _.min(prices);
+            if (verbose)
+                console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
+            this.memory.cache.buy[resourceType] = { high: high, low: low };
+        }
+        for (const resourceType in groupedSellOrders) {
+            const prices = _.map(groupedSellOrders[resourceType], (o) => o.price);
+            const high = _.max(prices);
+            const low = _.min(prices);
+            if (verbose)
+                console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
+            this.memory.cache.sell[resourceType] = { high: high, low: low };
+        }
+        this.memory.cache.tick = Game.time;
+    }
+    buildMarketHistoryCache() {
+        this.debug("Building market history cache");
+        const history = Game.market.getHistory();
+        const historyByResource = _.groupBy(history, (hist) => hist.resourceType);
+        for (const resource in historyByResource) {
+            const resourceHistory = _.sortBy(historyByResource[resource], (hist) => hist.date);
+            const prices = _.map(resourceHistory, (hist) => hist.avgPrice);
+            const avg = _.last(resourceHistory).avgPrice;
+            const std = _.last(resourceHistory).stddevPrice;
+            const avg14 = _.sum(resourceHistory, (hist) => hist.avgPrice * hist.volume) /
+                _.sum(resourceHistory, (hist) => hist.volume);
+            const std14 = Math.sqrt(_.sum(resourceHistory, (h) => h.volume * (h.avgPrice - avg14) ** 2 + h.stddevPrice ** 2) / _.sum(resourceHistory, (h) => h.volume));
+            this.memory.cache.history[resource] = {
+                avg,
+                std,
+                avg14,
+                std14,
+            };
+        }
+    }
+    getExistingOrders(type, resource, roomName) {
+        let orders;
+        if (roomName) {
+            orders = _.filter(Game.market.orders, (order) => order.type == type &&
+                (order.resourceType == resource || resource == "any") &&
+                order.roomName == roomName);
+            if (orders.length > 1 && resource != "any") {
+                log.error(`Multiple orders for ${resource} detected in ${printRoomName(roomName)}!`);
+            }
+        }
+        else {
+            orders = _.filter(Game.market.orders, (order) => order.type == type &&
+                (order.resourceType == resource || resource == "any"));
+        }
+        return orders;
+    }
+    isOrderMine(order) {
+        return Game.rooms[order.roomName] && Game.rooms[order.roomName].my;
+    }
+    invalidateMarketCache() {
+        this.memory.cache = getDefaultTraderMemory().cache;
+    }
+    buy(terminal, resource, amount, opts = {}) {
+        _.defaults(opts, defaultTradeOpts);
+        if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
+            log.error(`Credits insufficient to buy resource ${amount} ${resource} to ${terminal.room.print}; ` +
+                `shouldn't be making this TradeNetwork.buy() request!`);
+            return ERR_CREDIT_THRESHOLDS;
+        }
+        if (opts.preferDirect &&
+            this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length ==
+                0) {
+            const result = this.buyDirect(terminal, resource, amount, opts);
+            if (result != ERR_NO_ORDER_TO_BUY_FROM &&
+                result != ERR_BUY_DIRECT_PRICE_TOO_HIGH) {
+                return result;
+            }
+            this.notify(`Buy direct request: ${amount} ${resource} to ${printRoomName(terminal.room.name)} ` +
+                `was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`);
+        }
+        if (opts.dryRun) {
+            return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
+        }
+        const result = this.maintainOrder(terminal, ORDER_BUY, resource, amount, opts);
+        return result;
+    }
+    sell(terminal, resource, amount, opts = {}) {
+        _.defaults(opts, defaultTradeOpts);
+        if (opts.preferDirect ||
+            Game.market.credits <
+                TraderJoe.settings.market.credits.mustSellDirectBelow) {
+            if (this.getExistingOrders(ORDER_SELL, resource, terminal.room.name)
+                .length == 0) {
+                const result = this.sellDirect(terminal, resource, amount, opts);
+                if (result != ERR_NO_ORDER_TO_SELL_TO &&
+                    result != ERR_SELL_DIRECT_PRICE_TOO_LOW) {
+                    return result;
+                }
+                this.notify(`Sell direct request: ${amount} ${resource} from ${printRoomName(terminal.room.name)} ` +
+                    `was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`);
+            }
+        }
+        if (opts.dryRun) {
+            return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
+        }
+        if (Game.market.credits >=
+            TraderJoe.settings.market.credits.canPlaceSellOrdersAbove) {
+            const result = this.maintainOrder(terminal, ORDER_SELL, resource, amount, opts);
+            return result;
+        }
+        else {
+            return ERR_CREDIT_THRESHOLDS;
+        }
+    }
+    computeCompetitivePrice(type, resource, room) {
+        const allOrdersOfResource = _.groupBy(Game.market.getAllOrders({ resourceType: resource }), "type");
+        const allBuyOrders = allOrdersOfResource[ORDER_BUY];
+        const allSellOrders = allOrdersOfResource[ORDER_SELL];
+        const highestBuyOrder = maxBy(allBuyOrders, (o) => o.amount < 100 || this.isOrderMine(o)
+            ? false
+            : o.price - this.marginalTransactionPrice(o, room));
+        const lowestSellOrder = minBy(allSellOrders, (o) => o.amount < 100 || this.isOrderMine(o)
+            ? false
+            : o.price + this.marginalTransactionPrice(o, room));
+        if (!highestBuyOrder || !lowestSellOrder) {
+            log.error(`No buy orders or no sell orders for ${resource}!`);
+            return Infinity;
+        }
+        const adjustMagnitude = 0.1;
+        let adjustment = 1;
+        const existingOrder = _.first(this.getExistingOrders(ORDER_SELL, resource, room));
+        if (existingOrder) {
+            const timeOnMarket = Game.time - existingOrder.created;
+            const orderDiscountTimescale = 50000;
+            adjustment = (adjustment + timeOnMarket / orderDiscountTimescale) / 2;
+        }
+        if (type == ORDER_SELL) {
+            const discountFactor = 1 - adjustment * adjustMagnitude;
+            const marketRate = Math.max(lowestSellOrder.price, highestBuyOrder.price);
+            const price = marketRate * discountFactor;
+            this.debug(`Candidate price to ${type} ${resource} in ${printRoomName(room)}: ${price}`);
+            if (price > lowestSellOrder.price) {
+            }
+            if (price < 0) {
+                return Infinity;
+            }
+            else {
+                return price;
+            }
+        }
+        else {
+            const outbidFactor = 1 + adjustment * adjustMagnitude;
+            const marketRate = Math.min(highestBuyOrder.price, lowestSellOrder.price);
+            const price = marketRate * outbidFactor;
+            this.debug(`Candidate price to ${type} ${resource} in ${printRoomName(room)}: ${price}`);
+            if (price < highestBuyOrder.price) {
+            }
+            const maxMarkupWillingToBuyFrom = 3;
+            if (price >
+                this.priceOf(resource) * maxMarkupWillingToBuyFrom) {
+                return Infinity;
+            }
+            else {
+                return price;
+            }
+        }
+    }
+    priceOf(mineralType) {
+        if (this.memory.cache.history[mineralType]) {
+            return this.memory.cache.history[mineralType].avg;
+        }
+        else {
+            return Infinity;
+        }
+    }
+    maintainOrder(terminal, type, resource, amount, opts) {
+        this.debug(`maintain ${type} order for ${terminal.room.print}: ${amount} ${resource}`);
+        if (!this.ordersProcessedThisTick()) {
+            return OK;
+        }
+        if (type == ORDER_SELL) {
+            amount = Math.min(amount, TraderJoe.settings.market.orders.maxBuyOrderAmount);
+        }
+        else {
+            amount = Math.min(amount, TraderJoe.settings.market.orders.maxSellOrderAmount);
+        }
+        const minAmount = type == ORDER_BUY
+            ? TraderJoe.settings.market.orders.minBuyOrderAmount
+            : TraderJoe.settings.market.orders.minSellOrderAmount;
+        if (amount < minAmount && !opts.ignoreMinAmounts) {
+            this.debug(`amount ${amount} less than min amount ${minAmount}; no action taken`);
+            return NO_ACTION;
+        }
+        const existingOrder = _.first(this.getExistingOrders(type, resource, terminal.room.name));
+        if (existingOrder) {
+            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name).toFixed(3);
+            if (price == Infinity || price == 0) {
+                log.warning(`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
+                    `in ${printRoomName(terminal.room.name)}!`);
+                return ERR_NOT_ENOUGH_MARKET_DATA;
+            }
+            const ratio = existingOrder.price / price;
+            const tolerance = 0.03;
+            const normalFluctuation = 1 + tolerance > ratio && ratio > 1 - tolerance;
+            if (amount > existingOrder.remainingAmount && normalFluctuation) {
+                const addAmount = amount - existingOrder.remainingAmount;
+                const ret = Game.market.extendOrder(existingOrder.id, addAmount);
+                this.notify(`${terminal.room.print}: extending ${type} order for ${resource} by ${addAmount}.` +
+                    ` Response: ${ret}`);
+                return ret;
+            }
+            if (!normalFluctuation && Math.random() < 1 / 2000) {
+                const ret = Game.market.changeOrderPrice(existingOrder.id, price);
+                this.notify(`${terminal.room.print}: changing ${type} order price for ${resource} from ` +
+                    `${existingOrder.price} to ${price}. Response: ${ret}`);
+                return ret;
+            }
+            return OK;
+        }
+        else {
+            if (this.ordersPlacedThisTick >
+                TraderJoe.settings.market.orders.maxOrdersPlacedPerTick) {
+                return NO_ACTION;
+            }
+            const existingOrdersForThis = this.getExistingOrders(type, resource);
+            if (existingOrdersForThis.length >
+                TraderJoe.settings.market.orders.maxOrdersForResource) {
+                this.notify(`${printRoomName(terminal.room.name, true)}: could not create ${type} order for ` +
+                    `${Math.round(amount)} ${resource} - too many existing!`);
+                return ERR_TOO_MANY_ORDERS_OF_TYPE;
+            }
+            const price = +this.computeCompetitivePrice(type, resource, terminal.room.name).toFixed(3);
+            if (price == Infinity || price == 0) {
+                log.warning(`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
+                    `${printRoomName(terminal.room.name)}!`);
+                return ERR_NOT_ENOUGH_MARKET_DATA;
+            }
+            const brokersFee = price * amount * MARKET_FEE;
+            if (Game.market.credits < brokersFee) {
+                amount = ((amount * Game.market.credits) / brokersFee) * 0.9;
+            }
+            const params = {
+                type: type,
+                resourceType: resource,
+                price: price,
+                totalAmount: amount,
+                roomName: terminal.room.name,
+            };
+            const ret = Game.market.createOrder(params);
+            let msg = "";
+            if (type == ORDER_BUY) {
+                msg +=
+                    `${printRoomName(terminal.room.name, true)} creating buy order:  ` +
+                        `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+            }
+            else {
+                msg +=
+                    `${printRoomName(terminal.room.name, true)} creating sell order: ` +
+                        `${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+            }
+            if (ret == OK) {
+                this.ordersPlacedThisTick++;
+            }
+            else {
+                msg += ` ERROR: ${ret}`;
+            }
+            this.debug(msg);
+            this.notify(msg);
+            return ret;
+        }
+    }
+    cleanOrders() {
+        const ordersToClean = _.filter(Game.market.orders, (order) => {
+            if (order.active == false && order.remainingAmount == 0) {
+                return true;
+            }
+            if (Game.time - order.created > TraderJoe.settings.market.orders.timeout &&
+                order.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount) {
+                return true;
+            }
+            if (order.roomName && !Overmind.colonies[order.roomName]) {
+                return true;
+            }
+        });
+        for (const order of ordersToClean) {
+            const ret = Game.market.cancelOrder(order.id);
+            if (ret == OK) {
+                this.notify(`Cleaning ${order.type} order for ${order.totalAmount} ${order.resourceType}. ` +
+                    `Order lifetime: ${Game.time - order.created}`);
+                order.lifetime = Game.time - order.created;
+                this.memory.canceledOrders.push(order);
+                if (this.memory.canceledOrders.length > 300) {
+                    this.memory.canceledOrders.shift();
+                }
+            }
+        }
+    }
+    buyDirect(terminal, resource, amount, opts) {
+        this.debug(`buyDirect for ${terminal.room.print}: ${amount} ${resource}`);
+        if (!terminal.isReady && !opts.dryRun) {
+            return NO_ACTION;
+        }
+        if (amount < TraderJoe.settings.market.orders.minBuyDirectAmount &&
+            !opts.ignoreMinAmounts &&
+            !opts.dryRun) {
+            return NO_ACTION;
+        }
+        amount = Math.min(amount, terminal.store.getFreeCapacity(), TraderJoe.settings.market.orders.maxBuyDirectAmount);
+        const minAmount = opts.flexibleAmount
+            ? Math.min(TraderJoe.settings.market.orders.minBuyDirectAmount, amount)
+            : amount;
+        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL }), (order) => order.amount >= minAmount);
+        const order = minBy(validOrders, (order) => order.price +
+            this.marginalTransactionPrice(order, terminal.room.name) -
+            order.amount / 1000000000);
+        if (!order) {
+            if (!opts.dryRun) {
+                this.notify(`No valid market order to buy from! Buy request: ${amount} ${resource} to ` +
+                    `${printRoomName(terminal.room.name)}`);
+            }
+            return ERR_NO_ORDER_TO_BUY_FROM;
+        }
+        const adjustedPrice = order.price + this.marginalTransactionPrice(order, terminal.room.name);
+        const priceForBaseIngredients = this.priceOf(resource);
+        const maxPriceWillingToPay = priceForBaseIngredients * (1.5 + Game.market.credits / 2e6);
+        this.debug(`Price: ${order.price}, Adjusted: ${adjustedPrice}, BaseCost: ${priceForBaseIngredients}, ` +
+            `Max: ${maxPriceWillingToPay}`);
+        if (priceForBaseIngredients == Infinity ||
+            (adjustedPrice > maxPriceWillingToPay &&
+                !opts.ignorePriceChecksForDirect) ||
+            adjustedPrice > 100) {
+            if (!opts.dryRun) {
+                this.notify(`Buy direct call is too expenisive! Buy request: ${amount} ${resource} to ` +
+                    `${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
+                    `${adjustedPrice.toFixed(4)}`);
+            }
+            return ERR_BUY_DIRECT_PRICE_TOO_HIGH;
+        }
+        const buyAmount = Math.min(order.amount, amount);
+        const transactionCost = Game.market.calcTransactionCost(buyAmount, terminal.room.name, order.roomName);
+        if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
+            if (opts.dryRun) {
+                const haveEnoughCredits = Game.market.credits >= buyAmount * order.price;
+                return haveEnoughCredits ? OK : ERR_NOT_ENOUGH_RESOURCES;
+            }
+            const response = Game.market.deal(order.id, buyAmount, terminal.room.name);
+            this.debug(`buyDirect executed for ${terminal.room.print}: ${buyAmount} ${resource} (${response})`);
+            return response;
+        }
+        else {
+            return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
+        }
+    }
+    sellDirect(terminal, resource, amount, opts) {
+        this.debug(`sellDirect for ${terminal.room.print}: ${amount} ${resource}`);
+        if (!terminal.isReady && !opts.dryRun) {
+            return NO_ACTION;
+        }
+        if (amount < TraderJoe.settings.market.orders.minSellDirectAmount &&
+            !opts.ignoreMinAmounts &&
+            !opts.dryRun) {
+            return NO_ACTION;
+        }
+        amount = Math.min(amount, terminal.store[resource], TraderJoe.settings.market.orders.maxSellDirectAmount);
+        const minAmount = opts.flexibleAmount
+            ? Math.min(amount, TraderJoe.settings.market.orders.minSellDirectAmount)
+            : amount;
+        const validOrders = _.filter(Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY }), (order) => order.amount >= minAmount);
+        const order = maxBy(validOrders, (order) => order.price -
+            this.marginalTransactionPrice(order, terminal.room.name) +
+            order.amount / 1000000000);
+        if (!order) {
+            if (!opts.dryRun) {
+                this.notify(`No valid market order to sell to! Sell request: ${amount} ${resource} from ` +
+                    `${printRoomName(terminal.room.name)}`);
+            }
+            return ERR_NO_ORDER_TO_SELL_TO;
+        }
+        const adjustedPrice = order.price - this.marginalTransactionPrice(order, terminal.room.name);
+        const priceForBaseIngredients = this.priceOf(resource);
+        const minPriceWillingToSell = 0.5 * priceForBaseIngredients;
+        this.debug(`Price: ${order.price}, Adjusted: ${adjustedPrice}, BaseCost: ${priceForBaseIngredients}, ` +
+            `Min: ${minPriceWillingToSell}`);
+        if (priceForBaseIngredients == Infinity ||
+            (adjustedPrice < minPriceWillingToSell &&
+                !opts.ignorePriceChecksForDirect) ||
+            adjustedPrice < 0) {
+            if (!opts.dryRun) {
+                this.notify(`Sell direct call is too cheap! Sell request: ${amount} ${resource} from ` +
+                    `${printRoomName(terminal.room.name)}, adjusted price of best order: ` +
+                    `${adjustedPrice}`);
+            }
+            return ERR_SELL_DIRECT_PRICE_TOO_LOW;
+        }
+        let sellAmount = Math.min(order.amount, amount);
+        const transactionCost = Game.market.calcTransactionCost(sellAmount, terminal.room.name, order.roomName);
+        if (terminal.store[RESOURCE_ENERGY] >= transactionCost) {
+            if (opts.dryRun) {
+                return OK;
+            }
+            const response = Game.market.deal(order.id, sellAmount, terminal.room.name);
+            this.debug(`sellDirect executed for ${terminal.room.print}: ${sellAmount} ${resource} (${response})`);
+            return response;
+        }
+        else {
+            return ERR_INSUFFICIENT_ENERGY_IN_TERMINAL;
+        }
+    }
+    marginalTransactionPrice(order, dealerRoomName) {
+        if (order.roomName) {
+            const transferCost = Game.market.calcTransactionCost(10000, order.roomName, dealerRoomName) /
+                10000;
+            const energyPriceGuess = 0.55 * this.memory.cache.history.energy.avg14;
+            const energyToCreditMultiplier = Math.min(energyPriceGuess, 0.1);
+            return transferCost * energyToCreditMultiplier;
+        }
+        else {
+            log.error(`order.roomName is unspecified!`);
+            return Infinity;
+        }
+    }
+    getPriceForBaseIngredients(resource) {
+        const ingredients = Abathur.enumerateReactionBaseIngredients(resource);
+        if (ingredients.length > 0) {
+            return _.sum(ingredients, (res) => this.memory.cache.history[res]
+                ? this.memory.cache.history[res].avg14 || Infinity
+                : Infinity);
+        }
+        else {
+            if (this.memory.cache.history[resource]) {
+                return this.memory.cache.history[resource].avg14;
+            }
+            else {
+                return Infinity;
+            }
+        }
+    }
+    ordersProcessedThisTick() {
+        return Game.time % 10 == 5;
+    }
+    init() {
+        if (Game.time - (this.memory.cache.tick || 0) >
+            TraderJoe.settings.cache.timeout) {
+            this.buildMarketCache();
+            this.buildMarketHistoryCache();
+        }
+    }
+    run() {
+        if (!onPublicServer())
+            return;
+        if (Game.time % 10 == 0) {
+            this.cleanOrders();
+        }
+        this.notifyLastTickTransactions();
+        if (Game.time % 10 == 0) {
+            if (this.notifications.length > 0) {
+                this.notifications.sort();
+                log.info(`Trade network activity: ` +
+                    alignedNewline +
+                    this.notifications.join(alignedNewline));
+            }
+        }
+        this.recordStats();
+    }
+    notifyLastTickTransactions() {
+        for (const transaction of Game.market.outgoingTransactions) {
+            if (transaction.time < Game.time - 1)
+                break;
+            if (transaction.order) {
+                let msg;
+                const cost = (transaction.amount * transaction.order.price).toFixed(2);
+                if (transaction.order.type == ORDER_BUY) {
+                    const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` sell direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+                            `${printRoomName(transaction.from, true)} `;
+                    if (transaction.sender && transaction.recipient) {
+                        const recipient = transaction.recipient.username;
+                        msg += `(sold to: ${recipient})`;
+                    }
+                    else {
+                        msg += `(sold to: ???)`;
+                    }
+                }
+                else {
+                    const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` sell order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+                            `${printRoomName(transaction.to, true)} `;
+                    if (transaction.sender && transaction.recipient) {
+                        const recipient = transaction.recipient.username;
+                        msg += `(buyer: ${recipient})`;
+                    }
+                    else {
+                        msg += `(buyer: ???)`;
+                    }
+                }
+                this.notify(msg);
+            }
+        }
+        for (const transaction of Game.market.incomingTransactions) {
+            if (transaction.time < Game.time - 1)
+                break;
+            if (transaction.order) {
+                let msg;
+                const cost = (transaction.amount * transaction.order.price).toFixed(2);
+                if (transaction.order.type == ORDER_SELL) {
+                    const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` buy direct: ${printRoomName(transaction.to, true)} ${leftArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${leftArrow} ` +
+                            `${printRoomName(transaction.from, true)} `;
+                    if (transaction.sender && transaction.recipient) {
+                        const sender = transaction.sender.username;
+                        msg += `(bought from: ${sender})`;
+                    }
+                    else {
+                        msg += `(bought from: ???)`;
+                    }
+                }
+                else {
+                    const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+                    msg =
+                        coststr +
+                            ` buy order: ${printRoomName(transaction.from, true)} ${rightArrow} ` +
+                            `${transaction.amount} ${transaction.resourceType} ${rightArrow} ` +
+                            `${printRoomName(transaction.to, true)} `;
+                    if (transaction.sender && transaction.recipient) {
+                        const sender = transaction.sender.username;
+                        msg += `(seller: ${sender})`;
+                    }
+                    else {
+                        msg += `(seller: ???)`;
+                    }
+                }
+                this.notify(msg);
+            }
+        }
+    }
+    recordStats() {
+        this.stats.credits = Game.market.credits;
+        const lastTick = Game.time - 1;
+        for (const transaction of Game.market.incomingTransactions) {
+            if (transaction.time < lastTick) {
+                break;
+            }
+            else {
+                if (transaction.order) {
+                    const resourceType = transaction.resourceType;
+                    const amount = transaction.amount;
+                    const price = transaction.order.price;
+                    this.stats.bought[resourceType] = this.stats.bought[resourceType] || {
+                        amount: 0,
+                        credits: 0,
+                    };
+                    this.stats.bought[resourceType].amount += amount;
+                    this.stats.bought[resourceType].credits += amount * price;
+                }
+            }
+        }
+        for (const transaction of Game.market.outgoingTransactions) {
+            if (transaction.time < lastTick) {
+                break;
+            }
+            else {
+                if (transaction.order) {
+                    const resourceType = transaction.resourceType;
+                    const amount = transaction.amount;
+                    const price = transaction.order.price;
+                    this.stats.sold[resourceType] = this.stats.sold[resourceType] || {
+                        amount: 0,
+                        credits: 0,
+                    };
+                    this.stats.sold[resourceType].amount += amount;
+                    this.stats.sold[resourceType].credits += amount * price;
+                }
+            }
+        }
+    }
+}
+TraderJoeIntershard.settings = {
+    cache: {
+        timeout: 250,
+    },
+    market: {
+        resources: {
+            allowBuyT1T2boosts: false,
+        },
+        credits: {
+            mustSellDirectBelow: 5000,
+            canPlaceSellOrdersAbove: 2000,
+            canBuyAbove: 1000000,
+            canBuyPassivelyAbove: 3000000,
+            canBuyBoostsAbove: 5 * Math.max(RESERVE_CREDITS, 1e5),
+            canBuyEnergyAbove: 10 * Math.max(RESERVE_CREDITS, 1e5),
+        },
+        orders: {
+            timeout: 500000,
+            cleanupAmount: 100,
+            maxEnergySellOrders: 5,
+            maxEnergyBuyOrders: 5,
+            maxOrdersPlacedPerTick: 7,
+            maxOrdersForResource: 20,
+            minSellOrderAmount: 1000,
+            maxSellOrderAmount: 25000,
+            minSellDirectAmount: 250,
+            maxSellDirectAmount: 10000,
+            minBuyOrderAmount: 250,
+            maxBuyOrderAmount: 25000,
+            minBuyDirectAmount: 500,
+            maxBuyDirectAmount: 10000,
+        },
+    },
+};
 
 var Abathur_1;
 const REACTION_PRIORITIES = [
@@ -19421,8 +20123,10 @@ let UpgradingOverlord = class UpgradingOverlord extends Overlord {
             return;
         }
         let setup = Setups.upgraders.default;
-        if (this.colony.assets.energy > UpgradeSite.settings.energyBuffer
-            || this.upgradeSite.controller.ticksToDowngrade < 500) {
+        if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
+            return;
+        }
+        if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) || (this.upgradeSite.controller.ticksToDowngrade < 500)) {
             if (this.colony.level == 8) {
                 setup = Setups.upgraders.rcl8;
                 if (this.colony.labs.length == 10 &&
@@ -19438,7 +20142,9 @@ let UpgradingOverlord = class UpgradingOverlord extends Overlord {
             const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
             this.wishlist(upgradersNeeded, setup);
         }
-        this.wishlist(0, setup);
+        else {
+            this.wishlist(0, setup);
+        }
     }
     handleUpgrader(upgrader) {
         if (upgrader.carry.energy > 0) {
@@ -21249,6 +21955,8 @@ let DefaultOverlord = class DefaultOverlord extends Overlord {
             zerg.refresh();
         }
     }
+    refresh() {
+    }
     run() {
     }
 };
@@ -21271,7 +21979,7 @@ let TransportOverlord = class TransportOverlord extends Overlord {
         const scaling = this.colony.stage == ColonyStage.Larva ? 1.5 : 2.0;
         for (const flagName in this.colony.miningSites) {
             const miningOverlord = this.colony.miningSites[flagName].overlords.mine;
-            if (!miningOverlord.isSuspended && miningOverlord.miners.length > 0) {
+            if (miningOverlord && !miningOverlord.isSuspended && miningOverlord.miners.length > 0) {
                 if ((miningOverlord.container && !miningOverlord.link) || miningOverlord.allowDropMining) {
                     transportPower += miningOverlord.energyPerTick * scaling * miningOverlord.distance;
                 }
@@ -22963,7 +23671,7 @@ let ReservingOverlord = class ReservingOverlord extends Overlord {
             RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
             amount = 1;
         }
-        this.wishlist(amount, Setups.infestors.reserve);
+        this.wishlist(amount, Setups.infestors.reserve, { reassignIdle: true });
     }
     handleReserver(reserver) {
         if (reserver.avoidDanger())
@@ -23106,8 +23814,16 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         this.spawnSite = this.room ? _.filter(this.room.constructionSites, s => s.structureType == STRUCTURE_SPAWN)[0] : undefined;
     }
     init() {
+        var _a;
         var type = this.directive.type;
-        this.wishlist(4, Setups.pioneers[type]);
+        var numSources = (_a = this.room) === null || _a === void 0 ? void 0 : _a.sources;
+        var numPos = 0;
+        if (numSources) {
+            for (var source of numSources) {
+                numPos += source.pos.availableNeighbors(true).length;
+            }
+        }
+        this.wishlist(numPos * 2, Setups.pioneers[type]);
     }
     findStructureBlockingController(pioneer) {
         const blockingPos = Pathing.findBlockingPos(pioneer.pos, pioneer.room.controller.pos, _.filter(pioneer.room.structures, s => !s.isWalkable));
@@ -23117,6 +23833,7 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
     }
     handlePioneer(pioneer) {
+        var _a;
         var viable = true;
         if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable)
             pioneer.retire();
@@ -23137,7 +23854,7 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
         }
         if (pioneer.carry.energy == 0) {
             pioneer.task = Tasks.recharge();
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
@@ -23146,13 +23863,19 @@ let PioneerOverlord = class PioneerOverlord extends Overlord {
             || !this.spawnSite)
             && !(this.room.controller.upgradeBlocked > 0)) {
             pioneer.task = Tasks.upgrade(this.room.controller);
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
         else if (this.spawnSite) {
             pioneer.task = Tasks.build(this.spawnSite);
-            if (!pioneer.task.isValidTask()) {
+            if (pioneer.task && !pioneer.task.isValidTask()) {
+                viable = false;
+            }
+        }
+        else if (((_a = this.room.spawns) === null || _a === void 0 ? void 0 : _a.length) > 0) {
+            pioneer.task = Tasks.transfer(this.room.spawns[0]);
+            if (pioneer.task && !pioneer.task.isValidTask()) {
                 viable = false;
             }
         }
@@ -23221,7 +23944,7 @@ let ClaimingOverlord = class ClaimingOverlord extends Overlord {
             return 1;
         });
         const setup = this.colony.level > 4 ? Setups.infestors.fastClaim : Setups.infestors.claim;
-        this.wishlist(amount, setup);
+        this.wishlist(amount, setup, { reassignIdle: true });
     }
     handleClaimer(claimer) {
         if (claimer.room != this.room || claimer.pos.isEdge) {
@@ -23240,11 +23963,6 @@ let ClaimingOverlord = class ClaimingOverlord extends Overlord {
     }
     run() {
         this.autoRun(this.claimers, claimer => this.handleClaimer(claimer));
-        if (this.room && this.room.controller && this.room.controller.my && this.room.controller.signedByMe) {
-            for (const claimer of this.claimers) {
-                claimer.suicide();
-            }
-        }
     }
 };
 ClaimingOverlord = __decorate([
@@ -23810,8 +24528,8 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         return assignments;
     }
     init() {
-        if (this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) {
-            this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, { noLifetimeFilter: true });
+        if ((this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) && !(this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0)) {
+            this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, { noLifetimeFilter: true, reassignIdle: true });
         }
     }
     controllerIsNeutral() {
@@ -23829,8 +24547,13 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
         var _a;
         if (!this.room || !this.room.controller)
             return;
+        if (this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0)
+            return;
+        var ready = 0;
         for (const controllerAttacker of this.controllerAttackers) {
             const attackPos = this.assignments[controllerAttacker.name];
+            if (this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0)
+                return;
             if (!attackPos) {
                 log.error(`No attack position for ${controllerAttacker.print}!`);
                 continue;
@@ -23843,14 +24566,20 @@ let ControllerAttackerOverlord = class ControllerAttackerOverlord extends Overlo
                 log.debug(`Controller already neutral: ${(_a = this.room) === null || _a === void 0 ? void 0 : _a.name}`);
                 return;
             }
-            const ret = controllerAttacker.attackController(this.room.controller);
-            if (ret == -12) {
-                controllerAttacker.suicide();
-                continue;
+            if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
+                controllerAttacker.retire();
+                return;
             }
-            if (ret != 0 && ret != -11) {
-                log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
-                continue;
+            if (attackPos.inRangeTo(controllerAttacker.pos, 0)) {
+                ready += 1;
+            }
+            if (ready == this.controllerAttackers.length) {
+                const ret = controllerAttacker.attackController(this.room.controller);
+                if (ret != 0 && ret != -11) {
+                    log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
+                    continue;
+                }
+                this.finish(false);
             }
         }
     }
@@ -23872,8 +24601,7 @@ let DirectiveControllerAttack = class DirectiveControllerAttack extends Directiv
         this.alert(`Downgrading controller (RCL${level})`);
     }
     run() {
-        if (this.room && this.room.controller && (this.room.controller.level == 0 && (!this.room.controller.reservation
-            || this.room.controller.reservation.ticksToEnd < 5))) {
+        if (this.room && this.room.controller && (this.room.controller.level == 0 && (!this.room.controller.reservation || this.room.controller.reservation.ticksToEnd < 5))) {
             log.notify(`Removing ${this.name} since controller has reached level 0.`);
             this.remove();
         }
@@ -24030,14 +24758,266 @@ DirectivePoisonRoom = DirectivePoisonRoom_1 = __decorate([
     profile
 ], DirectivePoisonRoom);
 
+let DirectiveTargetSiege = class DirectiveTargetSiege extends Directive {
+    constructor(flag) {
+        super(flag);
+    }
+    spawnMoarOverlords() {
+    }
+    getTarget() {
+        const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES);
+        for (const structure of targetedStructures) {
+            for (const structureType of AttackStructurePriorities) {
+                if (structure.structureType == structureType) {
+                    return structure;
+                }
+            }
+        }
+    }
+    init() {
+    }
+    run() {
+        if (this.pos.isVisible && !this.getTarget()) {
+            this.remove();
+        }
+    }
+    visuals() {
+        Visualizer.marker(this.pos, { color: 'orange' });
+    }
+};
+DirectiveTargetSiege.directiveName = 'target:siege';
+DirectiveTargetSiege.color = COLOR_GREY;
+DirectiveTargetSiege.secondaryColor = COLOR_ORANGE;
+DirectiveTargetSiege = __decorate([
+    profile
+], DirectiveTargetSiege);
+
+var PairDestroyerOverlord_1;
+let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlord extends Overlord {
+    constructor(directive, priority = OverlordPriority.offense.destroy) {
+        super(directive, 'destroy', priority);
+        this.directive = directive;
+        this.attackers = this.combatZerg(Roles.melee, { notifyWhenAttacked: false });
+        this.healers = this.combatZerg(Roles.healer, { notifyWhenAttacked: false });
+    }
+    findTarget(attacker) {
+        if (this.room) {
+            const targetingDirectives = DirectiveTargetSiege.find(this.room.flags);
+            const targetedStructures = _.compact(_.map(targetingDirectives, directive => directive.getTarget()));
+            if (targetedStructures.length > 0) {
+                return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
+            }
+            else {
+                const creepTarget = CombatTargeting.findClosestHostile(attacker, {
+                    checkReachable: true,
+                    ignoreCreepsAtEdge: true,
+                    playerOnly: false,
+                    onlyUnramparted: true
+                });
+                if (creepTarget)
+                    return creepTarget;
+                const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
+                if (structureTarget)
+                    return structureTarget;
+            }
+        }
+    }
+    attackActions(attacker, healer) {
+        const target = this.findTarget(attacker);
+        if (target) {
+            if (attacker.pos.isNearTo(target)) {
+                attacker.attack(target);
+            }
+            else {
+                Movement.pairwiseMove(attacker, healer, target);
+                attacker.autoMelee();
+            }
+        }
+    }
+    handleSquad(attacker) {
+        const healer = attacker.findPartner(this.healers);
+        if (!healer || healer.spawning || healer.needsBoosts) {
+            if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
+                attacker.goTo(this.colony.controller, { range: 5 });
+            }
+            else {
+                attacker.park();
+            }
+        }
+        else {
+            if (attacker.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent) ||
+                healer.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent)) {
+                Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
+            }
+            else {
+                if (!attacker.inSameRoomAs(this)) {
+                    Movement.pairwiseMove(attacker, healer, this.pos);
+                }
+                else {
+                    this.attackActions(attacker, healer);
+                }
+            }
+        }
+    }
+    handleHealer(healer) {
+        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
+        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
+            if (this.colony.towers.length > 0) {
+                healer.goToRoom(this.colony.room.name);
+            }
+            else {
+                healer.suicide();
+            }
+        }
+        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+            healer.doMedicActions(this.room.name);
+            return;
+        }
+        const attacker = healer.findPartner(this.attackers);
+        if (!attacker || attacker.spawning || attacker.needsBoosts) {
+            if (healer.hits < healer.hitsMax) {
+                healer.heal(healer);
+            }
+            if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
+                healer.goTo(this.colony.controller, { range: 5 });
+            }
+            else {
+                healer.park();
+            }
+        }
+        else {
+            if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
+                healer.heal(attacker);
+            }
+            else {
+                healer.heal(healer);
+            }
+        }
+    }
+    init() {
+        let amount;
+        if (this.directive.memory.amount) {
+            amount = this.directive.memory.amount;
+        }
+        else {
+            amount = 1;
+        }
+        if (RoomIntel.inSafeMode(this.pos.roomName)) {
+            amount = 0;
+        }
+        const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+        const attackerSetup = CombatSetups.zerglings.boosted.armored;
+        this.wishlist(amount, attackerSetup, { priority: attackerPriority });
+        const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
+        const healerSetup = CombatSetups.transfusers.boosted.default;
+        this.wishlist(amount, healerSetup, { priority: healerPriority });
+    }
+    run() {
+        this.reassignIdleCreeps(Roles.healer);
+        this.reassignIdleCreeps(Roles.melee);
+        for (const attacker of this.attackers) {
+            if (attacker.hasValidTask) {
+                attacker.run();
+            }
+            else {
+                if (attacker.needsBoosts) {
+                    this.handleBoosting(attacker);
+                }
+                else {
+                    this.handleSquad(attacker);
+                }
+            }
+        }
+        for (const healer of this.healers) {
+            if (healer.hasValidTask) {
+                healer.run();
+            }
+            else {
+                if (healer.needsBoosts) {
+                    this.handleBoosting(healer);
+                }
+                else {
+                    this.handleHealer(healer);
+                }
+            }
+        }
+    }
+};
+PairDestroyerOverlord.settings = {
+    retreatHitsPercent: 0.85,
+    reengageHitsPercent: 0.95,
+};
+PairDestroyerOverlord = PairDestroyerOverlord_1 = __decorate([
+    profile
+], PairDestroyerOverlord);
+
+let DirectivePairDestroy = class DirectivePairDestroy extends Directive {
+    constructor(flag) {
+        super(flag);
+    }
+    spawnMoarOverlords() {
+        this.overlords.destroy = new PairDestroyerOverlord(this);
+    }
+    init() {
+        this.alert(`Pair destroyer directive active`);
+    }
+    run() {
+        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+            log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
+            this.remove();
+        }
+    }
+    visuals() {
+        Visualizer.marker(this.pos, { color: 'red' });
+        const fallback = CombatIntel.getFallbackFrom(this.pos);
+        Visualizer.marker(fallback, { color: 'green' });
+    }
+};
+DirectivePairDestroy.directiveName = 'destroy';
+DirectivePairDestroy.color = COLOR_RED;
+DirectivePairDestroy.secondaryColor = COLOR_CYAN;
+DirectivePairDestroy = __decorate([
+    profile
+], DirectivePairDestroy);
+
 var DirectiveColonize_1;
 let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Directive {
     constructor(flag) {
+        var _a, _b, _c;
         flag.memory.allowPortals = true;
         super(flag, colony => colony.level >= DirectiveColonize_1.requiredRCL
             && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
         this.type = 'default';
         this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
+        if (this.room) {
+            var intel = RoomIntel.getAllRoomObjectInfo(this.room.name);
+        }
+        if (this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+            log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
+            var scan = true;
+            if (scan) {
+                var intel = RoomIntel.getAllRoomObjectInfo(this.room.name);
+                var spawns = (_a = intel === null || intel === void 0 ? void 0 : intel.importantStructures) === null || _a === void 0 ? void 0 : _a.spawnPositions;
+                var towers = (_b = intel === null || intel === void 0 ? void 0 : intel.importantStructures) === null || _b === void 0 ? void 0 : _b.towerPositions;
+                var controller = intel === null || intel === void 0 ? void 0 : intel.controller;
+                var owner = controller === null || controller === void 0 ? void 0 : controller.owner;
+                var safemode = (_c = intel === null || intel === void 0 ? void 0 : intel.controller) === null || _c === void 0 ? void 0 : _c.safemode;
+                var safemodeActive = (safemode && safemode > 0);
+                var spawnP = ((spawns === null || spawns === void 0 ? void 0 : spawns.length) && (spawns === null || spawns === void 0 ? void 0 : spawns.length) <= 0);
+                var towerP = ((towers === null || towers === void 0 ? void 0 : towers.length) && (towers === null || towers === void 0 ? void 0 : towers.length) <= 0);
+                var viableRoom = (spawnP && towerP && !safemode);
+                if (viableRoom && (this.room.controller)) {
+                    DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+                if ((this.room.controller) && this.room.playerHostiles.length > 0) {
+                    DirectiveOutpostDefense.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+                if ((this.room.controller) && this.room.dangerousPlayerHostiles.length > 0) {
+                    DirectivePairDestroy.createIfNotPresent(this.room.controller.pos, 'room');
+                }
+            }
+            this.remove(true);
+        }
         if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
             log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
                 `removing directive!`);
@@ -24072,7 +25052,7 @@ let DirectiveColonize = DirectiveColonize_1 = class DirectiveColonize extends Di
             }
             this.remove();
         }
-        if (Game.time % 10 == 2 && this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
+        if (Game.time % 10 == 2 && (this.room && !!this.room.owner && this.room.owner != MY_USERNAME)) {
             log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
             this.remove();
         }
@@ -24179,40 +25159,6 @@ let GuardSwarmOverlord = class GuardSwarmOverlord extends Overlord {
 GuardSwarmOverlord = __decorate([
     profile
 ], GuardSwarmOverlord);
-
-let DirectiveTargetSiege = class DirectiveTargetSiege extends Directive {
-    constructor(flag) {
-        super(flag);
-    }
-    spawnMoarOverlords() {
-    }
-    getTarget() {
-        const targetedStructures = this.pos.lookFor(LOOK_STRUCTURES);
-        for (const structure of targetedStructures) {
-            for (const structureType of AttackStructurePriorities) {
-                if (structure.structureType == structureType) {
-                    return structure;
-                }
-            }
-        }
-    }
-    init() {
-    }
-    run() {
-        if (this.pos.isVisible && !this.getTarget()) {
-            this.remove();
-        }
-    }
-    visuals() {
-        Visualizer.marker(this.pos, { color: 'orange' });
-    }
-};
-DirectiveTargetSiege.directiveName = 'target:siege';
-DirectiveTargetSiege.color = COLOR_GREY;
-DirectiveTargetSiege.secondaryColor = COLOR_ORANGE;
-DirectiveTargetSiege = __decorate([
-    profile
-], DirectiveTargetSiege);
 
 let DefenseNPCOverlord = class DefenseNPCOverlord extends Overlord {
     constructor(directive, priority = OverlordPriority.outpostDefense.guard) {
@@ -24761,194 +25707,6 @@ DirectiveHarass.secondaryColor = COLOR_WHITE;
 DirectiveHarass = __decorate([
     profile
 ], DirectiveHarass);
-
-var PairDestroyerOverlord_1;
-let PairDestroyerOverlord = PairDestroyerOverlord_1 = class PairDestroyerOverlord extends Overlord {
-    constructor(directive, priority = OverlordPriority.offense.destroy) {
-        super(directive, 'destroy', priority);
-        this.directive = directive;
-        this.attackers = this.combatZerg(Roles.melee, { notifyWhenAttacked: false });
-        this.healers = this.combatZerg(Roles.healer, { notifyWhenAttacked: false });
-    }
-    findTarget(attacker) {
-        if (this.room) {
-            const targetingDirectives = DirectiveTargetSiege.find(this.room.flags);
-            const targetedStructures = _.compact(_.map(targetingDirectives, directive => directive.getTarget()));
-            if (targetedStructures.length > 0) {
-                return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
-            }
-            else {
-                const creepTarget = CombatTargeting.findClosestHostile(attacker, {
-                    checkReachable: true,
-                    ignoreCreepsAtEdge: true,
-                    playerOnly: true,
-                    onlyUnramparted: true
-                });
-                if (creepTarget)
-                    return creepTarget;
-                const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
-                if (structureTarget)
-                    return structureTarget;
-            }
-        }
-    }
-    attackActions(attacker, healer) {
-        const target = this.findTarget(attacker);
-        if (target) {
-            if (attacker.pos.isNearTo(target)) {
-                attacker.attack(target);
-            }
-            else {
-                Movement.pairwiseMove(attacker, healer, target);
-                attacker.autoMelee();
-            }
-        }
-    }
-    handleSquad(attacker) {
-        const healer = attacker.findPartner(this.healers);
-        if (!healer || healer.spawning || healer.needsBoosts) {
-            if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-                attacker.goTo(this.colony.controller, { range: 5 });
-            }
-            else {
-                attacker.park();
-            }
-        }
-        else {
-            if (attacker.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent) ||
-                healer.needsToRecover(PairDestroyerOverlord_1.settings.retreatHitsPercent)) {
-                Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
-            }
-            else {
-                if (!attacker.inSameRoomAs(this)) {
-                    Movement.pairwiseMove(attacker, healer, this.pos);
-                }
-                else {
-                    this.attackActions(attacker, healer);
-                }
-            }
-        }
-    }
-    handleHealer(healer) {
-        var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
-        if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
-            if (this.colony.towers.length > 0) {
-                healer.goToRoom(this.colony.room.name);
-            }
-            else {
-                healer.suicide();
-            }
-        }
-        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-            healer.doMedicActions(this.room.name);
-            return;
-        }
-        const attacker = healer.findPartner(this.attackers);
-        if (!attacker || attacker.spawning || attacker.needsBoosts) {
-            if (healer.hits < healer.hitsMax) {
-                healer.heal(healer);
-            }
-            if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-                healer.goTo(this.colony.controller, { range: 5 });
-            }
-            else {
-                healer.park();
-            }
-        }
-        else {
-            if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
-                healer.heal(attacker);
-            }
-            else {
-                healer.heal(healer);
-            }
-        }
-    }
-    init() {
-        let amount;
-        if (this.directive.memory.amount) {
-            amount = this.directive.memory.amount;
-        }
-        else {
-            amount = 1;
-        }
-        if (RoomIntel.inSafeMode(this.pos.roomName)) {
-            amount = 0;
-        }
-        const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-        const attackerSetup = CombatSetups.zerglings.boosted.armored;
-        this.wishlist(amount, attackerSetup, { priority: attackerPriority });
-        const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-        const healerSetup = CombatSetups.transfusers.boosted.default;
-        this.wishlist(amount, healerSetup, { priority: healerPriority });
-    }
-    run() {
-        this.reassignIdleCreeps(Roles.healer);
-        this.reassignIdleCreeps(Roles.melee);
-        for (const attacker of this.attackers) {
-            if (attacker.hasValidTask) {
-                attacker.run();
-            }
-            else {
-                if (attacker.needsBoosts) {
-                    this.handleBoosting(attacker);
-                }
-                else {
-                    this.handleSquad(attacker);
-                }
-            }
-        }
-        for (const healer of this.healers) {
-            if (healer.hasValidTask) {
-                healer.run();
-            }
-            else {
-                if (healer.needsBoosts) {
-                    this.handleBoosting(healer);
-                }
-                else {
-                    this.handleHealer(healer);
-                }
-            }
-        }
-    }
-};
-PairDestroyerOverlord.settings = {
-    retreatHitsPercent: 0.85,
-    reengageHitsPercent: 0.95,
-};
-PairDestroyerOverlord = PairDestroyerOverlord_1 = __decorate([
-    profile
-], PairDestroyerOverlord);
-
-let DirectivePairDestroy = class DirectivePairDestroy extends Directive {
-    constructor(flag) {
-        super(flag);
-    }
-    spawnMoarOverlords() {
-        this.overlords.destroy = new PairDestroyerOverlord(this);
-    }
-    init() {
-        this.alert(`Pair destroyer directive active`);
-    }
-    run() {
-        if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
-            log.notify(`Pair destroyer mission at ${this.pos.roomName} completed successfully.`);
-            this.remove();
-        }
-    }
-    visuals() {
-        Visualizer.marker(this.pos, { color: 'red' });
-        const fallback = CombatIntel.getFallbackFrom(this.pos);
-        Visualizer.marker(fallback, { color: 'green' });
-    }
-};
-DirectivePairDestroy.directiveName = 'destroy';
-DirectivePairDestroy.color = COLOR_RED;
-DirectivePairDestroy.secondaryColor = COLOR_CYAN;
-DirectivePairDestroy = __decorate([
-    profile
-], DirectivePairDestroy);
 
 let SwarmOverlord = class SwarmOverlord extends CombatOverlord {
     swarmWishlist(swarmQuantity, config) {
@@ -26082,6 +26840,9 @@ let DirectiveHarvest = class DirectiveHarvest extends Directive {
         this.computeStats();
     }
     computeStats() {
+        if (!(this.overlords.mine.source)) {
+            return;
+        }
         const source = this.overlords.mine.source;
         if (source && source.ticksToRegeneration == 1) {
             this.memory["u"] = (source.energyCapacity - source.energy) / source.energyCapacity;
@@ -29470,6 +30231,37 @@ ExpansionPlanner = __decorate([
     profile
 ], ExpansionPlanner);
 
+class accountResources {
+    constructor() {
+        this.settings = {
+            pixelAmt: 0
+        };
+    }
+    generatePixel() {
+        if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
+            Game.cpu.generatePixel();
+            log.info("Generating Pixel...");
+            return true;
+        }
+        return false;
+    }
+    buyPixel(num) {
+    }
+    sellPixel(num) {
+    }
+    handlePixel() {
+        this.generatePixel();
+    }
+    buyCPUUnlock(num) {
+    }
+    sellCPUUnlock(num) {
+    }
+    useCPUUnlock(num) {
+    }
+    handleCPUUnlock() {
+    }
+}
+
 let _Overmind = class _Overmind {
     constructor() {
         this.memory = Memory.Overmind;
@@ -29487,8 +30279,12 @@ let _Overmind = class _Overmind {
         this.spawnGroups = {};
         this.colonyMap = {};
         this.terminalNetwork = new TerminalNetworkV2();
+        this.accountResources = new accountResources();
+        global.accountResources = this.accountResources;
         global.TerminalNetwork = this.terminalNetwork;
         this.tradeNetwork = new TraderJoe();
+        this.tradeNetworkIntershard = new TraderJoeIntershard();
+        global.tradeNetworkIntershard = this.tradeNetworkIntershard;
         global.TradeNetwork = this.tradeNetwork;
         this.expansionPlanner = new ExpansionPlanner();
         this.roomIntel = new RoomIntel();
@@ -29653,10 +30449,7 @@ let _Overmind = class _Overmind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
-        if (Game.cpu.bucket == 10000 && Game.shard.name != "shard3" && Game.cpu.generatePixel) {
-            Game.cpu.generatePixel();
-            log.info("Generating Pixel...");
-        }
+        this.accountResources.handlePixel();
     }
     postRun() {
         this.handleExceptions();
