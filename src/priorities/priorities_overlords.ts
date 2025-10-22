@@ -35,7 +35,10 @@ export const OverlordPriority = {
 				siege           : 302,
 				controllerAttack: 399,
 			},
-
+			scouting: {
+				stationary  : 410,
+				randomWalker: 411,
+			},
 			colonization: {				// Colonizing new rooms
 				claim          : 400,
 				pioneer        : 401,
@@ -71,10 +74,7 @@ export const OverlordPriority = {
 
 			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
 
-			scouting: {
-				stationary  : 800,
-				randomWalker: 801,
-			},
+			
 
 			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
 				reserve      : 900,
@@ -144,7 +144,10 @@ export class PrioritiesOverlords {
 				siege           : 302,
 				controllerAttack: 399,
 			},
-
+			scouting: {
+				stationary  : 410,
+				randomWalker: 411,
+			},
 			colonization: {				// Colonizing new rooms
 				claim          : 400,
 				pioneer        : 401,
@@ -180,10 +183,7 @@ export class PrioritiesOverlords {
 
 			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
 
-			scouting: {
-				stationary  : 800,
-				randomWalker: 801,
-			},
+			
 
 			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
 				reserve      : 900,
