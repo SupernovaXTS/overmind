@@ -13,7 +13,7 @@ import {log} from './log';
 import { Directives } from '../directives/directives';
 import { Setups, Roles } from 'creepSetups/setups';
 import { set } from 'lodash';
-
+import {Zerg} from '../zerg/Zerg';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -66,6 +66,7 @@ export class OvermindConsole {
 		global.evaluatePotentialOutpostEfficiencies = this.evaluatePotentialOutpostEfficiencies;
 		global.getDirective = this.getDirective;
 		global.getOverlord = this.getOverlord;
+		global.getColony = this.getColony;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -117,6 +118,7 @@ export class OvermindConsole {
 		descr['evaluatePotentialOutpostEfficiencies()'] = 'prints all nearby unmined outposts';
 		descr['getDirective(flagName)'] = 'returns the directive associated with the specified flag name';
 		descr['getOverlord(directive, overlordName)'] = 'returns the overlord associated with the directive and name';
+		descr['getColony(roomName)'] = 'returns the colony associated with the specified room name';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -125,6 +127,14 @@ export class OvermindConsole {
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
+	}
+	
+	static getColony(input:string): Colony | undefined {
+		return Overmind.colonies?.[input];
+	}
+
+	static getZerg(input:string): Zerg | undefined {
+		return Overmind.zerg?.[input];
 	}
 
 	static getOverlord(input:Directive,name:string): Overlord | undefined {
