@@ -1,112 +1,276 @@
+import {Colony} from 'Colony';
+
 /**
  * Default ordering for processing spawning requests and prioritizing overlords
  */
-export let OverlordPriority = {
-	emergency: {				// Colony-wide emergencies such as a catastrohic crash
-		bootstrap: 1
-	},
+export const OverlordPriority = {
+			emergency: {				// Colony-wide emergencies such as a catastrophic crash
+				bootstrap: 1,
+			},
 
-	core: {						// Functionality related to spawning more creeps
-		queen  : 100,
-		manager: 101,
-	},
+			core: {						// Functionality related to spawning more creeps
+				queen  : 100,
+				manager: 101,
+			},
 
-	powerCreeps: {
-		default: 150,
-	},
+			powerCreeps: {
+				default: 150,
+			},
 
-	defense: {					// Defense of local and remote rooms
-		meleeDefense : 200,
-		rangedDefense: 201,
-	},
+			defense: {					// Defense of local and remote rooms
+				meleeDefense : 200,
+				rangedDefense: 201,
+			},
 
-	outpostDefense: {
-		outpostDefense: 250,
-		guard         : 251,
-	},
+			outpostDefense: {
+				outpostDefense: 250,
+				guard         : 251,
+			},
 
-	warSpawnCutoff: 299, 		// Everything past this is non-critical and won't be spawned in case of emergency
+			warSpawnCutoff: 299,		// Everything past this is non-critical and won't be spawned in case of emergency
 
-	offense: {					// Offensive operations like raids or sieges
-		destroy         : 300,
-		healPoint       : 301,
-		siege           : 302,
-		controllerAttack: 305, // This should be lower then claiming unclaimed rooms as it takes longer
-	},
-	
-	colonization: { 			// Colonizing new rooms
-		claim          : 400,
-		pioneer        : 401,
-		remoteUpgrading: 610,
-	},
+			offense: {					// Offensive operations like raids or sieges
+				destroy         : 300,
+				healPoint       : 301,
+				siege           : 302,
+				controllerAttack: 399,
+			},
 
-	priorityOwnedRoom: {		// Situationally prioritized in-room operations
-		priorityUpgrade  : 450,
-		priorityTransport: 451,
-	},
+			colonization: {				// Colonizing new rooms
+				claim          : 400,
+				pioneer        : 401,
+				remoteUpgrading: 410,
+			},
 
-	ownedRoom: { 				// Operation of an owned room
-		firstTransport: 400,		// High priority to spawn the first transporter
-		mine          : 401,
-		work          : 403,
-		mineralRCL8   : 503,
-		transport     : 402,		// Spawn the rest of the transporters
-		mineral       : 505,
-	},
+			priorityOwnedRoom: {		// Situationally prioritized in-room operations
+				priorityUpgrade  : 450,
+				priorityTransport: 451,
+			},
 
-	
-	/*
-	// NOTE: only use this prio if your colony is 
-	colonization: { 			// Colonizing new rooms
-		claim          : 401, // after claimed, reduce this priority so pioneers spawn
-	 	pioneer        : 551,
-		remoteUpgrading: 552,
-	},
-	*/
-	outpostOffense: {
-		harass      : 560,
-		roomPoisoner: 561,
-	},
+			ownedRoom: {				// Operation of an owned room
+				firstTransport: 500,	// High priority to spawn the first transporter
+				mine          : 501,
+				work          : 502,
+				mineralRCL8   : 503,
+				transport     : 504,	// Spawn the rest of the transporters
+				mineral       : 505,
+			},
 
-	upgrading: {				// Spawning upgraders
-		upgrade: 401,
-	},
+			outpostOffense: {
+				harass      : 560,
+				roomPoisoner: 561,
+			},
 
-	collectionUrgent: { 		// Collecting resources that are time sensitive, like decaying resources on ground
-		haul: 700
-	},
+			upgrading: {				// Spawning upgraders
+				upgrade: 600,
+			},
 
-	throttleThreshold: 799,  	// Everything past this may be throttled in the event of low CPU
-	// Scouts are cheap and should be done first
-	scouting: {
-		stationary  : 400,
-		randomWalker: 400
-	},
-	// Nova Edit: We need remotes before we make new colonies
-	// Changed from: 900 to 520
-	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 405,
-		mine         : 403,
-		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
-	},
+			collectionUrgent: {			// Collecting resources that are time sensitive, like decaying resources on ground
+				haul: 700,
+			},
 
-	remoteSKRoom: {
-		sourceReaper : 1000,
-		mineral      : 1001,
-		mine         : 1002,
-		roomIncrement: 5,
-	},
+			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
 
-	powerMine: {
-		cool         : 1050,
-		drill        : 1051,
-		roomIncrement: 5
-	},
+			scouting: {
+				stationary  : 800,
+				randomWalker: 801,
+			},
 
-	tasks: {				// Non-urgent tasks, such as collection from a deserted storage
-		haul     : 1100,
-		dismantle: 1101
-	},
+			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
+				reserve      : 900,
+				mine         : 901,
+				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
+			},
 
-	default: 99999				// Default overlord priority to ensure it gets run last
-};
+			remoteSKRoom: {
+				sourceReaper : 1000,
+				mineral      : 1001,
+				mine         : 1002,
+				roomIncrement: 5,
+			},
+
+			powerMine: {
+				cool         : 1050,
+				drill        : 1051,
+				roomIncrement: 5,
+			},
+
+			tasks: {					// Non-urgent tasks, such as collection from a deserted storage
+				haul     : 1100,
+				dismantle: 1101,
+			},
+
+			default: 99999,				// Default overlord priority to ensure it gets run last
+	};
+
+export type OverlordPriorityType = typeof OverlordPriority;
+
+/**
+ * Priority manager class for handling multiple priority profiles
+ */
+export class PrioritiesOverlords {
+	private _profile: string;
+	private _colony: Colony | null;
+	private readonly _priorities: {[profile: string]: OverlordPriorityType} = {
+		default: {
+			emergency: {				// Colony-wide emergencies such as a catastrophic crash
+				bootstrap: 1,
+			},
+
+			core: {						// Functionality related to spawning more creeps
+				queen  : 100,
+				manager: 101,
+			},
+
+			powerCreeps: {
+				default: 150,
+			},
+
+			defense: {					// Defense of local and remote rooms
+				meleeDefense : 200,
+				rangedDefense: 201,
+			},
+
+			outpostDefense: {
+				outpostDefense: 250,
+				guard         : 251,
+			},
+
+			warSpawnCutoff: 299,		// Everything past this is non-critical and won't be spawned in case of emergency
+
+			offense: {					// Offensive operations like raids or sieges
+				destroy         : 300,
+				healPoint       : 301,
+				siege           : 302,
+				controllerAttack: 399,
+			},
+
+			colonization: {				// Colonizing new rooms
+				claim          : 400,
+				pioneer        : 401,
+				remoteUpgrading: 410,
+			},
+
+			priorityOwnedRoom: {		// Situationally prioritized in-room operations
+				priorityUpgrade  : 450,
+				priorityTransport: 451,
+			},
+
+			ownedRoom: {				// Operation of an owned room
+				firstTransport: 500,	// High priority to spawn the first transporter
+				mine          : 501,
+				work          : 502,
+				mineralRCL8   : 503,
+				transport     : 504,	// Spawn the rest of the transporters
+				mineral       : 505,
+			},
+
+			outpostOffense: {
+				harass      : 560,
+				roomPoisoner: 561,
+			},
+
+			upgrading: {				// Spawning upgraders
+				upgrade: 600,
+			},
+
+			collectionUrgent: {			// Collecting resources that are time sensitive, like decaying resources on ground
+				haul: 700,
+			},
+
+			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
+
+			scouting: {
+				stationary  : 800,
+				randomWalker: 801,
+			},
+
+			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
+				reserve      : 900,
+				mine         : 901,
+				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
+			},
+
+			remoteSKRoom: {
+				sourceReaper : 1000,
+				mineral      : 1001,
+				mine         : 1002,
+				roomIncrement: 5,
+			},
+
+			powerMine: {
+				cool         : 1050,
+				drill        : 1051,
+				roomIncrement: 5,
+			},
+
+			tasks: {					// Non-urgent tasks, such as collection from a deserted storage
+				haul     : 1100,
+				dismantle: 1101,
+			},
+
+			default: 99999,				// Default overlord priority to ensure it gets run last
+		},
+	};
+
+	constructor(colony?: Colony, profile: string = 'default') {
+		this._colony = colony || null;
+		this._profile = profile;
+
+		// Validate profile exists
+		if (!this._priorities[this._profile]) {
+			console.log(`Warning: Profile '${this._profile}' not found, using 'default'`);
+			this._profile = 'default';
+		}
+	}
+
+	get profile(): string {
+		return this._profile;
+	}
+
+	get colony(): Colony | null {
+		return this._colony;
+	}
+
+	set colony(colony: Colony | null) {
+		this._colony = colony;
+	}
+
+	/**
+	 * Get the priorities for the current profile
+	 */
+	getPriorities(): OverlordPriorityType {
+		return this._priorities[this._profile] || this._priorities.default;
+	}
+
+	/**
+	 * Set the active priority profile
+	 */
+	setProfile(profile: string): void {
+		if (this._priorities[profile]) {
+			this._profile = profile;
+		} else {
+			console.log(`Warning: Profile '${profile}' not found, using 'default'`);
+			this._profile = 'default';
+		}
+	}
+
+	/**
+	 * Add a new priority profile
+	 */
+	addProfile(name: string, priorities: OverlordPriorityType): void {
+		this._priorities[name] = priorities;
+	}
+
+	/**
+	 * Get all available profile names
+	 */
+	getProfileNames(): string[] {
+		return Object.keys(this._priorities);
+	}
+}
+
+// Create a singleton instance for global use
+export const priorityManager = new PrioritiesOverlords();
+
+export default PrioritiesOverlords;
