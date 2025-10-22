@@ -16,8 +16,8 @@ export class LogisticsSector {
     };
     static defaultBuffer: number = 100000;
     static rangeLimit: number = 4; // Maximum range to consider for transfers
-    static maxHaulRequestRetries: number = 5; // Max retries for queued directive creations
-    static maxQueueAge: number = 5000; // Optional pruning age in ticks
+    static maxHaulRequestRetries: number = 5; // default max retries for queued directive creations
+    static maxQueueAge: number = 5000; // default pruning age in ticks
     // Populate buffer with all ResourceConstants, applying defaults where unspecified
     
     static initializeBuffers(): void {
@@ -231,9 +231,11 @@ export class LogisticsSector {
         if (!queue.length) return;
 
         const nextQueue: typeof queue = [];
+        const maxRetries = Memory.settings?.logistics?.haulQueue?.maxRetries ?? LogisticsSector.maxHaulRequestRetries;
+        const maxAge = Memory.settings?.logistics?.haulQueue?.maxAge ?? LogisticsSector.maxQueueAge;
         for (const item of queue) {
             // Prune by age
-            if (item.createdAt && (Game.time - item.createdAt) > LogisticsSector.maxQueueAge) {
+            if (item.createdAt && (Game.time - item.createdAt) > maxAge) {
                 log.warning(`${this.colony.print} pruning stale haul request from ${item.source}`);
                 continue;
             }
@@ -241,7 +243,7 @@ export class LogisticsSector {
             if (!sourceColony) {
                 // Source colony missing; increment retry and keep if under limit
                 item.retries = (item.retries || 0) + 1;
-                if (item.retries <= LogisticsSector.maxHaulRequestRetries) {
+                if (item.retries <= maxRetries) {
                     nextQueue.push(item);
                 } else {
                     log.warning(`${this.colony.print} dropping haul request from ${item.source} after ${item.retries} retries (source missing)`);
@@ -261,10 +263,10 @@ export class LogisticsSector {
             // If creation failed (e.g., room not visible), keep it queued to retry next tick
             if (res !== OK && typeof res !== 'string') {
                 item.retries = (item.retries || 0) + 1;
-                if (item.retries <= LogisticsSector.maxHaulRequestRetries) {
+                if (item.retries <= maxRetries) {
                     nextQueue.push(item);
                     if (this.colony.memory.debug) {
-                        log.debug(`${this.colony.print} retry ${item.retries}/${LogisticsSector.maxHaulRequestRetries} for haul request from ${sourceColony.name}`);
+                        log.debug(`${this.colony.print} retry ${item.retries}/${maxRetries} for haul request from ${sourceColony.name}`);
                     }
                 } else {
                     log.warning(`${this.colony.print} dropping haul request from ${sourceColony.name} after ${item.retries} retries (res=${res})`);

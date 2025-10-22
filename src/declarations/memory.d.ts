@@ -65,6 +65,12 @@ interface Memory {
 			maxRange: number;
 			maxConcurrent: number;
 		},
+		logistics?: {
+			haulQueue?: {
+				maxRetries?: number;
+				maxAge?: number; // ticks
+			}
+		}
 	};
 
 	[otherProperty: string]: any;
