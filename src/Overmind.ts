@@ -258,7 +258,9 @@ export default class _Overmind implements IOvermind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
-        this.try(() => this.accountResources.main());
+        this.try(() => this.accountResources.handleCPUUnlock());
+        this.try(() => this.accountResources.handlePixel());
+        //this.try(() => this.accountResources.main());
 
         /* Broken?
         var cpuTime = Game.cpu.unlockedTime;
