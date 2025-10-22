@@ -301,7 +301,7 @@ export class WorkerOverlord extends Overlord {
 		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
 		// Build a paving manifest
 		const pavingManifest = this.colony.roadLogistics.buildPavingManifest(worker, roomToRepave);
-		if (pavingManifest && !this.colony.state.bootstrapping) {
+		if (pavingManifest) {
 			worker.task = pavingManifest;
 			return true;
 		} else {
@@ -398,7 +398,7 @@ export class WorkerOverlord extends Overlord {
 			if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
 		}
 		// Build and maintain roads
-		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
+		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe && !this.colony.state.bootstrapping) {
 			if (this.pavingActions(worker)) return;
 		}
 		// Dismantle marked structures
@@ -412,7 +412,7 @@ export class WorkerOverlord extends Overlord {
 		// Upgrade controller if less than RCL8 or no upgraders
 		if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
 			// if below 3, we are in bootstrapping, always upgrade
-			&& (this.colony.defcon == DEFCON.safe || this.colony.level < 3)) {
+			&& (this.colony.defcon == DEFCON.safe || this.colony.level < 3) && !this.colony.state.bootstrapping) {
 			if (this.upgradeActions(worker)) return;
 		}
 	}
