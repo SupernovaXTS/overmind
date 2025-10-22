@@ -34,10 +34,24 @@ export class LogisticsSector {
      */
     storeFromPairs(...pairs: Array<[ResourceConstant, number]>): StoreDefinition {
         const store: StoreDefinition = {} as StoreDefinition;
-        for (const [resource, amount] of pairs) {
+        for (const pair of pairs as any[]) {
+            if (!pair) continue;
+            let resource: ResourceConstant | undefined;
+            let amount: number | undefined;
+            if (Array.isArray(pair)) {
+                resource = pair[0] as ResourceConstant;
+                amount = pair[1] as number;
+            } else if (typeof pair === 'object' && 'resource' in pair && 'amount' in pair) {
+                // Optional support for objects of shape {resource, amount}
+                resource = (pair as any).resource as ResourceConstant;
+                amount = (pair as any).amount as number;
+            } else {
+                // Unsupported shape; skip defensively
+                continue;
+            }
             if (!resource) continue;
-            const amt = Math.floor(amount || 0);
-            if (amt <= 0) continue;
+            const amt = Math.floor(Number(amount) || 0);
+            if (amt <= 0 || !isFinite(amt)) continue;
             store[resource] = ((store[resource] as number) || 0) + amt;
         }
         return store;
@@ -137,7 +151,14 @@ export class LogisticsSector {
      * Example: sector.requestFromPairs([[RESOURCE_ENERGY, 50000], [RESOURCE_OPS, 100]])
      */
     public requestFromPairs(pairs: Array<[ResourceConstant, number]>): number | string | undefined | false {
-        const store = this.storeFromPairs(...pairs);
+        // Normalize inputs in case a flat tuple [res, amt] was passed instead of [[res, amt]]
+        let normalized: Array<[ResourceConstant, number]> = pairs;
+        if (pairs && pairs.length === 2 && !Array.isArray((pairs as any)[0]) && typeof (pairs as any)[1] !== 'object') {
+            const res = (pairs as any)[0] as ResourceConstant;
+            const amt = (pairs as any)[1] as number;
+            normalized = [[res, amt]];
+        }
+        const store = this.storeFromPairArray(normalized);
         return this.request(store);
     }
 
