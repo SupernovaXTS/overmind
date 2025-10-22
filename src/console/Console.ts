@@ -11,6 +11,9 @@ import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {DEFAULT_OVERMIND_SIGNATURE, USE_SCREEPS_PROFILER} from '../~settings';
 import {log} from './log';
 import { Directives } from '../directives/directives';
+import { Setups, Roles } from 'creepSetups/setups';
+import { set } from 'lodash';
+
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -21,6 +24,8 @@ export class OvermindConsole {
 
 	static init() {
 		global.directives = Directives;
+		global.Roles = Roles;
+		global.Setups = Setups;
 		global.directivesMap = Directives.all;
 		global.help = this.help();
 		global.info = this.info;
