@@ -71,6 +71,8 @@ export class OvermindConsole {
 		global.getLogisticsSector = this.getLogisticsSector;
 		global.requestEnergy = this.requestEnergy;
 		global.requestEnergyOk = this.requestEnergyOk;
+		global.requestResource = this.requestResource;
+		global.requestResourceOk = this.requestResourceOk;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -126,6 +128,8 @@ export class OvermindConsole {
 		descr['getLogisticsSector(roomName)'] = 'returns the LogisticsSector for the specified colony room';
 		descr['requestEnergy(roomName, amount)'] = 'queues a haul request for energy for the specified colony';
 		descr['requestEnergyOk(roomName, amount)'] = 'same as requestEnergy but returns boolean success';
+		descr['requestResource(roomName, resource, amount)'] = 'queues a haul request for a resource for the colony';
+		descr['requestResourceOk(roomName, resource, amount)'] = 'boolean variant of requestResource';
 		descr['getZerg(creepName)'] = 'returns the Zerg instance associated with the specified creep name';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -156,6 +160,26 @@ export class OvermindConsole {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		return col.logisticsSector.requestEnergyOk(amount);
+	}
+
+	static requestResource(roomName: string, resource: ResourceConstant | string, amount: number): number | string | undefined | false {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return false;
+		const res = resource as ResourceConstant;
+		if (!((RESOURCES_ALL as ResourceConstant[]).includes(res))) return false;
+		return col.logisticsSector.requestFromPairs([[res, amt]]);
+	}
+
+	static requestResourceOk(roomName: string, resource: ResourceConstant | string, amount: number): boolean {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return false;
+		const res = resource as ResourceConstant;
+		if (!((RESOURCES_ALL as ResourceConstant[]).includes(res))) return false;
+		return col.logisticsSector.requestFromPairsOk([[res, amt]]);
 	}
 
 	static getZerg(input:string): Zerg | undefined {
