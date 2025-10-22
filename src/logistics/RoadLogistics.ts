@@ -48,8 +48,9 @@ export class RoadLogistics {
 				return this.repairableRoads(room).length > 0;
 			} else {
 				// If worker is not already assigned, repair if critical roads or repaving energy >= carry capacity
-				// Only pave if we have enough energy in the colony to repave
-				return this.criticalRoads(room).length > 0 || (repaveEnergy >= worker.carryCapacity && this.colony.assets.energy >= repaveEnergy);
+				// Only pave if we have enough energy in the colony to repave and are not bootstrapping
+				return this.criticalRoads(room).length > 0 || 
+				((repaveEnergy >= worker.carryCapacity && this.colony.assets.energy >= repaveEnergy) && !this.colony.state.bootstrapping);
 			}
 		} else {
 			return false;
