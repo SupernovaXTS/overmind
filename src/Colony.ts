@@ -612,6 +612,7 @@ export class Colony {
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
+		this.logisticsSector.run();											// Process deferred logistics requests
 		this.roomPlanner.run();												// Run the room planner
 		this.stats();														// Log stats per tick
 	}

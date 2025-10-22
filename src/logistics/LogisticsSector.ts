@@ -69,6 +69,13 @@ export class LogisticsSector {
         this.colony = colony;
     }
 
+    // In-memory queue (per colony) for deferring directive creation to the run phase
+    private get haulRequestQueue(): Array<{ source: string; manifest: StoreDefinitionUnlimited }> {
+        const mem = this.colony.memory as any;
+        if (!mem.haulRequestQueue) mem.haulRequestQueue = [];
+        return mem.haulRequestQueue as Array<{ source: string; manifest: StoreDefinitionUnlimited }>;
+    }
+
     // Nearby colonies within rangeLimit, excluding self
     get nearbyColonies(): Colony[] {
         const nearbyColonies: Colony[] = [];
@@ -117,20 +124,9 @@ export class LogisticsSector {
         if (!result) return false;
         const { colony: sourceColony, manifest } = result;
 
-        // Choose a good placement position in the source colony
-        const pos: RoomPosition = (sourceColony.storage?.pos
-                                || sourceColony.terminal?.pos
-                                || sourceColony.controller.pos);
-
-        // Create the directive with memory specifying ownership and routing
-        const memory: FlagMemory = {
-            [MEM.COLONY]: sourceColony.name,   // directive belongs to source colony
-            manifest: manifest,                // what to pick up
-            destination: this.colony.name,     // where to bring it
-            source: sourceColony.name,         // explicit for clarity
-        } as any;
-
-        return DirectiveHaulRequest.createIfNotPresent(pos, 'room', { memory });
+        // Defer directive creation to run phase to comply with engine restrictions
+        this.haulRequestQueue.push({ source: sourceColony.name, manifest });
+        return 'queued';
     }
 
     /**
@@ -203,6 +199,40 @@ export class LogisticsSector {
             manifest[res] = amountRequested;
         }
         return manifest;
+    }
+
+    /**
+     * Process any queued haul directive creations. Must be called during run phase.
+     */
+    public run(): void {
+        const mem = (this.colony.memory as any);
+        const queue: Array<{ source: string; manifest: StoreDefinitionUnlimited }> = mem.haulRequestQueue || [];
+        if (!queue.length) return;
+
+        const nextQueue: typeof queue = [];
+        for (const item of queue) {
+            const sourceColony = Overmind.colonies[item.source] as Colony | undefined;
+            if (!sourceColony) {
+                // Source colony missing; skip but keep for retry next tick
+                nextQueue.push(item);
+                continue;
+            }
+            const pos: RoomPosition = (sourceColony.storage?.pos
+                                    || sourceColony.terminal?.pos
+                                    || sourceColony.controller.pos);
+            const memory: FlagMemory = {
+                [MEM.COLONY]: sourceColony.name,
+                manifest: item.manifest,
+                destination: this.colony.name,
+                source: sourceColony.name,
+            } as any;
+            const res = DirectiveHaulRequest.createIfNotPresent(pos, 'room', { memory });
+            // If creation failed (e.g., room not visible), keep it queued to retry next tick
+            if (res !== OK && typeof res !== 'string') {
+                nextQueue.push(item);
+            }
+        }
+        mem.haulRequestQueue = nextQueue;
     }
 }
 
