@@ -32,7 +32,8 @@ export class LogisticsSector {
         this.colony = colony;
     }
 
-    get NearbyColonies(): Colony[] {
+    // Nearby colonies within rangeLimit, excluding self
+    get nearbyColonies(): Colony[] {
         const nearbyColonies: Colony[] = [];
         const source = this.colony.room.name;
         for (const name in Overmind.colonies) {
@@ -55,7 +56,7 @@ export class LogisticsSector {
      */
     public supply(request: StoreDefinition | StoreDefinitionUnlimited,
                   candidates?: Colony[]): { colony: Colony; manifest: StoreDefinitionUnlimited } | false {
-        let colonies = candidates && candidates.length > 0 ? candidates : this.NearbyColonies;
+    let colonies = candidates && candidates.length > 0 ? candidates : this.nearbyColonies;
         // Prefer closest sources first (by linear distance to the requesting colony)
         colonies = colonies.sort((a, b) =>
             Game.map.getRoomLinearDistance(a.room.name, this.colony.room.name)
@@ -92,7 +93,19 @@ export class LogisticsSector {
             source: sourceColony.name,         // explicit for clarity
         } as any;
 
-        return DirectiveHaulRequest.createIfNotPresent(pos, 'pos', { memory });
+        return DirectiveHaulRequest.createIfNotPresent(pos, 'room', { memory });
+    }
+
+    /**
+     * High-level convenience method to request resources for this colony.
+     * Uses NearbyColonies as the candidate supplier set and creates a haul directive
+     * at the selected supplier if possible.
+     *
+     * Returns the directive creation result (flag name or code) if successful; otherwise false.
+     */
+    public request(store: StoreDefinition | StoreDefinitionUnlimited): number | string | undefined | false {
+        // Explicitly use nearbyColonies as candidates
+        return this.createHaulDirectiveForRequest(store, this.nearbyColonies);
     }
 
     /**
