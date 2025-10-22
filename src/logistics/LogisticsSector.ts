@@ -149,6 +149,14 @@ export class LogisticsSector {
     }
 
     /**
+     * Boolean variant of request(): returns true if the request was queued/created successfully.
+     */
+    public requestOk(store: StoreDefinition | StoreDefinitionUnlimited): boolean {
+        const res = this.request(store);
+        return this.isSuccessResult(res);
+    }
+
+    /**
      * Convenience: accept an array of [resource, amount] pairs, build a store via storeFromPairs,
      * and invoke request using nearby colonies.
      * Example: sector.requestFromPairs([[RESOURCE_ENERGY, 50000], [RESOURCE_OPS, 100]])
@@ -163,6 +171,14 @@ export class LogisticsSector {
         }
         const store = this.storeFromPairArray(normalized);
         return this.request(store);
+    }
+
+    /**
+     * Boolean variant for pair input: returns true if the request was queued/created successfully.
+     */
+    public requestFromPairsOk(pairs: Array<[ResourceConstant, number]>): boolean {
+        const res = this.requestFromPairs(pairs);
+        return this.isSuccessResult(res);
     }
 
     /**
@@ -181,9 +197,7 @@ export class LogisticsSector {
      */
     public requestEnergyOk(amount: number): boolean {
         const result = this.requestEnergy(amount);
-        if (result === false || result === undefined) return false;
-        if (typeof result === 'number' && result < 0) return false; // treat error codes as failure
-        return true;
+        return this.isSuccessResult(result);
     }
 
     /**
@@ -262,6 +276,13 @@ export class LogisticsSector {
             }
         }
         mem.haulRequestQueue = nextQueue;
+    }
+
+    // Convert directive creation result to boolean success
+    private isSuccessResult(result: number | string | undefined | false): boolean {
+        if (result === false || result === undefined) return false;
+        if (typeof result === 'number' && result < 0) return false; // negative Screeps error codes
+        return true; // OK (0), string names (including 'queued') count as success
     }
 }
 
