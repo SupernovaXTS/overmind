@@ -1,22 +1,22 @@
 import { DEFAULT_OVERMIND_SIGNATURE } from '~settings';
-import {$} from '../../caching/GlobalCache';
-import {Colony, ColonyStage, DEFCON} from '../../Colony';
-import {CreepSetup} from '../../creepSetups/CreepSetup';
-import {Roles, Setups} from '../../creepSetups/setups';
-import {DirectiveNukeResponse} from '../../directives/situational/nukeResponse';
-import {OverlordPriority} from '../../priorities/priorities_overlords';
-import {BuildPriorities, FortifyPriorities} from '../../priorities/priorities_structures';
-import {profile} from '../../profiler/decorator';
-import {buildTaskName} from '../../tasks/instances/build';
-import {fortifyTaskName} from '../../tasks/instances/fortify';
-import {repairTaskName} from '../../tasks/instances/repair';
-import {upgradeTaskName} from '../../tasks/instances/upgrade';
-import {Tasks} from '../../tasks/Tasks';
-import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {minBy} from '../../utilities/utils';
-import {Visualizer} from '../../visuals/Visualizer';
-import {Zerg} from '../../zerg/Zerg';
-import {Overlord} from '../Overlord';
+import { $ } from '../../caching/GlobalCache';
+import { Colony, ColonyStage, DEFCON } from '../../Colony';
+import { CreepSetup } from '../../creepSetups/CreepSetup';
+import { Roles, Setups } from '../../creepSetups/setups';
+import { DirectiveNukeResponse } from '../../directives/situational/nukeResponse';
+import { OverlordPriority } from '../../priorities/priorities_overlords';
+import { BuildPriorities, FortifyPriorities } from '../../priorities/priorities_structures';
+import { profile } from '../../profiler/decorator';
+import { buildTaskName } from '../../tasks/instances/build';
+import { fortifyTaskName } from '../../tasks/instances/fortify';
+import { repairTaskName } from '../../tasks/instances/repair';
+import { upgradeTaskName } from '../../tasks/instances/upgrade';
+import { Tasks } from '../../tasks/Tasks';
+import { Cartographer, ROOMTYPE_CONTROLLER } from '../../utilities/Cartographer';
+import { minBy } from '../../utilities/utils';
+import { Visualizer } from '../../visuals/Visualizer';
+import { Zerg } from '../../zerg/Zerg';
+import { Overlord } from '../Overlord';
 
 /**
  * Spawns general-purpose workers, which maintain a colony, performing actions such as building, repairing, fortifying,
@@ -37,18 +37,18 @@ export class WorkerOverlord extends Overlord {
 	useBoostedRepair?: boolean;
 
 	static settings = {
-		barrierHits         : {			// What HP to fortify barriers to at each RCL
+		barrierHits: {			// What HP to fortify barriers to at each RCL
 			critical: 2500,
-			1       : 3e+3,
-			2       : 3e+3,
-			3       : 1e+4,
-			4       : 5e+4,
-			5       : 1e+5,
-			6       : 5e+5,
-			7       : 2e+6,
-			8       : 2.1e+7,
+			1: 3e+3,
+			2: 3e+3,
+			3: 1e+4,
+			4: 5e+4,
+			5: 1e+5,
+			6: 5e+5,
+			7: 2e+6,
+			8: 2.1e+7,
 		},
-		hitTolerance        : 100000, 	// allowable spread in HP
+		hitTolerance: 100000, 	// allowable spread in HP
 		fortifyDutyThreshold: 250000,	// ignore fortify duties until this amount of energy is present in the room
 	};
 
@@ -62,7 +62,7 @@ export class WorkerOverlord extends Overlord {
 			), s => s.hits), 25);
 		this.criticalBarriers = $.structures(this, 'criticalBarriers', () =>
 			_.filter(this.fortifyBarriers,
-					 barrier => barrier.hits < WorkerOverlord.settings.barrierHits.critical), 10);
+				barrier => barrier.hits < WorkerOverlord.settings.barrierHits.critical), 10);
 		// Generate a list of structures needing repairing (different from fortifying except in critical case)
 		this.repairStructures = $.structures(this, 'repairStructures', () =>
 			_.filter(this.colony.repairables, structure => {
@@ -87,24 +87,24 @@ export class WorkerOverlord extends Overlord {
 		// Filter constructionSites to only build valid ones
 		const room = this.colony.room as any;
 		const level = this.colony.controller.level;
-		this.constructionSites = _.filter(this.colony.constructionSites, function(site) {
+		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
 			// If site will be more than max amount of a structure at current level, ignore (happens after downgrade)
 			const structureAmount = room[site.structureType + 's'] ? room[site.structureType + 's'].length :
-									(room[site.structureType] ? 1 : 0);
+				(room[site.structureType] ? 1 : 0);
 			if (structureAmount >= CONTROLLER_STRUCTURES[site.structureType][level]) {
 				return false;
 			}
 			if (defcon > DEFCON.safe) {
 				// Only build non-road, non-container sites in the home room if defcon is unsafe
 				return site.pos.roomName == homeRoomName &&
-					   site.structureType != STRUCTURE_CONTAINER &&
-					   site.structureType != STRUCTURE_ROAD;
+					site.structureType != STRUCTURE_CONTAINER &&
+					site.structureType != STRUCTURE_ROAD;
 			} else {
 				// Build all non-container sites in outpost and all sites in room if defcon is safe
 				if (site.pos.roomName != homeRoomName
 					&& Cartographer.roomType(site.pos.roomName) == ROOMTYPE_CONTROLLER) {
 					return site.structureType != STRUCTURE_CONTAINER &&
-						   !(site.room && site.room.dangerousHostiles.length > 0);
+						!(site.room && site.room.dangerousHostiles.length > 0);
 				} else {
 					return true;
 				}
@@ -120,7 +120,7 @@ export class WorkerOverlord extends Overlord {
 				if (rampart.hits < neededHits && rampart.pos.findInRange(FIND_NUKES, 2).length > 0
 					&& DirectiveNukeResponse.shouldReinforceLocation(rampart.pos)) {
 					this.nukeDefenseRamparts.push(rampart);
-					Visualizer.marker(rampart.pos, {color: 'gold'});
+					Visualizer.marker(rampart.pos, { color: 'gold' });
 					this.nukeDefenseHitsRemaining[rampart.id] = Math.min(neededHits - rampart.hits, 0);
 				}
 			}
@@ -157,7 +157,7 @@ export class WorkerOverlord extends Overlord {
 	refresh() {
 		super.refresh();
 		$.refresh(this, 'repairStructures', 'dismantleStructures', 'fortifyBarriers', 'criticalBarriers',
-				  'constructionSites', 'nukeDefenseRamparts');
+			'constructionSites', 'nukeDefenseRamparts');
 	}
 
 	private wishlistWorkers() {
@@ -168,7 +168,7 @@ export class WorkerOverlord extends Overlord {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 30; // Maximum number of workers to spawn
-				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site) {
+				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function (site) {
 					const overlord = site.overlords.mine;
 					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));
 					const saturation = Math.min(miningPowerAssigned / overlord.miningPowerNeeded, 1);
@@ -177,13 +177,13 @@ export class WorkerOverlord extends Overlord {
 				const transporterSaturation = Math.min(this.colony.overlords.logistics.memory.transporterSaturation, 1);
 				// Average energy per tick when working
 				const energySpentPerTickPerWorkPart = _.filter(this.colony.constructionSites,
-															   s => s.structureType != STRUCTURE_ROAD).length > 0 ? BUILD_POWER : 1;
+					s => s.structureType != STRUCTURE_ROAD).length > 0 ? BUILD_POWER : 1;
 				const energyPerTickPerWorker = workPartsPerWorker * energySpentPerTickPerWorkPart;
 				const workerUptime = 1.0;
 
 				const numWorkers = Math.ceil((energyMinedPerTick * transporterSaturation) /
-											 (energyPerTickPerWorker * workerUptime)
-											 + 0.5);
+					(energyPerTickPerWorker * workerUptime)
+					+ 0.5);
 
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
@@ -199,22 +199,22 @@ export class WorkerOverlord extends Overlord {
 						return MAX_WORKERS;
 					}
 					const buildTicks = _.sum(this.constructionSites,
-											 site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
+						site => Math.max(site.progressTotal - site.progress, 0)) / BUILD_POWER;
 					const repairTicks = _.sum(this.repairStructures,
-											  structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
+						structure => structure.hitsMax - structure.hits) / REPAIR_POWER;
 					const activeRooms = _.filter(this.colony.roomNames, roomName => this.colony.isRoomActive(roomName));
 					const paveTicks = _.sum(activeRooms,
-											roomName => this.colony.roadLogistics.energyToRepave(roomName));
+						roomName => this.colony.roadLogistics.energyToRepave(roomName));
 					let fortifyTicks = 0;
 					const shouldFortify = this.colony.assets.energy > WorkerOverlord.settings.fortifyDutyThreshold;
 					if (shouldFortify) {
 						fortifyTicks = 0.25 * _.sum(this.fortifyBarriers, barrier =>
 							Math.max(0, WorkerOverlord.settings.barrierHits[this.colony.level]
-										- barrier.hits)) / REPAIR_POWER;
+								- barrier.hits)) / REPAIR_POWER;
 					}
 					// max constructionTicks for private server manually setting progress
 					let numWorkers = Math.ceil(2 * (5 * buildTicks + repairTicks + paveTicks + fortifyTicks) /
-											   (workPartsPerWorker * CREEP_LIFE_TIME));
+						(workPartsPerWorker * CREEP_LIFE_TIME));
 					numWorkers = Math.min(numWorkers, MAX_WORKERS);
 					if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {
 						numWorkers = Math.max(numWorkers, 1);
@@ -241,13 +241,13 @@ export class WorkerOverlord extends Overlord {
 				const rechargeThreshold = 25 * workParts;
 				if (worker.store.energy < rechargeThreshold && worker.store.getCapacity() > rechargeThreshold && worker.task) {
 					if (worker.task.name == upgradeTaskName && !this.colony.upgradeSite.battery) {
-						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * UPGRADE_CONTROLLER_POWER});
+						this.colony.logisticsNetwork.requestInput(worker, { dAmountdt: workParts * UPGRADE_CONTROLLER_POWER });
 					} else if (worker.task.name == buildTaskName) {
-						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * BUILD_POWER});
+						this.colony.logisticsNetwork.requestInput(worker, { dAmountdt: workParts * BUILD_POWER });
 					} else if (worker.task.name == repairTaskName) {
-						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * 1});
+						this.colony.logisticsNetwork.requestInput(worker, { dAmountdt: workParts * 1 });
 					} else if (worker.task.name == fortifyTaskName) {
-						this.colony.logisticsNetwork.requestInput(worker, {dAmountdt: workParts * 1});
+						this.colony.logisticsNetwork.requestInput(worker, { dAmountdt: workParts * 1 });
 					}
 				}
 			}
@@ -316,7 +316,7 @@ export class WorkerOverlord extends Overlord {
 			// At high barrier HP, fortify only structures that are within a threshold of the lowest
 			const lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits));
 			lowBarriers = _.filter(fortifyStructures, structure => structure.hits <= lowestBarrierHits +
-																   WorkerOverlord.settings.hitTolerance);
+				WorkerOverlord.settings.hitTolerance);
 		} else {
 			// Otherwise fortify the lowest N structures
 			const numBarriersToConsider = 5; // Choose the closest barrier of the N barriers with lowest hits
@@ -370,55 +370,76 @@ export class WorkerOverlord extends Overlord {
 			worker.task = Tasks.recharge(workerWithdrawLimit);
 			return
 		}
+		if (this.colony.state.bootstrapping) {
+			for (const [resourceType, amount] of worker.carry.contents) {
+				if (amount == 0) continue;
+				if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
+					if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						worker.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						worker.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					}
+				} else { // prefer to put minerals in terminal
+					if (this.colony.terminal && this.colony.terminal.my
+						&& _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						worker.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						worker.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					}
+				}
+			}
+					// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
+					// FIXME workers get stalled at controller in case of downgrade attack
+					// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
+					const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
+						(this.colony.controller.level < 4 ? .3 : .7);
+					if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
+						&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
+							|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
+						if (this.upgradeActions(worker)) return;
+					}
+					// Repair damaged non-road non-barrier structures
+					if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+						if (this.repairActions(worker)) return;
+					}
+					// Fortify critical barriers
+					if (this.criticalBarriers.length > 0) {
+						if (this.fortifyActions(worker, this.criticalBarriers)) return;
+					}
+					// Build new structures
+					if (this.constructionSites.length > 0) {
+						if (this.buildActions(worker)) return;
+					}
+					// Build ramparts to block incoming nuke
+					if (this.nukeDefenseRamparts.length > 0 && !this.colony.state.isRebuilding) {
+						if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
+					}
+					// Build and maintain roads
+					if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe && !this.colony.state.bootstrapping) {
+						if (this.pavingActions(worker)) return;
+					}
+					// Dismantle marked structures
+					if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+						if (this.dismantleActions(worker)) return;
+					}
+					// Fortify walls and ramparts
+					if (this.fortifyBarriers.length > 0 && !this.colony.state.bootstrapping) {
+						if (this.fortifyActions(worker, this.fortifyBarriers)) return;
+					}
+					// Upgrade controller if less than RCL8 or no upgraders
+					if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
+						// if below 3, we are in bootstrapping, always upgrade
+						&& (this.colony.defcon == DEFCON.safe || this.colony.level < 3) && !this.colony.state.bootstrapping) {
+						if (this.upgradeActions(worker)) return;
+					}
+				}
 
-		// TODO Add high priority to block controller with ramparts/walls in case of downgrade attack
-		// FIXME workers get stalled at controller in case of downgrade attack
-		// Upgrade controller if close to downgrade or if getting controller attacked/was downgraded
-		const downgradeLevel = CONTROLLER_DOWNGRADE[this.colony.controller.level] *
-								(this.colony.controller.level < 4 ? .3 : .7);
-		if ((!this.colony.controller.upgradeBlocked || this.colony.controller.upgradeBlocked < 30)
-			&& (this.colony.controller.ticksToDowngrade <= downgradeLevel
-				|| this.colony.controller.progress > this.colony.controller.progressTotal)) {
-			if (this.upgradeActions(worker)) return;
-		}
-		// Repair damaged non-road non-barrier structures
-		if (this.repairStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-			if (this.repairActions(worker)) return;
-		}
-		// Fortify critical barriers
-		if (this.criticalBarriers.length > 0) {
-			if (this.fortifyActions(worker, this.criticalBarriers)) return;
-		}
-		// Build new structures
-		if (this.constructionSites.length > 0) {
-			if (this.buildActions(worker)) return;
-		}
-		// Build ramparts to block incoming nuke
-		if (this.nukeDefenseRamparts.length > 0 && !this.colony.state.isRebuilding) {
-			if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
-		}
-		// Build and maintain roads
-		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe && !this.colony.state.bootstrapping) {
-			if (this.pavingActions(worker)) return;
-		}
-		// Dismantle marked structures
-		if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-			if (this.dismantleActions(worker)) return;
-		}
-		// Fortify walls and ramparts
-		if (this.fortifyBarriers.length > 0 && !this.colony.state.bootstrapping) {
-			if (this.fortifyActions(worker, this.fortifyBarriers)) return;
-		}
-		// Upgrade controller if less than RCL8 or no upgraders
-		if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
-			// if below 3, we are in bootstrapping, always upgrade
-			&& (this.colony.defcon == DEFCON.safe || this.colony.level < 3) && !this.colony.state.bootstrapping) {
-			if (this.upgradeActions(worker)) return;
-		}
-	}
-
-	run() {
-		this.autoRun(this.workers, worker => this.handleWorker(worker),
-					 worker => worker.flee(worker.room.fleeDefaults, {invalidateTask: true}));
-	}
-}
+				run() {
+					this.autoRun(this.workers, worker => this.handleWorker(worker),
+						worker => worker.flee(worker.room.fleeDefaults, { invalidateTask: true }));
+				}
+			}
