@@ -105,7 +105,7 @@ export class BootstrappingOverlord extends Overlord {
 			} else {
 				
 				// wish for rcl/2 fillers
-				var fillerAmt = 1 + Math.ceil(this.colony.controller.level);
+				var fillerAmt = Math.ceil(this.colony.controller.level);
 				this.wishlist(fillerAmt, Setups.filler);
 			}
 		}
