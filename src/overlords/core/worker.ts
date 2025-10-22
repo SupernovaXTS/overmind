@@ -301,7 +301,7 @@ export class WorkerOverlord extends Overlord {
 		this.colony.roadLogistics.registerWorkerAssignment(worker, roomToRepave);
 		// Build a paving manifest
 		const pavingManifest = this.colony.roadLogistics.buildPavingManifest(worker, roomToRepave);
-		if (pavingManifest) {
+		if (pavingManifest && !this.colony.state.bootstrapping) {
 			worker.task = pavingManifest;
 			return true;
 		} else {
