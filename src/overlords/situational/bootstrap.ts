@@ -1,3 +1,4 @@
+import { isResource } from 'declarations/typeGuards';
 import {bodyCost, CreepSetup, patternCost} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveHarvest} from '../../directives/resource/harvest';
@@ -128,9 +129,13 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private rechargeActions(filler: Zerg) {
-		const target = filler.pos.findClosestByRange(this.withdrawStructures);
+		const target = filler.pos.findClosestByRange(this.withdrawStructures,this.room.droppedEnergy);
 		if (target) {
-			filler.task = Tasks.withdraw(target);
+			if (isResource(target)) {
+				filler.task = Tasks.pickup(target);
+			} else {
+				filler.task = Tasks.withdraw(target);
+			}
 		} else {
 			filler.task = Tasks.recharge();
 		}
