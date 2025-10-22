@@ -163,6 +163,27 @@ export class LogisticsSector {
     }
 
     /**
+     * Convenience: request only energy by amount. Returns false for invalid/non-positive amounts.
+     * Example: sector.requestEnergy(100000)
+     */
+    public requestEnergy(amount: number): number | string | undefined | false {
+        const amt = Math.floor(Number(amount) || 0);
+        if (amt <= 0 || !isFinite(amt)) return false;
+        const store = this.storeFromPairs([RESOURCE_ENERGY, amt]);
+        return this.request(store);
+    }
+
+    /**
+     * Boolean convenience: request only energy and return true/false for success.
+     */
+    public requestEnergyOk(amount: number): boolean {
+        const result = this.requestEnergy(amount);
+        if (result === false || result === undefined) return false;
+        if (typeof result === 'number' && result < 0) return false; // treat error codes as failure
+        return true;
+    }
+
+    /**
      * Internal: determine if a single colony can fulfill the request without breaching per-resource buffers.
      * Returns a manifest if possible; otherwise false.
      */
