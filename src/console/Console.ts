@@ -14,6 +14,7 @@ import { Directives } from '../directives/directives';
 import { Setups, Roles } from 'creepSetups/setups';
 import { set } from 'lodash';
 import {Zerg} from '../zerg/Zerg';
+import { LogisticsSector } from 'logistics/LogisticsSector';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -67,6 +68,9 @@ export class OvermindConsole {
 		global.getDirective = this.getDirective;
 		global.getOverlord = this.getOverlord;
 		global.getColony = this.getColony;
+		global.getLogisticsSector = this.getLogisticsSector;
+		global.requestEnergy = this.requestEnergy;
+		global.requestEnergyOk = this.requestEnergyOk;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -119,6 +123,9 @@ export class OvermindConsole {
 		descr['getDirective(flagName)'] = 'returns the directive associated with the specified flag name';
 		descr['getOverlord(directive, overlordName)'] = 'returns the overlord associated with the directive and name';
 		descr['getColony(roomName)'] = 'returns the colony associated with the specified room name';
+		descr['getLogisticsSector(roomName)'] = 'returns the LogisticsSector for the specified colony room';
+		descr['requestEnergy(roomName, amount)'] = 'queues a haul request for energy for the specified colony';
+		descr['requestEnergyOk(roomName, amount)'] = 'same as requestEnergy but returns boolean success';
 		descr['getZerg(creepName)'] = 'returns the Zerg instance associated with the specified creep name';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -132,6 +139,23 @@ export class OvermindConsole {
 	
 	static getColony(input:string): Colony | undefined {
 		return Overmind.colonies?.[input];
+	}
+
+	static getLogisticsSector(roomName: string): LogisticsSector | undefined {
+		const col = Overmind.colonies?.[roomName];
+		return col?.logisticsSector;
+	}
+
+	static requestEnergy(roomName: string, amount: number): number | string | undefined | false {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		return col.logisticsSector.requestEnergy(amount);
+	}
+
+	static requestEnergyOk(roomName: string, amount: number): boolean {
+		const col = Overmind.colonies?.[roomName];
+		if (!col) return false;
+		return col.logisticsSector.requestEnergyOk(amount);
 	}
 
 	static getZerg(input:string): Zerg | undefined {
