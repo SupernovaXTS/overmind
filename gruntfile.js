@@ -12,13 +12,16 @@ module.exports = function (grunt) {
 
 	// Load plugins
 	const typescript = require("rollup-plugin-typescript2");
-	const screeps = require("rollup-plugin-screeps");
 	const resolve = require('@rollup/plugin-node-resolve');
 	const commonjs = require('@rollup/plugin-commonjs');
 	const progress = require("rollup-plugin-progress");
+	const fs = require('fs');
 
 	// Config
-	var config = require('./.screeps.json')
+	var config = {};
+	if (fs.existsSync('./.screeps.json')) {
+		config = require('./.screeps.json');
+	}
 	var branch = grunt.option('branch') || config.branch;
 	var email = grunt.option('email') || config.email;
 	var token = grunt.option('token') || config.token;
@@ -83,7 +86,7 @@ module.exports = function (grunt) {
                 email: email,
                 token: token,
                 branch: branch,
-                ptr: ptr
+                ptr: ptr,
             },
             dist: {
                 src: ['dist/*.js']
