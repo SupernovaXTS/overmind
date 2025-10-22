@@ -1322,8 +1322,8 @@ export class TraderJoe implements ITradeNetwork {
 		}
 	}
 }
-// TODO: Complete this
-export class TraderJoeIntershard implements ITradeNetwork {
+// Intershard trader for account resources (pixels, CPU unlocks) that don't require terminals
+export class TraderJoeIntershard implements IIntershardTradeNetwork {
 	static settings = {
 		cache: {
 			timeout: 250,
@@ -1515,28 +1515,23 @@ export class TraderJoeIntershard implements ITradeNetwork {
 	}
 
 	buy(
-		terminal: StructureTerminal,
 		resource: InterShardResourceConstant,
 		amount: number,
 		opts: TradeOpts = {}
 	): number {
 		_.defaults(opts, defaultTradeOpts);
 
-		if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {
+		if (Game.market.credits < TraderJoeIntershard.settings.market.credits.canBuyAbove) {
 			log.error(
-				`Credits insufficient to buy resource ${amount} ${resource} to ${terminal.room.print}; ` +
-					`shouldn't be making this TradeNetwork.buy() request!`
+				`Credits insufficient to buy ${amount} ${resource}; ` +
+					`shouldn't be making this IntershardTradeNetwork.buy() request!`
 			);
 			return ERR_CREDIT_THRESHOLDS;
 		}
 
-		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
-		if (
-			opts.preferDirect &&
-			this.getExistingOrders(ORDER_BUY, resource, terminal.room.name).length ==
-				0
-		) {
-			const result = this.buyDirect(terminal, resource, amount, opts);
+		// Intershard resources: buy directly from market orders without terminals
+		if (opts.preferDirect && this.getExistingOrders(ORDER_BUY, resource).length == 0) {
+			const result = this.buyDirectIntershard(resource, amount, opts);
 			if (
 				result != ERR_NO_ORDER_TO_BUY_FROM &&
 				result != ERR_BUY_DIRECT_PRICE_TOO_HIGH
@@ -1544,10 +1539,8 @@ export class TraderJoeIntershard implements ITradeNetwork {
 				return result;
 			}
 			this.notify(
-				`Buy direct request: ${amount} ${resource} to ${printRoomName(
-					terminal.room.name
-				)} ` +
-					`was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`
+				`Buy direct request: ${amount} ${resource} ` +
+					`was unsuccessful; allowing fallthrough to maintainOrderIntershard()`
 			);
 		}
 
@@ -1555,9 +1548,8 @@ export class TraderJoeIntershard implements ITradeNetwork {
 			return ERR_DRY_RUN_ONLY_SUPPORTS_DIRECT_TRANSACTIONS;
 		}
 
-		// Fallthrough - if not preferDirect or if existing order or if there's no orders to buy from then make order
-		const result = this.maintainOrder(
-			terminal,
+		// Fallthrough - create or maintain an order
+		const result = this.maintainOrderIntershard(
 			ORDER_BUY,
 			resource,
 			amount,
@@ -1570,7 +1562,6 @@ export class TraderJoeIntershard implements ITradeNetwork {
 	 * Sell a resource on the market, either through a sell order or directly
 	 */
 	sell(
-		terminal: StructureTerminal,
 		resource: InterShardResourceConstant,
 		amount: number,
 		opts: TradeOpts = {}
@@ -1581,13 +1572,10 @@ export class TraderJoeIntershard implements ITradeNetwork {
 		if (
 			opts.preferDirect ||
 			Game.market.credits <
-				TraderJoe.settings.market.credits.mustSellDirectBelow
+				TraderJoeIntershard.settings.market.credits.mustSellDirectBelow
 		) {
-			if (
-				this.getExistingOrders(ORDER_SELL, resource, terminal.room.name)
-					.length == 0
-			) {
-				const result = this.sellDirect(terminal, resource, amount, opts);
+			if (this.getExistingOrders(ORDER_SELL, resource).length == 0) {
+				const result = this.sellDirectIntershard(resource, amount, opts);
 				if (
 					result != ERR_NO_ORDER_TO_SELL_TO &&
 					result != ERR_SELL_DIRECT_PRICE_TOO_LOW
@@ -1595,10 +1583,8 @@ export class TraderJoeIntershard implements ITradeNetwork {
 					return result; // if there's nowhere to sensibly sell, allow creating an order
 				}
 				this.notify(
-					`Sell direct request: ${amount} ${resource} from ${printRoomName(
-						terminal.room.name
-					)} ` +
-						`was unsuccessful; allowing fallthrough to TradeNetwork.maintainOrder()`
+					`Sell direct request: ${amount} ${resource} ` +
+						`was unsuccessful; allowing fallthrough to maintainOrderIntershard()`
 				);
 			}
 		}
@@ -1610,10 +1596,9 @@ export class TraderJoeIntershard implements ITradeNetwork {
 		// If you have enough credits or if there are no buy orders to sell to, create / maintain a sell order
 		if (
 			Game.market.credits >=
-			TraderJoe.settings.market.credits.canPlaceSellOrdersAbove
+			TraderJoeIntershard.settings.market.credits.canPlaceSellOrdersAbove
 		) {
-			const result = this.maintainOrder(
-				terminal,
+			const result = this.maintainOrderIntershard(
 				ORDER_SELL,
 				resource,
 				amount,
@@ -1624,6 +1609,323 @@ export class TraderJoeIntershard implements ITradeNetwork {
 			return ERR_CREDIT_THRESHOLDS;
 		}
 	}
+
+	/**
+	 * Buy intershard resources directly from a seller using Game.market.deal()
+	 */
+	private buyDirectIntershard(
+		resource: InterShardResourceConstant,
+		amount: number,
+		opts: TradeOpts
+	): number {
+		// Can only buy what we have space for in account
+		amount = Math.min(amount, TraderJoeIntershard.settings.market.orders.maxBuyDirectAmount);
+
+		// Wait until threshold is met
+		if (
+			amount < TraderJoeIntershard.settings.market.orders.minBuyDirectAmount &&
+			!opts.ignoreMinAmounts &&
+			!opts.dryRun
+		) {
+			return NO_ACTION;
+		}
+
+		const minAmount = opts.flexibleAmount
+			? Math.min(TraderJoeIntershard.settings.market.orders.minBuyDirectAmount, amount)
+			: amount;
+		const validOrders = _.filter(
+			Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL }),
+			(order) => order.amount >= minAmount
+		);
+
+		// Find the cheapest order
+		const order = minBy(validOrders, (order) => order.price - order.amount / 1000000000);
+
+		if (!order) {
+			if (!opts.dryRun) {
+				this.notify(`No valid market order to buy ${resource} from!`);
+			}
+			return ERR_NO_ORDER_TO_BUY_FROM;
+		}
+
+		// Check price isn't too expensive
+		const priceForResource = this.priceOf(resource);
+		const maxPriceWillingToPay = priceForResource * (1.5 + Game.market.credits / 2e6);
+		
+		if (
+			priceForResource == Infinity ||
+			(order.price > maxPriceWillingToPay && !opts.ignorePriceChecksForDirect) ||
+			order.price > 100
+		) {
+			if (!opts.dryRun) {
+				this.notify(
+					`Buy direct call is too expensive! Buy request: ${amount} ${resource}, ` +
+						`price: ${order.price.toFixed(4)}`
+				);
+			}
+			return ERR_BUY_DIRECT_PRICE_TOO_HIGH;
+		}
+
+		const buyAmount = Math.min(order.amount, amount);
+
+		if (opts.dryRun) {
+			const haveEnoughCredits = Game.market.credits >= buyAmount * order.price;
+			return haveEnoughCredits ? OK : ERR_NOT_ENOUGH_RESOURCES;
+		}
+
+		// Make the deal - intershard resources don't need terminal or energy cost
+		const response = Game.market.deal(order.id, buyAmount);
+		this.debug(`buyDirectIntershard executed: ${buyAmount} ${resource} (${response})`);
+		return response;
+	}
+
+	/**
+	 * Sell intershard resources directly to a buyer using Game.market.deal()
+	 */
+	private sellDirectIntershard(
+		resource: InterShardResourceConstant,
+		amount: number,
+		opts: TradeOpts
+	): number {
+		// Can only sell what we have
+		const currentAmount = Game.resources[resource] || 0;
+		amount = Math.min(
+			amount,
+			currentAmount,
+			TraderJoeIntershard.settings.market.orders.maxSellDirectAmount
+		);
+
+		if (
+			amount < TraderJoeIntershard.settings.market.orders.minSellDirectAmount &&
+			!opts.ignoreMinAmounts &&
+			!opts.dryRun
+		) {
+			return NO_ACTION;
+		}
+
+		const minAmount = opts.flexibleAmount
+			? Math.min(amount, TraderJoeIntershard.settings.market.orders.minSellDirectAmount)
+			: amount;
+		const validOrders = _.filter(
+			Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY }),
+			(order) => order.amount >= minAmount
+		);
+
+		// Find the best order
+		const order = maxBy(validOrders, (order) => order.price + order.amount / 1000000000);
+
+		if (!order) {
+			if (!opts.dryRun) {
+				this.notify(`No valid market order to sell ${resource} to!`);
+			}
+			return ERR_NO_ORDER_TO_SELL_TO;
+		}
+
+		// Check price isn't too cheap
+		const priceForResource = this.priceOf(resource);
+		const minPriceWillingToSell = 0.5 * priceForResource;
+		
+		if (
+			priceForResource == Infinity ||
+			(order.price < minPriceWillingToSell && !opts.ignorePriceChecksForDirect) ||
+			order.price < 0
+		) {
+			if (!opts.dryRun) {
+				this.notify(
+					`Sell direct call is too cheap! Sell request: ${amount} ${resource}, ` +
+						`price: ${order.price.toFixed(4)}`
+				);
+			}
+			return ERR_SELL_DIRECT_PRICE_TOO_LOW;
+		}
+
+		const sellAmount = Math.min(order.amount, amount);
+
+		if (opts.dryRun) {
+			return OK;
+		}
+
+		// Make the deal - intershard resources don't need terminal
+		const response = Game.market.deal(order.id, sellAmount);
+		this.debug(`sellDirectIntershard executed: ${sellAmount} ${resource} (${response})`);
+		return response;
+	}
+
+	/**
+	 * Create or maintain an order for intershard resources (no terminal/room needed)
+	 */
+	private maintainOrderIntershard(
+		type: ORDER_SELL | ORDER_BUY,
+		resource: InterShardResourceConstant,
+		amount: number,
+		opts: TradeOpts
+	): number {
+		this.debug(`maintain ${type} order: ${amount} ${resource}`);
+
+		if (!this.ordersProcessedThisTick()) {
+			return OK;
+		}
+
+		// Cap the amount
+		if (type == ORDER_SELL) {
+			amount = Math.min(amount, TraderJoeIntershard.settings.market.orders.maxBuyOrderAmount);
+		} else {
+			amount = Math.min(amount, TraderJoeIntershard.settings.market.orders.maxSellOrderAmount);
+		}
+
+		const minAmount =
+			type == ORDER_BUY
+				? TraderJoeIntershard.settings.market.orders.minBuyOrderAmount
+				: TraderJoeIntershard.settings.market.orders.minSellOrderAmount;
+		if (amount < minAmount && !opts.ignoreMinAmounts) {
+			this.debug(`amount ${amount} less than min amount ${minAmount}; no action taken`);
+			return NO_ACTION;
+		}
+
+		const existingOrder = _.first(this.getExistingOrders(type, resource));
+
+		// Maintain an existing order
+		if (existingOrder) {
+			const price = +this.computeCompetitivePriceIntershard(type, resource).toFixed(3);
+			if (price == Infinity || price == 0) {
+				log.warning(
+					`IntershardTradeNetwork: sanity checks not passed for ${type} order ${resource}!`
+				);
+				return ERR_NOT_ENOUGH_MARKET_DATA;
+			}
+			const ratio = existingOrder.price / price;
+			const tolerance = 0.03;
+			const normalFluctuation = 1 + tolerance > ratio && ratio > 1 - tolerance;
+
+			// Extend the order if needed
+			if (amount > existingOrder.remainingAmount && normalFluctuation) {
+				const addAmount = amount - existingOrder.remainingAmount;
+				const ret = Game.market.extendOrder(existingOrder.id, addAmount);
+				this.notify(`Extending ${type} order for ${resource} by ${addAmount}. Response: ${ret}`);
+				return ret;
+			}
+
+			// Change price if not competitive
+			if (!normalFluctuation && Math.random() < 1 / 2000) {
+				const ret = Game.market.changeOrderPrice(existingOrder.id, price);
+				this.notify(
+					`Changing ${type} order price for ${resource} from ${existingOrder.price} to ${price}. ` +
+						`Response: ${ret}`
+				);
+				return ret;
+			}
+
+			return OK;
+		}
+		// Create a new order
+		else {
+			if (
+				this.ordersPlacedThisTick >
+				TraderJoeIntershard.settings.market.orders.maxOrdersPlacedPerTick
+			) {
+				return NO_ACTION;
+			}
+
+			const existingOrdersForThis = this.getExistingOrders(type, resource);
+			if (
+				existingOrdersForThis.length >
+				TraderJoeIntershard.settings.market.orders.maxOrdersForResource
+			) {
+				this.notify(`Could not create ${type} order for ${amount} ${resource} - too many existing!`);
+				return ERR_TOO_MANY_ORDERS_OF_TYPE;
+			}
+
+			const price = +this.computeCompetitivePriceIntershard(type, resource).toFixed(3);
+			if (price == Infinity || price == 0) {
+				log.warning(
+					`IntershardTradeNetwork: sanity checks not passed to create ${type} order ${resource}!`
+				);
+				return ERR_NOT_ENOUGH_MARKET_DATA;
+			}
+
+			// Adjust amount based on broker's fee
+			const brokersFee = price * amount * MARKET_FEE;
+			if (Game.market.credits < brokersFee) {
+				amount = ((amount * Game.market.credits) / brokersFee) * 0.9;
+			}
+
+			// Create the order - no roomName needed for intershard resources
+			const ret = Game.market.createOrder({
+				type: type,
+				resourceType: resource,
+				price: price,
+				totalAmount: amount,
+			});
+
+			let msg =
+				type == ORDER_BUY
+					? `Creating buy order: ${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`
+					: `Creating sell order: ${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+
+			if (ret == OK) {
+				this.ordersPlacedThisTick++;
+			} else {
+				msg += ` ERROR: ${ret}`;
+			}
+			this.debug(msg);
+			this.notify(msg);
+			return ret;
+		}
+	}
+
+	/**
+	 * Compute competitive price for intershard resources (simpler version without terminal costs)
+	 */
+	private computeCompetitivePriceIntershard(
+		type: ORDER_SELL | ORDER_BUY,
+		resource: InterShardResourceConstant
+	): number {
+		const allOrdersOfResource = _.groupBy(
+			Game.market.getAllOrders({ resourceType: resource }),
+			"type"
+		);
+		const allBuyOrders = allOrdersOfResource[ORDER_BUY];
+		const allSellOrders = allOrdersOfResource[ORDER_SELL];
+
+		const highestBuyOrder = maxBy(allBuyOrders, (o) =>
+			o.amount < 100 || this.isOrderMine(o) ? false : o.price
+		);
+		const lowestSellOrder = minBy(allSellOrders, (o) =>
+			o.amount < 100 || this.isOrderMine(o) ? false : o.price
+		);
+
+		if (!highestBuyOrder || !lowestSellOrder) {
+			log.error(`No buy orders or no sell orders for ${resource}!`);
+			return Infinity;
+		}
+
+		const adjustMagnitude = 0.1;
+		let adjustment = 1;
+		const existingOrder = _.first(this.getExistingOrders(ORDER_SELL, resource));
+		if (existingOrder) {
+			const timeOnMarket = Game.time - existingOrder.created;
+			const orderDiscountTimescale = 50000;
+			adjustment = (adjustment + timeOnMarket / orderDiscountTimescale) / 2;
+		}
+
+		if (type == ORDER_SELL) {
+			const discountFactor = 1 - adjustment * adjustMagnitude;
+			const marketRate = Math.max(lowestSellOrder.price, highestBuyOrder.price);
+			const price = marketRate * discountFactor;
+			return price < 0 ? Infinity : price;
+		} else {
+			const outbidFactor = 1 + adjustment * adjustMagnitude;
+			const marketRate = Math.min(highestBuyOrder.price, lowestSellOrder.price);
+			const price = marketRate * outbidFactor;
+			const priceForResource = this.priceOf(resource);
+			const maxMarkup = 3;
+			if (price > priceForResource * maxMarkup) {
+				return Infinity;
+			}
+			return price;
+		}
+	}
+
 	computeCompetitivePrice(
 		type: ORDER_SELL | ORDER_BUY,
 		resource: InterShardResourceConstant,

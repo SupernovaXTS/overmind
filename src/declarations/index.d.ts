@@ -203,15 +203,35 @@ interface ITradeNetwork {
 
 	refresh(): void;
 
-	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant| InterShardResourceConstant | 'any', roomName?: string): Order[];
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: ResourceConstant | 'any', roomName?: string): Order[];
 
-	priceOf(resource: ResourceConstant| InterShardResourceConstant): number;
+	priceOf(resource: ResourceConstant): number;
 
 	ordersProcessedThisTick(): boolean;
 
-	buy(terminal: StructureTerminal, resource: ResourceConstant| InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
+	buy(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;
 
-	sell(terminal: StructureTerminal, resource: ResourceConstant| InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
+	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number, opts?: TradeOpts): number;
+
+	init(): void;
+
+	run(): void;
+}
+
+interface IIntershardTradeNetwork {
+	memory: any;
+
+	refresh(): void;
+
+	getExistingOrders(type: ORDER_BUY | ORDER_SELL, resource: InterShardResourceConstant | 'any'): Order[];
+
+	priceOf(resource: InterShardResourceConstant): number;
+
+	ordersProcessedThisTick(): boolean;
+
+	buy(resource: InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
+
+	sell(resource: InterShardResourceConstant, amount: number, opts?: TradeOpts): number;
 
 	init(): void;
 

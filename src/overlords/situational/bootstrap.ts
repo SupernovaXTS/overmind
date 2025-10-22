@@ -104,7 +104,7 @@ export class BootstrappingOverlord extends Overlord {
 				transporter.reassign(this.colony.hatchery.overlord, Roles.queen);
 			} else {
 				
-				// wish for rcl/2 fillers
+				// wish for rcl fillers
 				var fillerAmt = Math.ceil(this.colony.controller.level);
 				this.wishlist(fillerAmt, Setups.filler);
 			}

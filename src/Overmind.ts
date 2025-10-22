@@ -21,7 +21,7 @@ import { Directive } from 'directives/Directive';
 import { PowerZerg } from 'zerg/PowerZerg';
 import { Overlord } from 'overlords/Overlord';
 import { SpawnGroup } from 'logistics/SpawnGroup';
-import { accountResources } from 'logistics/accountResources';
+import { AccountResources } from 'logistics/accountResources';
 @profile
 export default class _Overmind implements IOvermind {
 	memory: Mem
@@ -40,8 +40,8 @@ export default class _Overmind implements IOvermind {
 	colonyMap: { [roomName: string]: string };
 	terminalNetwork: TerminalNetworkV2;
 	tradeNetwork: TraderJoe;
-    tradeNetworkIntershard: TraderJoeIntershard
-    accountResources: accountResources
+	tradeNetworkIntershard: TraderJoeIntershard;
+	accountResources: AccountResources;
 	expansionPlanner: ExpansionPlanner;
 	exceptions: Error[];
 	roomIntel: RoomIntel;
@@ -63,11 +63,11 @@ export default class _Overmind implements IOvermind {
         this.spawnGroups = {};
         this.colonyMap = {};
         this.terminalNetwork = new TerminalNetworkV2();
-        this.accountResources = new accountResources();
-        global.accountResources = this.accountResources
-        global.TerminalNetwork = this.terminalNetwork;
         this.tradeNetwork = new TraderJoe();
-        this.tradeNetworkIntershard = new TraderJoeIntershard()
+        this.tradeNetworkIntershard = new TraderJoeIntershard();
+        this.accountResources = new AccountResources(this.tradeNetworkIntershard);
+        global.accountResources = this.accountResources;
+        global.TerminalNetwork = this.terminalNetwork;
         global.tradeNetworkIntershard = this.tradeNetworkIntershard;
         global.TradeNetwork = this.tradeNetwork;
         this.expansionPlanner = new ExpansionPlanner();
@@ -258,7 +258,8 @@ export default class _Overmind implements IOvermind {
         this.try(() => this.tradeNetwork.run());
         this.try(() => this.expansionPlanner.run());
         this.try(() => RoomIntel.run());
-        this.accountResources.handlePixel()
+        this.try(() => this.accountResources.handlePixel());
+        this.try(() => this.accountResources.handleCPUUnlock());
 
         /* Broken?
         var cpuTime = Game.cpu.unlockedTime;
