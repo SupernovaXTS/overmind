@@ -7,9 +7,18 @@ import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
 import {HiveCluster} from './_HiveCluster';
-
+import {Setups,Roles} from '../creepSetups/setups';
 interface UpgradeSiteMemory {
-	stats: { downtime: number };
+	stats: { 
+		downtime: number,
+		energyPerTick: number,
+		energy: number,
+		energyPercent: number,
+		progress: number,
+		progressPercent: number,
+		progressTotal: number,
+		ticksTillUpgrade: number
+	};
 	speedFactor: number;		// Multiplier on upgrade parts for fast growth
 }
 
@@ -27,8 +36,8 @@ export class UpgradeSite extends HiveCluster {
 	battery: StructureContainer | undefined; 				// The container to provide an energy buffer
 	batteryPos: RoomPosition | undefined;
 	overlord: UpgradingOverlord;
-	// energyPerTick: number;
-
+	energyPerTick: number;
+	lastProgress: number = 0;
 	static settings = {
 		energyBuffer     : 100000,	// Number of upgrader parts scales with energy minus this value
 		energyPerBodyUnit: 20000,	// Scaling factor: this much excess energy adds one extra body repetition // TODO: scaling needs to increase with new storage/terminal system
@@ -62,11 +71,6 @@ export class UpgradeSite extends HiveCluster {
 		$.set(this, 'link', () => this.pos.findClosestByLimitedRange(colony.availableLinks, 3));
 		this.colony.linkNetwork.claimLink(this.link);
 		// // Energy per tick is sum of upgrader body parts and nearby worker body parts
-		// this.energyPerTick = $.number(this, 'energyPerTick', () =>
-		// 	_.sum(this.overlord.upgraders, upgrader => upgrader.getActiveBodyparts(WORK)) +
-		// 	_.sum(_.filter(this.colony.getCreepsByRole(WorkerSetup.role), worker =>
-		// 			  worker.pos.inRangeTo((this.link || this.battery || this).pos, 2)),
-		// 		  worker => worker.getActiveBodyparts(WORK)));
 		// Compute stats
 		this.stats();
 	}
@@ -124,13 +128,13 @@ export class UpgradeSite extends HiveCluster {
 		const inThreshold = this.colony.stage == ColonyStage.Larva ? 0.75 : 0.5;
 		if (this.battery) {
 			if (this.colony.stage == ColonyStage.Larva) {
-				if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+				if (this.battery.energy < inThreshold * this.battery.store.getCapacity(RESOURCE_ENERGY)) {
 					const workers = this.colony.overlords.work.workers;
 					const energyPerTick = UPGRADE_CONTROLLER_POWER * _.sum(workers, worker => worker.getBodyparts(WORK));
 					this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
 				}
 			} else {
-				if (this.battery.energy < inThreshold * this.battery.storeCapacity) {
+				if (this.battery.energy < inThreshold * this.battery.store.getCapacity(RESOURCE_ENERGY)) {
 					const energyPerTick = UPGRADE_CONTROLLER_POWER * this.upgradePowerNeeded;
 					this.colony.logisticsNetwork.requestInput(this.battery, {dAmountdt: energyPerTick});
 				}
@@ -187,17 +191,72 @@ export class UpgradeSite extends HiveCluster {
 			}
 		}
 	}
-
+	private get investedEnergyPerTick(): number {
+		const progressThisTick = this.controller.progress - this.lastProgress;
+		this.lastProgress = this.controller.progress;
+		return progressThisTick/100;
+	}
+	private get progressPerTick(): number {
+		const progressThisTick = this.controller.progress - this.lastProgress;
+		this.lastProgress = this.controller.progress;
+		return progressThisTick/100;
+	}
+	private get progress(): number {
+		return this.controller.progress;
+	}
+	private get progressTotal(): number {
+		return this.controller.progressTotal;
+	}
+	private get energy(): number {
+		return this.controller.progress/100;
+	}
+	private get energyTotal(): number {
+		return this.controller.progressTotal/100;
+	}
+	private get progressPercent(): number {
+		var progressPercent = Math.floor(100 * this.controller.progress / this.controller.progressTotal);
+		return progressPercent;
+	}
+	private get energyPercent(): number {
+		var energyPercent = Math.floor(100 * this.energy / this.energyTotal);
+		return energyPercent;
+	}
+	private get ticksTillUpgrade(): number {
+		var ticksTillUpgrade = Math.ceil((this.controller.progressTotal - this.controller.progress) / (this.progressPerTick || 1));
+		return ticksTillUpgrade;
+	}	
 	private stats() {
 		const defaults = {
 			downtime: 0,
+			energyPerTick: 0,
+			energy: 0,
+			energyPercent: 0,
+			progress: 0,
+			progressPercent: 0,
+			progressTotal: 0,
+			ticksTillUpgrade: 0
 		};
 		if (!this.memory.stats) this.memory.stats = defaults;
 		_.defaults(this.memory.stats, defaults);
 		// Compute downtime
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
 									  (this.battery ? +this.battery.isEmpty : 0)) / CREEP_LIFE_TIME;
+		this.memory.stats.energyPerTick = this.investedEnergyPerTick;
+		this.memory.stats.energy = this.energy;
+		this.memory.stats.energyPercent = this.energyPercent;
+		this.memory.stats.progress = this.progress;
+		this.memory.stats.progressPercent = this.progressPercent;
+		this.memory.stats.progressTotal = this.progressTotal;
+		this.memory.stats.ticksTillUpgrade = this.ticksTillUpgrade;
+		// Log stats
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.energy`, this.memory.stats.energy);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPercent`, this.memory.stats.energyPercent);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.progress`, this.memory.stats.progress);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.progressPercent`, this.memory.stats.progressPercent);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.progressTotal`, this.memory.stats.progressTotal);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.downtime`, this.memory.stats.downtime);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPerTick`, this.memory.stats.energyPerTick);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.ticksTillUpgrade`, this.memory.stats.ticksTillUpgrade);
 	}
 
 	run(): void {
