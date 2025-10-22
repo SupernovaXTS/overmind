@@ -64,6 +64,8 @@ export class OvermindConsole {
 		global.listPortals = this.listPortals;
 		global.evaluateOutpostEfficiencies = this.evaluateOutpostEfficiencies;
 		global.evaluatePotentialOutpostEfficiencies = this.evaluatePotentialOutpostEfficiencies;
+		global.getDirective = this.getDirective;
+		global.getOverlord = this.getOverlord;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -113,7 +115,8 @@ export class OvermindConsole {
 		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
 		descr['evaluateOutpostEfficiencies()'] = 'prints all colony outposts efficiency';
 		descr['evaluatePotentialOutpostEfficiencies()'] = 'prints all nearby unmined outposts';
-
+		descr['getDirective(flagName)'] = 'returns the directive associated with the specified flag name';
+		descr['getOverlord(directive, overlordName)'] = 'returns the overlord associated with the directive and name';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -122,6 +125,10 @@ export class OvermindConsole {
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
+	}
+
+	static getOverlord(input:Directive,name:string): Overlord | undefined {
+		return input.overlords?.[name];
 	}
 
 	static printUpdateMessage(aligned = false): void {
@@ -135,7 +142,9 @@ export class OvermindConsole {
 	static printTrainingMessage(): void {
 		console.log('\n' + asciiLogoRL.join('\n') + '\n');
 	}
-
+	static getDirective(name:string): Directive | undefined {
+		return _.find(Overmind.directives, { name });
+	}
 	static info(aligned = false): string {
 		const b = bullet;
 		const baseInfo = [
