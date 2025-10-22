@@ -44,7 +44,7 @@ export class TaskRecharge extends Task<rechargeTargetType> {
 		}
 
 		// Don't allow workers to withdraw from mining containers at lower levels
-		if (creep.colony && creep.colony.stage == ColonyStage.Larva && creep.roleName == 'worker') {
+		if ((creep.colony && creep.colony.stage == ColonyStage.Larva && creep.roleName == 'worker') || creep.colony?.state.bootstrapping) {
 			const miningSiteContainers = _.compact(_.map(creep.colony.miningSites, site => site.overlords.mine.container));
 			// if this is a mining site container, don't let creeps withdraw from it unless it is sort of full
 			const CONTAINER_THRESHOLD = 1000;
