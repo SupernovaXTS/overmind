@@ -14,7 +14,7 @@ export type rechargeTargetType = HasRef & _HasRoomPosition;  // This is handled 
 export const rechargeTaskName = 'recharge';
 
 // This is a "dispenser task" which is not itself a valid task, but dispenses a task when assigned to a creep.
-
+const rechargeWorkerBootstrapping = true
 @profile
 export class TaskRecharge extends Task<rechargeTargetType> {
 
@@ -42,7 +42,7 @@ export class TaskRecharge extends Task<rechargeTargetType> {
 				}
 			}
 		}
-		if ( creep.roleName == 'worker' || creep.colony?.state.bootstrapping ) {
+		if (( creep.roleName == 'worker' && creep.colony?.state.bootstrapping ) && !rechargeWorkerBootstrapping) {
 			return false; // while bootstrapping do not allow workers to withdraw energy
 		}
 		// Don't allow workers to withdraw from mining containers at lower levels
