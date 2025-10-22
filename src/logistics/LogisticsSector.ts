@@ -132,6 +132,16 @@ export class LogisticsSector {
     }
 
     /**
+     * Convenience: accept an array of [resource, amount] pairs, build a store via storeFromPairs,
+     * and invoke request using nearby colonies.
+     * Example: sector.requestFromPairs([[RESOURCE_ENERGY, 50000], [RESOURCE_OPS, 100]])
+     */
+    public requestFromPairs(pairs: Array<[ResourceConstant, number]>): number | string | undefined | false {
+        const store = this.storeFromPairs(...pairs);
+        return this.request(store);
+    }
+
+    /**
      * Internal: determine if a single colony can fulfill the request without breaching per-resource buffers.
      * Returns a manifest if possible; otherwise false.
      */
