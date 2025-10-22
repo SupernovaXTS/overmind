@@ -129,7 +129,7 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private rechargeActions(filler: Zerg) {
-		const target = filler.pos.findClosestByRange(this.withdrawStructures,this.room.droppedEnergy);
+		const target = filler.pos.findClosestByRange(this.room.droppedEnergy) || filler.pos.findClosestByRange(this.withdrawStructures);
 		if (target) {
 			if (isResource(target)) {
 				filler.task = Tasks.pickup(target);
