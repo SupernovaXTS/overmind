@@ -195,7 +195,26 @@ export class HaulingOverlordRequest extends Overlord {
 			}
 		}
 	}
-
+	private updateManifestFromPickup(before: StoreDefinition, after: StoreDefinition) {
+		// Initialize manifest in memory if needed
+		if (!this.directive.memory.manifest) this.directive.memory.manifest = {} as StoreDefinitionUnlimited;
+		const manifest = this.directive.memory.manifest as StoreDefinitionUnlimited;
+		// consider all resource types present before/after
+		const resources = _.uniq([...Object.keys(before), ...Object.keys(after)]) as ResourceConstant[];
+		for (const res of resources) {
+			const prev = (before[res] as number) || 0;
+			const curr = (after[res] as number) || 0;
+			const gained = Math.max(0, curr - prev);
+			if (gained > 0 && manifest[res] != undefined) {
+				const remaining = Math.max(0, ((manifest[res] as number) || 0) - gained);
+				if (remaining <= 0) {
+					delete manifest[res];
+				} else {
+					manifest[res] = remaining;
+				}
+			}
+		}
+	}
 	run() {
 		for (const hauler of this.haulers) {
 			// Snapshot carry before running task
@@ -217,24 +236,5 @@ export class HaulingOverlordRequest extends Overlord {
 	/**
 	 * Reduce directive manifest by the amount a hauler actually picked up/withdrew this tick.
 	 */
-	private updateManifestFromPickup(before: StoreDefinition, after: StoreDefinition) {
-		// Initialize manifest in memory if needed
-		if (!this.directive.memory.manifest) this.directive.memory.manifest = {} as StoreDefinitionUnlimited;
-		const manifest = this.directive.memory.manifest as StoreDefinitionUnlimited;
-		// consider all resource types present before/after
-		const resources = _.uniq([...Object.keys(before), ...Object.keys(after)]) as ResourceConstant[];
-		for (const res of resources) {
-			const prev = (before[res] as number) || 0;
-			const curr = (after[res] as number) || 0;
-			const gained = Math.max(0, curr - prev);
-			if (gained > 0 && manifest[res] != undefined) {
-				const remaining = Math.max(0, ((manifest[res] as number) || 0) - gained);
-				if (remaining <= 0) {
-					delete manifest[res];
-				} else {
-					manifest[res] = remaining;
-				}
-			}
-		}
-	}
+	
 }

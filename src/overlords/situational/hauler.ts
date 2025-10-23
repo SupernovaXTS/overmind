@@ -123,15 +123,6 @@ export class HaulingOverlord extends Overlord {
 	}
 
 	run() {
-		for (const hauler of this.haulers) {
-			if (hauler.isIdle) {
-				this.handleHauler(hauler);
-			}
-			hauler.run();
-		}
-		// TODO: fix the way this is done
-		if (this.directive.memory.totalResources == 0 && this.haulers.filter(hauler => _.sum(hauler.carry) > 0).length == 0) {
-			this.directive.remove();
-		}
+		this.autoRun(this.haulers, hauler => this.handleHauler(hauler));
 	}
 }
