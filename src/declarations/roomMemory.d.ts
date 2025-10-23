@@ -35,6 +35,12 @@ interface RoomMemory {
 	[RMEM.PREV_POSITIONS]?: { [packedCreepId: string]: string }; // TODO: deprecate
 	// [RMEM.CREEPS_IN_ROOM]?: { [tick: number]: string[] }; // TODO: deprecate
 	[RMEM.CREEP_INFOS]?: SavedCreepInfo;
+
+	// Stats for controller RCL progress averaging (used by utilities/statistics)
+	_rclStats?: {
+		lastProgress?: number;
+		avgTick?: number; // average effective energy per tick to controller progress
+	};
 }
 
 

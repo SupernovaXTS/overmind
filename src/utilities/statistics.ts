@@ -3,15 +3,20 @@ const _structureController = StructureController.prototype as any;
 const structureController = _structureController;
 structureController.updateRclAvg = function (): void {
     if (this.level === 8) return;
-    if (this.memory.rclLastTick !== null && this.level <= this.memory.level) {
-        const diff: number = this.progress - this.memory.rclLastTick;
-        this.memory.rclAvgTick = MM_AVG(diff, this.memory.rclAvgTick, 1000);
+    const roomMem: any = this.room && this.room.memory ? this.room.memory : undefined;
+    if (!roomMem) return;
+    roomMem._rclStats = roomMem._rclStats || {};
+    const stats = roomMem._rclStats as { lastProgress?: number; avgTick?: number };
+    if (typeof stats.lastProgress === 'number' && this.level <= (this.room.controller?.level || 0)) {
+        const diff: number = this.progress - stats.lastProgress;
+        stats.avgTick = MM_AVG(diff, stats.avgTick, 1000);
     }
-    this.memory.rclLastTick = this.progress;
+    stats.lastProgress = this.progress;
 };
 
 structureController.estimateInTicks = function (): number | undefined {
-    const avg = this.memory.rclAvgTick;
+    const roomMem: any = this.room && this.room.memory ? this.room.memory : undefined;
+    const avg = roomMem?._rclStats?.avgTick;
     if (typeof avg !== 'number' || avg <= 0 || !isFinite(avg)) return undefined;
     const remaining = this.progressTotal - this.progress;
     if (remaining <= 0) return 0;
@@ -63,7 +68,7 @@ export function progress(): string {
             const ctrl = c?.room?.controller;
             const progressVal = ctrl?.progress ?? 0;
             const progressTotal = ctrl?.progressTotal ?? 0;
-            const avgEt = _.round(c?.memory?.rclAvgTick ?? 0, 2);
+            const avgEt = _.round(((c?.room?.memory as any)?._rclStats?.avgTick) ?? 0, 2);
             const progressHtml = `<progress value="${progressVal}" max="${progressTotal}"/>`;
             str += `Room: ${ROOM_LINK(roomName)}, RCL: ${rcl}, ${etaStr} ${progressHtml}, ${avgEt} e/t \n`;
         })
