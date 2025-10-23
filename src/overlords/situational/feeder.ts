@@ -69,8 +69,8 @@ export class FeederOverlord extends Overlord {
 			log.error(`${this.print}: parent and child colonies are the same! (Why?)`);
 		}
 		this.upgradeSite = this.childColony.upgradeSite;
-		// If new colony or boosts overflowing to storage
-		this.feeders = this.zerg(Roles.feeder);
+		// Feeder creeps use transporter bodies/role
+		this.feeders = this.zerg(Roles.transport);
 
 		this.boosted = true; // TODO
 	}

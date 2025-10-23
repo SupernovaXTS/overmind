@@ -144,10 +144,17 @@ export abstract class Overlord {
 					// log.debug(`Refreshing creep ${creep.name}`)
 					Overmind.zerg[creep.name].refresh();
 				} else {
-					if (creep.spawning) {
-						log.debug(`Creep ${creep.name} is still spawning!`);
-					}
-					else {
+					// If a Zerg wrapper doesn't exist, create it on the fly
+					// This can happen if a creep was reassigned or created outside of typical zerg(role) flows
+					try {
+						// Lazily wrap and register the creep to avoid repeated warnings
+						Overmind.zerg[creep.name] = Overmind.zerg[creep.name] || new Zerg(creep);
+						Overmind.zerg[creep.name].refresh();
+						// Only warn for non-spawning creeps to avoid noisy logs during birth ticks
+						if (!creep.spawning) {
+							log.warning(`${this.print}: created missing Zerg wrapper for ${creep.name} during refresh.`);
+						}
+					} catch (e) {
 						log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
 					}
 				}
