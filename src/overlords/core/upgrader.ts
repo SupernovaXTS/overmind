@@ -26,12 +26,15 @@ export class UpgradingOverlord extends Overlord {
 	}
 
 	init() {
+		let setup = Setups.upgraders.default;
+		
 		if (this.colony.level < 3) { // can't spawn upgraders at early levels
+			this.creepReport(setup.role, this.upgraders.length, 0);
 			return;
 		}
 
-		let setup = Setups.upgraders.default;
 		if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
+			this.creepReport(setup.role, this.upgraders.length, 0);
 			return;
 		}
 		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) ||
