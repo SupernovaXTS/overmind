@@ -306,7 +306,7 @@ export class UpgradeSite extends HiveCluster {
 			tickDelay(this.memory.stats.ticksTillUpgrade, getAvgTickLength(3))
 		);
 		// Compute ETA date using unified getter
-		const etaDate: Date | undefined = this.etaDate;
+		const 	etaDate: Date | undefined = this.etaDate;
 		if (etaDate instanceof Date && !isNaN(etaDate.getTime())) {
 			this.memory.stats.etaTimestamp = etaDate.getTime();
 			this.memory.stats.etaFormatted = DATETIME_FORMATTER.format(etaDate);
