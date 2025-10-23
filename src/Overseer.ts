@@ -253,8 +253,10 @@ export class Overseer implements IOverseer {
 		const maxFeed = DirectiveFeeder.maxFeed;
 		if (colony.storage && colony.assets.energy > maxFeed) return false;
 		const feederSettings = Memory.settings.feeder;
-		if (!feederSettings || !feederSettings.enabled) return false;
-		if (!colony.hatchery) return false;
+	if (!feederSettings || !feederSettings.enabled) return false;
+	if (!colony.hatchery) return false;
+	// If a Feeder directive already exists in this room, consider it ensured
+	if (DirectiveFeeder.isPresent(colony.room.name)) return true;
 		// Optional cadence to reduce overhead
 		const freq = feederSettings.checkFrequency || 0;
 		if (freq > 0 && Game.time % freq != 0) return false;
