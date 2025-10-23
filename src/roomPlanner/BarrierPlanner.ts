@@ -62,6 +62,10 @@ export class BarrierPlanner {
 		const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
 		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
 		positions = positions.concat(upgradeSitePos.availableNeighbors(true));
+		
+		// Add tunnel positions (roads through walls)
+		positions = positions.concat(this.getTunnelPositions());
+			
 		return positions;
 	}
 
@@ -89,7 +93,12 @@ export class BarrierPlanner {
 		}
 		// Get Min cut
 		const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
-		return _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		
+		// Add tunnel positions (roads through walls)
+		positions = positions.concat(this.getTunnelPositions());
+		
+		return positions;
 	}
 
 	init(): void {
@@ -101,19 +110,20 @@ export class BarrierPlanner {
 		if (this.barrierPositions.length == 0) {
 			if (this.roomPlanner.bunkerPos) {
 				this.barrierPositions = this.computeBunkerBarrierPositions(this.roomPlanner.bunkerPos,
-																		   this.colony.controller.pos);
+										   this.colony.controller.pos,);
 			} else if (this.roomPlanner.storagePos && this.roomPlanner.hatcheryPos) {
 				this.barrierPositions = this.computeBarrierPositions(this.roomPlanner.hatcheryPos,
-																	 this.roomPlanner.storagePos,
-																	 this.colony.controller.pos);
+										 this.roomPlanner.storagePos,
+										 this.colony.controller.pos);
 			} else {
 				log.error(`${this.colony.print} BARRIER PLANNER: couldn't generate barrier plan!`);
 				return;
 			}
 		}
+		// Include any tunnel tiles before saving so they're persisted
+		this.protectTunnels();
 		this.memory.barrierCoordsPacked = packCoordList(this.barrierPositions);
 	}
-
 	/* Quick lookup for if a barrier should be in this position. Barriers returning false won't be maintained. */
 	barrierShouldBeHere(pos: RoomPosition): boolean {
 		// Once you are high level, only maintain ramparts at bunker or controller
@@ -176,7 +186,34 @@ export class BarrierPlanner {
 			}
 		}
 	}
+	private getTunnelPositions(): RoomPosition[] {
+		// Only get tunnels in the owned colony room (you can't build ramparts in remotes)
+		const tunnels: RoomPosition[] = [];
+		const roadPlanner = this.roomPlanner.roadPlanner;
+		if (!roadPlanner) return tunnels;
+		const roomName = this.colony.room.name;
+		const packed = (roadPlanner as any).memory.roadCoordsPacked;
+		if (!packed || !packed[roomName]) return tunnels;
+		const terrain = Game.map.getRoomTerrain(roomName);
+		const positions = roadPlanner.getRoadPositions(roomName);
+		for (const pos of positions) {
+			// A tunnel is represented by a road coordinate on wall terrain
+			if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
+				tunnels.push(pos);
+			}
+		}
+		return tunnels;
+	}
 
+	private protectTunnels(): void {
+		// Add tunnel positions to the current barrier positions array
+		const tunnels = this.getTunnelPositions();
+		for (const pos of tunnels) {
+			if (!this.barrierPositions.some(p => p.isEqualTo(pos))) {
+				this.barrierPositions.push(pos);
+			}
+		}
+	}
 	private recomputeBarrierPositions(): void {
 		this.barrierPositions = [];
 		if (this.roomPlanner.bunkerPos) {
@@ -191,6 +228,9 @@ export class BarrierPlanner {
 				this.colony.controller.pos,
 			);
 		}
+
+		// Include any tunnel tiles from the road planner into barriers for protection
+		this.protectTunnels();
 
 		this.memory.barrierCoordsPacked = packCoordList(this.barrierPositions);
 	}
