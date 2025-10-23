@@ -14,6 +14,7 @@ import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
 import {Zerg} from '../zerg/Zerg';
 import {DEFAULT_OVERMIND_SIGNATURE, USE_SCREEPS_PROFILER} from '../~settings';
 import {log} from './log';
+import {progress as statsProgress} from '../utilities/statistics';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -82,6 +83,7 @@ export class OvermindConsole {
 		global.setPixelGeneration = this.setPixelGeneration;
 		global.setPixelTrading = this.setPixelTrading;
 		global.setCPUUnlockTrading = this.setCPUUnlockTrading;
+		global.progress = this.progress;
 	}
 
 	static refresh(): void {
@@ -172,6 +174,7 @@ export class OvermindConsole {
 		descr['setPixelGeneration(enabled)'] = 'enable/disable automatic pixel generation (true/false)';
 		descr['setPixelTrading(enabled)'] = 'enable/disable automatic pixel buying/selling (true/false)';
 		descr['setCPUUnlockTrading(enabled)'] = 'enable/disable automatic CPU unlock buying/selling (true/false)';
+		descr['progress()'] = 'print GCL/RCL ETA overview with progress bars';
 		// Console list
 		const descrMsg = toColumns(descr, { justify: true, padChar: '.' });
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -913,6 +916,11 @@ export class OvermindConsole {
 		msg += `  Sell Threshold: ${settings.cpuUnlock?.sellThreshold ?? 'default'}\n`;
 		
 		return msg;
+	}
+
+	// Statistics helpers ==============================================================================================
+	static progress(): string {
+		return statsProgress();
 	}
 
 	/**

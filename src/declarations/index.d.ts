@@ -5,6 +5,7 @@ declare var global: any;
 declare const __VERSION__: string;
 declare function deref(ref: string): RoomObject | null;
 declare function derefRoomPosition(protoPos: ProtoPos): RoomPosition;
+declare function progress(): string;
 
 declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
 global.MARKET_FEE = MARKET_FEE;
@@ -35,6 +36,8 @@ declare namespace NodeJS {
 		deref(ref: string): RoomObject | null;
 
 		derefRoomPosition(protoPos: ProtoPos): RoomPosition;
+
+		progress(): string;
 
 		gc(quick?: boolean): void;
 	}
