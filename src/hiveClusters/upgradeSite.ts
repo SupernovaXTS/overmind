@@ -105,7 +105,7 @@ export class UpgradeSite extends HiveCluster {
 			let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
 			if (amountOver > 800000) {
 				upgradePower *= 4; // double upgrade power if we have lots of surplus energy
-			} else if (amountOver > 500000) {
+			} else if (amountOver > 200000) {
 				upgradePower *= 2;
 			}
 			if (this.controller.level == 8) {
