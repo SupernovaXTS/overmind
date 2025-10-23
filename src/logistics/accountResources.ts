@@ -27,13 +27,13 @@ export class AccountResources {
 
 	private readonly defaultSettings: AccountResourcesSettings = {
 		pixelGenerationEnabled: true,
-		tradePixels: false,
+		tradePixels: true,
 		tradeCPUUnlocks: false,
 		pixel: {
 			min: 500,           // Minimum pixels to maintain in account
-			max: 500,           // Maximum pixels before selling excess
-			buyThreshold: 50,   // Buy pixels when below this amount
-			sellThreshold: 500, // Sell pixels when above this amount
+			max: 10000,           // Maximum pixels before selling excess
+			buyThreshold: 500,   // Buy pixels when below this amount
+			sellThreshold: 10000, // Sell pixels when above this amount
 		},
 		cpuUnlock: {
 			min: 14,            // Minimum CPU unlocks to keep (reserve for emergencies)
@@ -228,14 +228,20 @@ export class AccountResources {
 			return ERR_NOT_ENOUGH_RESOURCES;
 		}
 
-		// Check if enough pixels are available
-		if (remainingAmount > 0) {
-			log.warning(`Not enough pixels available on market. Requested: ${amount}, Available: ${amount - remainingAmount}`);
-			return ERR_NOT_ENOUGH_RESOURCES;
+		// If not enough pixels are available, proceed to buy all available
+		const insufficientSupply = remainingAmount > 0;
+		if (insufficientSupply) {
+			const available = amount - remainingAmount;
+			if (available <= 0) {
+				log.warning(`Not enough pixels available on market. No purchasable amount found.`);
+				return ERR_NOT_ENOUGH_RESOURCES;
+			}
+			log.warning(`Not enough pixels available on market. Requested: ${amount}, Available: ${available}. Proceeding to buy available amount.`);
 		}
 
 		// Execute the purchases
-		log.info(`Buying ${amount} pixels for ${totalCost.toFixed(2)} credits from ${purchases.length} order(s)`);
+		const plannedAmount = insufficientSupply ? (amount - remainingAmount) : amount;
+		log.info(`Buying ${plannedAmount} pixels for ${totalCost.toFixed(2)} credits from ${purchases.length} order(s)`);
 		
 		let totalBought = 0;
 		for (const purchase of purchases) {
