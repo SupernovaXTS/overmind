@@ -25,6 +25,7 @@ import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
 import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
+import { DirectiveFeeder } from './situational/feeder';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
 import {DirectiveNukeTarget} from './situational/nukeTarget';
 import {DirectivePortalScout} from './situational/portalScout';
@@ -110,6 +111,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectivePortalScout(flag);
 				case COLOR_YELLOW:
 					return new DirectiveRemoteUpgrade(flag);
+				case COLOR_GREEN:
+					return new DirectiveFeeder(flag);
 			}
 			break;
 
