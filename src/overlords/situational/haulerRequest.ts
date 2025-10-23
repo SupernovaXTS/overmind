@@ -3,7 +3,6 @@ import { CreepSetup } from 'creepSetups/CreepSetup';
 import { DirectiveHaulRequest } from 'directives/resource/haulRequest';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {DirectiveHaul} from '../../directives/resource/haul';
 import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -11,7 +10,6 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import { SpawnRequest } from 'hiveClusters/hatchery';
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -24,11 +22,10 @@ export class HaulingOverlordRequest extends Overlord {
 	directive: DirectiveHaulRequest;
 	static haulerSetup = Setups.transporters.default;
 	
-	constructor(directive: DirectiveHaulRequest, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
-													 OverlordPriority.tasks.haul) {
+	constructor(directive: DirectiveHaulRequest, priority = OverlordPriority.tasks.haul) {
 		super(directive, 'haul', priority);
-		this.haulers = this.zerg(Roles.transport);
-		this.haulerSetup = HaulingOverlordRequest.haulerSetup;
+		this.haulers = this.zerg(Roles.hauler);
+		this.haulerSetup = Setups.transporters.default;
 	}
 
 	private get source(): _HasRoomPosition {
@@ -81,26 +78,20 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 
 	init() {
-		//let haulersNeeded = this.calculateHaulers;
-		/*
-		if (haulersNeeded === 0) {
-			haulersNeeded = 8;
+		let haulersNeeded = this.calculateHaulers;
+		
+		if (haulersNeeded == 0) {
+			log.error(`${this.print}: calculated 0 haulers needed despite checks to prevent this!`);
+			haulersNeeded = 1;
 		}
-		 */
+		
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max;
 		// Request the haulers
-		//log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
-		//this.wishlist(8, Setups.transporters.default);
-		// temporary test
+		log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
+		this.wishlist(haulersNeeded, Setups.transporters.default);
 		// Notify about hauler request
-		//log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
-		//`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
-		const request: SpawnRequest = {
-								setup   : Setups.transporters.default,
-								overlord: this,
-								priority: this.priority + 1,
-							};
-		this.colony.hatchery?.enqueue(request);	
+		log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
+		`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
 	}
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
