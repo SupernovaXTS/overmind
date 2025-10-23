@@ -22,6 +22,7 @@ export class HaulingOverlordRequest extends Overlord {
 	maxHaulers: number = 8;
 	directive: DirectiveHaulRequest;
 	static haulerSetup = Setups.transporters.default;
+	
 	constructor(directive: DirectiveHaulRequest, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
 													 OverlordPriority.tasks.haul) {
 		super(directive, 'haul', priority);
@@ -29,12 +30,20 @@ export class HaulingOverlordRequest extends Overlord {
 		this.haulerSetup = HaulingOverlordRequest.haulerSetup;
 	}
 
-	calculateHaulers() {
+	private get source(): _HasRoomPosition {
+		return this.directive;
+	}
+
+	private get destination(): _HasRoomPosition {
+		return this.colony.storage || this.colony;
+	}
+
+	get calculateHaulers() {
 		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
 			return;
 		}
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
-		const tripDistance = 2 * (Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos) || 0);
+		const tripDistance = 2 * (Pathing.distance(this.destination.pos, this.source.pos) || 0);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
 											this.colony.storage.store.capacity
 											- _.sum(this.colony.storage.store)) * tripDistance;
@@ -47,7 +56,7 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 
 	init() {
-		const haulersNeeded = this.calculateHaulers();
+		const haulersNeeded = this.calculateHaulers;
 		if (haulersNeeded == undefined) {
 			return;
 		}
@@ -57,8 +66,8 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
-			// Travel to directive and collect resources
-			if (hauler.inSameRoomAs(this.directive)) {
+			// Travel to source and collect resources
+			if (hauler.inSameRoomAs(this.source)) {
 				// Pick up drops first
 				if (this.directive.hasDrops) {
 					const manifest = this.directive.manifest || {};
@@ -121,12 +130,12 @@ export class HaulingOverlordRequest extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
-				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive, {pathOpts: {avoidSK: true}});
+				// Travel to source
+				hauler.goTo(this.source, {pathOpts: {avoidSK: true}});
 			}
 		} else {
-			// Travel to colony room and deposit resources
-			if (hauler.inSameRoomAs(this.colony)) {
+			// Travel to destination and deposit resources
+			if (hauler.inSameRoomAs(this.destination)) {
 				// Put energy in storage and minerals in terminal if there is one
 				for (const [resourceType, amount] of hauler.carry.contents) {
 					if (amount == 0) continue;
@@ -152,7 +161,8 @@ export class HaulingOverlordRequest extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 			} else {
-				hauler.task = Tasks.goToRoom(this.colony.room.name);
+				// Travel to destination room
+				hauler.task = Tasks.goToRoom(this.destination.pos.roomName);
 			}
 		}
 	}
