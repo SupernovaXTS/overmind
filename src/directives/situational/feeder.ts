@@ -3,7 +3,6 @@ import {Colony} from '../../Colony';
 import {RemoteUpgradingOverlord} from '../../overlords/situational/remoteUpgrader';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import {color, printRoomName} from '../../utilities/utils';
 import {rightArrow} from '../../utilities/stringConstants';
 
 // spawns transporters to carry energy to child room
@@ -31,13 +30,11 @@ export class DirectiveFeeder extends Directive {
 
 	init(): void {
 		this.colony.state.beingFed = true;
-		// Include source (parent) and destination (child) colony in notification with colored markers
+		// Include source (parent) and destination (child) colony in notification without links or colors
 		const sourceColonyName = this.colony?.name || 'unknown-source';
 		const destinationColony = Overmind.colonies[this.pos.roomName];
 		const destinationColonyName = destinationColony?.name || this.pos.roomName;
-		const src = color(printRoomName(sourceColonyName, true), '#00c853'); // green
-		const dst = color(printRoomName(destinationColonyName, true), '#ff9800'); // orange
-		this.alert(`Feeder active: ${src} ${rightArrow} ${dst}`);
+		this.alert(`Feeder active: ${sourceColonyName} ${rightArrow} ${destinationColonyName}`);
 	}
 
 	run(): void {
