@@ -169,12 +169,18 @@ export class PrioritiesOverlords {
 				transport     : 504,	// Spawn the rest of the transporters
 				mineral       : 505,
 			},
-
+			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
+				reserve      : 510,
+				mine         : 511,
+				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
+			},
 			outpostOffense: {
 				harass      : 560,
 				roomPoisoner: 561,
 			},
-
+			feeding: {
+				feeder: 599,
+			},
 			upgrading: {				// Spawning upgraders
 				upgrade: 600,
 			},
@@ -184,17 +190,8 @@ export class PrioritiesOverlords {
 			},
 
 			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
-
 			
-
-			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
-				reserve      : 900,
-				mine         : 901,
-				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
-			},
-			feeding: {
-				feeder: 950,
-			},
+			
 			remoteSKRoom: {
 				sourceReaper : 1000,
 				mineral      : 1001,
