@@ -108,12 +108,6 @@ export class BootstrappingOverlord extends Overlord {
 				// wish for rcl fillers
 				const fillerAmt = Math.ceil(this.colony.controller.level);
 				this.wishlist(fillerAmt, Setups.filler, {reassignIdle: true});
-				const request: SpawnRequest = {
-						setup   : Setups.transporters.default,
-						overlord: this.colony.overlords.logistics,
-						priority: this.priority + 1,
-					};
-				this.colony.hatchery.enqueue(request);
 				this.debug(`Enqueueing bootstrap filler (total fillers: ${this.fillers.length}/${fillerAmt})`);
 				
 				return;
