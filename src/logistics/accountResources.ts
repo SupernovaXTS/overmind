@@ -9,7 +9,7 @@ export class AccountResources {
 
 	settings = {
 		pixelGenerationEnabled: true,
-		tradePixels: true,
+		tradePixels: false,
 		tradeCPUUnlocks: false,
 		pixel: {
 			min: 590,           // Minimum pixels to maintain in account
