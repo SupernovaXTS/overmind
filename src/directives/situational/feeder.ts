@@ -28,12 +28,14 @@ export class DirectiveFeeder extends Directive {
 	}
 
 	init(): void {
+		this.colony.state.beingFed = true;
 		this.alert(`Feeder active`);
 	}
 
 	run(): void {
 		if (this.colony && this.colony.assets.energy <= DirectiveFeeder.maxFeed) {
 			this.remove();
+			this.colony.state.beingFed = false;
 		}
 	}
 }

@@ -298,13 +298,14 @@ export class Overseer implements IOverseer {
 		// Create a feeder directive at the receiver's hatchery, owned by the donor colony
 		const res = DirectiveFeeder.createIfNotPresent(colony.bunker?.anchor, 'pos', {memory: {[MEM.COLONY]: donor.name}});
 		// If already present, res will be undefined; we still consider that success
+		colony.state.beingFed = true;
 		return true;
 	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
-		if (this.handleFeeding(colony)) return;
 		// Doesn't apply to incubating or fed colonies.
-		if (colony.state.isIncubating && colony.state.beingFed) return;
+		if (colony.state.isIncubating || colony.state.beingFed) return;
+		if (this.handleFeeding(colony)) return;
 
 		const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
 		if (noQueen && colony.hatchery && !colony.spawnGroup) {
