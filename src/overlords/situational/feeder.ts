@@ -48,7 +48,7 @@ export class FeederOverlord extends Overlord {
 	parentColony: Colony;
 	childColony: Colony;
 
-	feeders: Zerg[];
+	transporters: Zerg[];
 
 	private boosted: boolean;
 
@@ -70,7 +70,7 @@ export class FeederOverlord extends Overlord {
 		}
 		this.upgradeSite = this.childColony.upgradeSite;
 		// Feeder creeps use transporter bodies/role
-		this.feeders = this.zerg(Roles.transport);
+		this.transporters = this.zerg(Roles.transport);
 
 		this.boosted = true; // TODO
 	}
@@ -89,23 +89,23 @@ export class FeederOverlord extends Overlord {
 
 	init() {
 		
-		let neededFeeders = this.feeders.length;
-		if (this.feeders.length == 0) {
-			neededFeeders = 1;
+		let neededTransporters = this.transporters.length;
+		if (this.transporters.length == 0) {
+			neededTransporters = 1;
 		} else {
 			const neededCarryCapacity = this.computeNeededCarrierCapacity();
-			const currentCarryCapacity = _.sum(this.feeders, feeder =>
-				CARRY_CAPACITY * CombatIntel.getCarryPotential(feeder.creep, true));
-			const avgFeederCapacity = currentCarryCapacity / this.feeders.length;
+			const currentCarryCapacity = _.sum(this.transporters, transporter =>
+				CARRY_CAPACITY * CombatIntel.getCarryPotential(transporter.creep, true));
+			const avgTransporterCapacity = currentCarryCapacity / this.transporters.length;
 			this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
-			neededFeeders = Math.ceil(neededCarryCapacity / avgFeederCapacity);
-			this.debug(`Needed feeders: ${neededFeeders}`);
+			neededTransporters = Math.ceil(neededCarryCapacity / avgTransporterCapacity);
+			this.debug(`Needed transporters: ${neededTransporters}`);
 		}
 
 		if (this.boosted) {
-			this.wishlist(neededFeeders, Setups.transporters.boosted, {priority: this.priority,reassignIdle: true});
+			this.wishlist(neededTransporters, Setups.transporters.boosted, {priority: this.priority,reassignIdle: true});
 		} else {
-			this.wishlist(neededFeeders, Setups.transporters.default, {priority: this.priority,reassignIdle: true});
+			this.wishlist(neededTransporters, Setups.transporters.default, {priority: this.priority,reassignIdle: true});
 		}
 	}
 	private supplyActions(queen: Zerg) {
@@ -258,9 +258,9 @@ export class FeederOverlord extends Overlord {
 			const childColony = this.childColony;
 
 			const depositPos = this.upgradeSite.batteryPos || this.upgradeSite.pos;
-			const feedersWaitingToUnload = _.filter(this.feeders, c =>
+			const transportersWaitingToUnload = _.filter(this.transporters, c =>
 				c.carry.energy > 0 && c.pos.inRangeToPos(depositPos, 5));
-			const firstFeederInQueue = minBy(feedersWaitingToUnload, c =>
+			const firstTransporterInQueue = minBy(transportersWaitingToUnload, c =>
 				c.carry.energy + (c.ticksToLive || Infinity) / 10000);
 
 			let hatcheryBattery: StructureContainer | undefined;
@@ -275,7 +275,7 @@ export class FeederOverlord extends Overlord {
 				feeder.task = Tasks.transfer(hatcheryBattery as StructureContainer);
 				return;
 			}
-			if (this.childColony.storage && firstFeederInQueue && firstFeederInQueue != feeder) {
+			if (this.childColony.storage && firstTransporterInQueue && firstTransporterInQueue != feeder) {
 				feeder.task = Tasks.transfer(this.childColony.storage);
 				return;
 			}
@@ -292,6 +292,6 @@ export class FeederOverlord extends Overlord {
 }
 
 	run() {
-		this.autoRun(this.feeders, feeder => this.handleFeeder(feeder));
+		this.autoRun(this.transporters, transporter => this.handleFeeder(transporter));
 	}
 }
