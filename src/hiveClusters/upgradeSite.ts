@@ -81,7 +81,6 @@ export class UpgradeSite extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'upgradeSite');
 		$.refreshRoom(this);
 		$.refresh(this, 'controller', 'battery', 'link');
-		this.stats();
 	}
 
 	spawnMoarOverlords() {
@@ -267,6 +266,7 @@ export class UpgradeSite extends HiveCluster {
 		if (Game.time % 25 == 7 && this.colony.level >= 2) {
 			this.buildBatteryIfMissing();
 		}
+		this.stats();
 	}
 
 	visuals() {
