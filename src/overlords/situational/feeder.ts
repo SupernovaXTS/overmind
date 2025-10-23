@@ -208,6 +208,34 @@ export class FeederOverlord extends Overlord {
 			feeder.heal(feeder);
 		}
 
+		// Check if child colony needs feeding (threshold: 50000)
+		const childEnergyAvailable = (this.childColony.storage?.store[RESOURCE_ENERGY] || 0) +
+									 (this.childColony.terminal?.store[RESOURCE_ENERGY] || 0);
+		if (childEnergyAvailable >= 50000) {
+			// Child colony has enough energy, no need to feed
+			if (feeder.room == this.childColony.room) {
+				// If already in child room, try to help as queen
+				if (this.childColony.getCreepsByRole(Roles.queen).length < 1) {
+					this.handleQueen(feeder);
+				}
+			}
+			return;
+		}
+
+		// Check if parent colony has enough energy to spare (threshold: 20000)
+		const parentEnergyAvailable = (this.parentColony.storage?.store[RESOURCE_ENERGY] || 0) +
+									  (this.parentColony.terminal?.store[RESOURCE_ENERGY] || 0);
+		if (parentEnergyAvailable < 20000) {
+			// Not enough energy in parent colony, idle or return
+			if (feeder.room == this.childColony.room) {
+				// If already in child room, try to help as queen
+				if (this.childColony.getCreepsByRole(Roles.queen).length < 1) {
+					this.handleQueen(feeder);
+				}
+			}
+			return;
+		}
+
 		// Get energy from the parent colony if you need it
 		if (feeder.carry.energy == 0) {
 			// If you are in the child room and there are valuable resources in a storage/terminal that isn't mine,
