@@ -108,7 +108,7 @@ export class BootstrappingOverlord extends Overlord {
 				// wish for rcl fillers
 				const fillerAmt = Math.ceil(this.colony.controller.level);
 				this.wishlist(fillerAmt, Setups.filler, {reassignIdle: true});
-				this.wishlist(1,Setups.transporters.default);
+				//this.wishlist(1,Setups.transporters.default);
 				this.debug(`Enqueueing bootstrap filler (total fillers: ${this.fillers.length}/${fillerAmt})`);
 				return;
 			}
