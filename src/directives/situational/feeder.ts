@@ -28,15 +28,6 @@ export class DirectiveFeeder extends Directive {
 	}
 
 	init(): void {
-		if (DirectiveFeeder.findInColony(this.colony).length > 1) {
-			this.remove();
-			return;
-		}
-		if (this.room && DirectiveFeeder.isPresent(this.pos) || this.colony.state.beingFed) {
-			this.remove();
-			return;
-		}
-
 		this.colony.state.beingFed = true;
 		this.alert(`Feeder active`);
 	}
