@@ -11,6 +11,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import {DEFCON} from '../../Colony';
 
 // The order in which resources are handled within the network
 const highPriorityLoot: ResourceConstant[] = [
@@ -199,13 +200,20 @@ export class FeederOverlord extends Overlord {
 	}
 
 	private handleFeeder(feeder: Zerg): void {
-		var beQueen = false;
-		if (beQueen) {
-			this.handleQueen(feeder);
-			return;
-		}
 		if (feeder.getActiveBodyparts(HEAL) > 0) {
 			feeder.heal(feeder);
+		}
+
+		// Only run feeder operations if both source and target rooms are safe
+		if (this.parentColony.defcon > DEFCON.safe || this.childColony.defcon > DEFCON.safe) {
+			// Not safe to operate, idle or return
+			if (feeder.room == this.childColony.room) {
+				// If already in child room, try to help as queen
+				if (this.childColony.getCreepsByRole(Roles.queen).length < 1) {
+					this.handleQueen(feeder);
+				}
+			}
+			return;
 		}
 
 		// Check if child colony needs feeding (threshold: 50000)
@@ -214,7 +222,7 @@ export class FeederOverlord extends Overlord {
 		if (childEnergyAvailable >= 50000) {
 			// Child colony has enough energy, no need to feed
 			if (feeder.room == this.childColony.room) {
-				// If already in child room, try to help as queen
+				// If already in child room and no queen, help as queen
 				if (this.childColony.getCreepsByRole(Roles.queen).length < 1) {
 					this.handleQueen(feeder);
 				}
@@ -226,9 +234,34 @@ export class FeederOverlord extends Overlord {
 		const parentEnergyAvailable = (this.parentColony.storage?.store[RESOURCE_ENERGY] || 0) +
 									  (this.parentColony.terminal?.store[RESOURCE_ENERGY] || 0);
 		if (parentEnergyAvailable < 20000) {
-			// Not enough energy in parent colony, idle or return
+			// Not enough energy in parent colony
+			// If parent has a terminal, request energy from the network or buy it
+			if (this.parentColony.terminal && Overmind.terminalNetwork) {
+				const neededAmount = 50000 - parentEnergyAvailable; // Request enough to reach a comfortable level
+				
+				// Check if the network has enough energy to fulfill this request
+				const networkEnergy = Overmind.terminalNetwork.getAssets()[RESOURCE_ENERGY] || 0;
+				
+				if (networkEnergy >= neededAmount) {
+					// Network has energy, request it
+					Overmind.terminalNetwork.requestResource(this.parentColony, RESOURCE_ENERGY, neededAmount);
+				} else {
+					// Network doesn't have enough energy, try to buy it
+					if (Overmind.tradeNetwork) {
+						const amountToBuy = Math.max(neededAmount, 50000); // Buy at least 50k
+						Overmind.tradeNetwork.buy(
+							this.parentColony.terminal,
+							RESOURCE_ENERGY,
+							amountToBuy,
+							{ preferDirect: true }
+						);
+					}
+				}
+			}
+			
+			// Idle or return
 			if (feeder.room == this.childColony.room) {
-				// If already in child room, try to help as queen
+				// If already in child room and no queen, help as queen
 				if (this.childColony.getCreepsByRole(Roles.queen).length < 1) {
 					this.handleQueen(feeder);
 				}
@@ -299,26 +332,30 @@ export class FeederOverlord extends Overlord {
 				hatcheryBattery = feeder.pos.findClosestByRange(candidates) as StructureContainer | null || undefined;
 			}
 
-			// Put in storage if you can
+			// Put in hatchery battery if available
 			if (hatcheryBattery) {
 				feeder.task = Tasks.transfer(hatcheryBattery as StructureContainer);
 				return;
 			}
+			
+			// Put in storage if not first in queue
 			if (this.childColony.storage && firstTransporterInQueue && firstTransporterInQueue != feeder) {
 				feeder.task = Tasks.transfer(this.childColony.storage);
 				return;
 			}
-			// If we dont have a queen in the colony, become the queen temporarily
+			
+			// If we don't have a queen in the colony, act as queen temporarily
 			if (childColony.getCreepsByRole(Roles.queen).length < 1) {
-				beQueen = true;
 				this.handleQueen(feeder);
 				return;
 			}
-			else {
-				beQueen = false;
+			
+			// Default: deposit to upgrade site battery or storage
+			if (this.childColony.storage) {
+				feeder.task = Tasks.transfer(this.childColony.storage);
 			}
+		}
 	}
-}
 
 	run() {
 		this.autoRun(this.transporters, transporter => this.handleFeeder(transporter));
