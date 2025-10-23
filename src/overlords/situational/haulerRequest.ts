@@ -88,7 +88,7 @@ export class HaulingOverlordRequest extends Overlord {
 		 */
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max;
 		// Request the haulers
-		log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
+		//log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
 		this.wishlist(8, Setups.transporters.default);
 		// temporary test
 		// Notify about hauler request
