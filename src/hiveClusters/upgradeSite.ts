@@ -17,9 +17,13 @@ interface UpgradeSiteMemory {
 		progress: number,
 		progressPercent: number,
 		progressTotal: number,
-		ticksTillUpgrade: number
+		ticksTillUpgrade: number,
+		secondsTillUpgrade: number,
 	};
 	speedFactor: number;		// Multiplier on upgrade parts for fast growth
+	progressHistory: number[];	// Array to track progress over last 100 ticks
+	lastProgress: number;		// Last recorded progress value
+	tickTimes: number[];		// Array to track millisecond timestamps for calculating tick duration
 }
 
 
@@ -37,7 +41,6 @@ export class UpgradeSite extends HiveCluster {
 	batteryPos: RoomPosition | undefined;
 	overlord: UpgradingOverlord;
 	energyPerTick: number;
-	lastProgress: number = 0;
 	static settings = {
 		energyBuffer     : 100000,	// Number of upgrader parts scales with energy minus this value
 		// Scaling factor: this much excess energy adds one extra body repetition
@@ -194,14 +197,35 @@ export class UpgradeSite extends HiveCluster {
 		}
 	}
 	private get investedEnergyPerTick(): number {
-		const progressThisTick = this.controller.progress - this.lastProgress;
-		this.lastProgress = this.controller.progress;
+		const lastProgress = this.memory.lastProgress || this.controller.progress;
+		const progressThisTick = this.controller.progress - lastProgress;
 		return progressThisTick/100;
 	}
 	private get progressPerTick(): number {
-		const progressThisTick = this.controller.progress - this.lastProgress;
-		this.lastProgress = this.controller.progress;
+		const lastProgress = this.memory.lastProgress || this.controller.progress;
+		const progressThisTick = this.controller.progress - lastProgress;
 		return progressThisTick/100;
+	}
+	private get averageProgressPerTick(): number {
+		if (!this.memory.progressHistory || this.memory.progressHistory.length === 0) {
+			return this.progressPerTick;
+		}
+		const sum = _.sum(this.memory.progressHistory);
+		return sum / this.memory.progressHistory.length;
+	}
+	private get averageTickDuration(): number {
+		// Calculate average tick duration in seconds based on recorded timestamps
+		if (!this.memory.tickTimes || this.memory.tickTimes.length < 2) {
+			return 3; // Default to 3 seconds if we don't have enough data
+		}
+		// Calculate time differences between consecutive ticks
+		const timeDiffs: number[] = [];
+		for (let i = 1; i < this.memory.tickTimes.length; i++) {
+			timeDiffs.push(this.memory.tickTimes[i] - this.memory.tickTimes[i - 1]);
+		}
+		// Return average in seconds
+		const avgMilliseconds = _.sum(timeDiffs) / timeDiffs.length;
+		return avgMilliseconds / 1000;
 	}
 	private get progress(): number {
 		return this.controller.progress;
@@ -225,7 +249,7 @@ export class UpgradeSite extends HiveCluster {
 	}
 	private get ticksTillUpgrade(): number {
 		const ticksTillUpgrade = Math.ceil((this.controller.progressTotal - this.controller.progress)
-			/ (this.progressPerTick || 1));
+			/ (this.averageProgressPerTick || 1));
 		return ticksTillUpgrade;
 	}	
 	private stats() {
@@ -237,10 +261,42 @@ export class UpgradeSite extends HiveCluster {
 			progress: 0,
 			progressPercent: 0,
 			progressTotal: 0,
-			ticksTillUpgrade: 0
+			ticksTillUpgrade: 0,
+			secondsTillUpgrade: 0,
 		};
 		if (!this.memory.stats) this.memory.stats = defaults;
 		_.defaults(this.memory.stats, defaults);
+		
+		// Initialize progress history if needed
+		if (!this.memory.progressHistory) {
+			this.memory.progressHistory = [];
+		}
+		
+		// Initialize tick times array if needed
+		if (!this.memory.tickTimes) {
+			this.memory.tickTimes = [];
+		}
+		
+		// Record current timestamp
+		this.memory.tickTimes.push(Date.now());
+		
+		// Keep only the last 100 ticks of timestamp data
+		if (this.memory.tickTimes.length > 100) {
+			this.memory.tickTimes.shift();
+		}
+		
+		// Calculate and store progress for this tick
+		const currentProgressPerTick = this.progressPerTick;
+		this.memory.progressHistory.push(currentProgressPerTick);
+		
+		// Keep only the last 100 ticks of data
+		if (this.memory.progressHistory.length > 100) {
+			this.memory.progressHistory.shift();
+		}
+		
+		// Update lastProgress for next tick
+		this.memory.lastProgress = this.controller.progress;
+		
 		// Compute downtime
 		this.memory.stats.downtime = (this.memory.stats.downtime * (CREEP_LIFE_TIME - 1) +
 									  (this.battery ? +this.battery.isEmpty : 0)) / CREEP_LIFE_TIME;
@@ -251,6 +307,7 @@ export class UpgradeSite extends HiveCluster {
 		this.memory.stats.progressPercent = this.progressPercent;
 		this.memory.stats.progressTotal = this.progressTotal;
 		this.memory.stats.ticksTillUpgrade = this.ticksTillUpgrade;
+		this.memory.stats.secondsTillUpgrade = Math.ceil(this.ticksTillUpgrade * this.averageTickDuration);
 		// Log stats
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energy`, this.memory.stats.energy);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPercent`, this.memory.stats.energyPercent);
