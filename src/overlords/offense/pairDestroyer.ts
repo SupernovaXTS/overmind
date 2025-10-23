@@ -151,11 +151,11 @@ export class PairDestroyerOverlord extends Overlord {
 
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const attackerSetup = CombatSetups.zerglings.boosted.armored;
-		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
+		this.wishlist(amount, attackerSetup, {priority: attackerPriority, reassignIdle: true});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const healerSetup =  CombatSetups.transfusers.boosted.default;
-		this.wishlist(amount, healerSetup, {priority: healerPriority});
+		this.wishlist(amount, healerSetup, {priority: healerPriority, reassignIdle: true});
 	}
 
 	run() {

@@ -33,7 +33,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 			return;
 		}
 
-		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
+		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout,{reassignIdle: true});
 	}
 
 	private handleScout(scout: Zerg) {
