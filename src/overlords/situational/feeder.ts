@@ -47,7 +47,7 @@ export class FeederOverlord extends Overlord {
 
 	parentColony: Colony;
 	childColony: Colony;
-
+	maxTransporters = 10;
 	transporters: Zerg[];
 
 	private boosted: boolean;
@@ -83,7 +83,7 @@ export class FeederOverlord extends Overlord {
 			return 0; // don't need this once you have a terminal
 		}
 		const roundTripDistance = 1.5 /* todo */ * this.directive.distanceFromColony.terrainWeighted;
-		const energyPerTick = 10;
+		const energyPerTick = 25;
 		return energyPerTick * roundTripDistance;
 	}
 
@@ -99,6 +99,7 @@ export class FeederOverlord extends Overlord {
 			const avgTransporterCapacity = currentCarryCapacity / this.transporters.length;
 			this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
 			neededTransporters = Math.ceil(neededCarryCapacity / avgTransporterCapacity);
+			neededTransporters = Math.max(neededTransporters, maxTransporters);
 			this.debug(`Needed transporters: ${neededTransporters}`);
 		}
 
