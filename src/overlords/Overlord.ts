@@ -147,7 +147,9 @@ export abstract class Overlord {
 					if (creep.spawning) {
 						log.debug(`Creep ${creep.name} is still spawning!`);
 					}
-					else {log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);}
+					else {
+						log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
+					}
 				}
 			}
 		}
