@@ -11,6 +11,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import { SpawnRequest } from 'hiveClusters/hatchery';
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -89,12 +90,17 @@ export class HaulingOverlordRequest extends Overlord {
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max;
 		// Request the haulers
 		//log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
-		this.wishlist(8, Setups.transporters.default);
+		//this.wishlist(8, Setups.transporters.default);
 		// temporary test
 		// Notify about hauler request
 		//log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
 		//`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
-		
+		const request: SpawnRequest = {
+								setup   : Setups.transporters.default,
+								overlord: this,
+								priority: this.priority + 1,
+							};
+		this.colony.hatchery?.enqueue(request);	
 	}
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
