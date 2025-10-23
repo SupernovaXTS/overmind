@@ -13,6 +13,7 @@ import { DirectiveWrapper } from './directives/initializer';
 import { NotifierPriority } from './directives/Notifier';
 import { RoomIntel } from './intel/RoomIntel';
 import { TerminalNetworkV2 } from './logistics/TerminalNetwork_v2';
+import { SectorLogistics } from './logistics/SectorLogistics';
 import { TraderJoe, TraderJoeIntershard } from './logistics/TradeNetwork';
 import { Mem } from './memory/Memory';
 import { Overseer } from './Overseer';
@@ -261,6 +262,12 @@ export default class _Overmind implements IOvermind {
 		for (const colonyName in this.colonies) {
 			this.try(() => this.colonies[colonyName].run(), colonyName);
 		}
+		// Publish inter-colony logistics requests to central pool
+		for (const colonyName in this.colonies) {
+			try { new SectorLogistics(this.colonies[colonyName]).publishUnfulfilledRequests(); } catch (e) { /* noop */ }
+		}
+		// Attempt to fulfill central pool requests (rate limited per tick)
+		this.try(() => SectorLogistics.processPool());
 		this.try(() => this.terminalNetwork.run());
 		this.try(() => this.tradeNetwork.run());
 		this.try(() => this.expansionPlanner.run());
