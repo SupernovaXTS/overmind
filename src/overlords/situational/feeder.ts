@@ -55,7 +55,7 @@ export class FeederOverlord extends Overlord {
 	upgradeSite: UpgradeSite;
 	room: Room;	//  Operates in owned room
 
-	constructor(directive: DirectiveFeeder, priority = OverlordPriority.collectionUrgent.haul) {
+	constructor(directive: DirectiveFeeder, priority = OverlordPriority.feeding.feeder) {
 		super(directive, 'feeder', priority);
 
 		this.directive = directive;

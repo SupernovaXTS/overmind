@@ -81,7 +81,9 @@ export const OverlordPriority = {
 				mine         : 901,
 				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
 			},
-
+			feeding: {
+				feeder: 950,
+			},
 			remoteSKRoom: {
 				sourceReaper : 1000,
 				mineral      : 1001,
@@ -190,7 +192,9 @@ export class PrioritiesOverlords {
 				mine         : 901,
 				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
 			},
-
+			feeding: {
+				feeder: 950,
+			},
 			remoteSKRoom: {
 				sourceReaper : 1000,
 				mineral      : 1001,
