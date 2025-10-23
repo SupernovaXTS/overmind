@@ -1,6 +1,10 @@
-// import typescript from "rollup-plugin-typescript2";
-
 module.exports = function (grunt) {
+	const fs = require('fs');
+	const typescript = require('rollup-plugin-typescript2');
+	const resolve = require('@rollup/plugin-node-resolve');
+	const commonjs = require('@rollup/plugin-commonjs');
+	const progress = require('rollup-plugin-progress');
+
 	// Load npm tasks
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
@@ -10,89 +14,99 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-env');
 	grunt.loadNpmTasks('grunt-ts');
 
-	// Load plugins
-	const typescript = require("rollup-plugin-typescript2");
-	const resolve = require('@rollup/plugin-node-resolve');
-	const commonjs = require('@rollup/plugin-commonjs');
-	const progress = require("rollup-plugin-progress");
-	const fs = require('fs');
+	// Load configuration from .screeps.json if it exists
+	const loadConfig = () => {
+		const configPath = './.screeps.json';
+		if (fs.existsSync(configPath)) {
+			return require(configPath);
+		}
+		return {};
+	};
 
-	// Config
-	var config = {};
-	if (fs.existsSync('./.screeps.json')) {
-		config = require('./.screeps.json');
-	}
-	var branch = grunt.option('branch') || config.branch;
-	var email = grunt.option('email') || config.email;
-	var token = grunt.option('token') || config.token;
-	var ptr = grunt.option('ptr') ? true : config.ptr;
+	const config = loadConfig();
 
-	const ignoreWarnings = [
+	// Configuration options with fallbacks
+	const getOption = (name, defaultValue = undefined) => {
+		return grunt.option(name) || config[name] || defaultValue;
+	};
+
+	const branch = getOption('branch');
+	const email = getOption('email');
+	const token = getOption('token');
+	const ptr = grunt.option('ptr') ? true : (config.ptr || false);
+
+	// Warnings to ignore during rollup
+	const IGNORED_WARNINGS = [
 		'commonjs-proxy',
 		'Circular dependency',
 		"The 'this' keyword is equivalent to 'undefined'",
-		"Use of eval is strongly discouraged"
-    ];
+		'Use of eval is strongly discouraged'
+	];
 
-    grunt.initConfig({
-        clean: {
-            'dist': ['dist/']
-        },
+	// Check if warning should be ignored
+	const shouldIgnoreWarning = (warning) => {
+		const warningString = warning.toString();
+		return IGNORED_WARNINGS.some(ignored => warningString.includes(ignored));
+	};
 
-        rollup: {
-            options: {
-                format: 'cjs',
-                sourcemap: false,
-                input: 'src/main.ts',
-                plugins: [
-                    progress({ clearLine: true }),
-                    resolve(),
-                    commonjs({
-                        namedExports: {
-                            'src/Overmind': ['_Overmind'],
-                            'screeps-profiler': ['profiler'],
-                            'columnify': ['columnify']
-                        }
-                    }),
-                    typescript({ tsconfig: "./tsconfig.json" }),
-                ],
-                output: {
-                    file: "dist/main.js",
-                    format: "cjs",
-                    sourcemap: false,
-                },
-                onwarn: function (warning) {
-                    // Skip default export warnings from using obfuscated overmind file in main
-                    for (let ignoreWarning of ignoreWarnings) {
-                        if (warning.toString().includes(ignoreWarning)) {
-                            return;
-                        }
-                    }
-                    // console.warn everything else
-                    console.warn(warning.message);
-                },
-                treeshake: false,
-            },
+	// Rollup plugins configuration
+	const getRollupPlugins = () => [
+		progress({ clearLine: true }),
+		resolve(),
+		commonjs({
+			namedExports: {
+				'src/Overmind': ['_Overmind'],
+				'screeps-profiler': ['profiler'],
+				'columnify': ['columnify']
+			}
+		}),
+		typescript({ tsconfig: './tsconfig.json' }),
+	];
 
-            dist: {
-                files: {
-                    'dist/main.js': 'src/main.ts'
-                }
-            }
-        },
+	// Grunt task configuration
+	grunt.initConfig({
+		clean: {
+			dist: ['dist/']
+		},
 
-        screeps: {
-            options: {
-                email: email,
-                token: token,
-                branch: branch,
-                ptr: ptr,
-            },
-            dist: {
-                src: ['dist/*.js']
-            }
-        },
-    });
+		rollup: {
+			options: {
+				format: 'cjs',
+				sourcemap: false,
+				input: 'src/main.ts',
+				plugins: getRollupPlugins(),
+				output: {
+					file: 'dist/main.js',
+					format: 'cjs',
+					sourcemap: false,
+				},
+				onwarn: (warning) => {
+					if (!shouldIgnoreWarning(warning)) {
+						console.warn(warning.message);
+					}
+				},
+				treeshake: false,
+			},
+			dist: {
+				files: {
+					'dist/main.js': 'src/main.ts'
+				}
+			}
+		},
 
-    grunt.registerTask('default', ['clean', 'rollup','screeps']);
+		screeps: {
+			options: {
+				email: email,
+				token: token,
+				branch: branch,
+				ptr: ptr,
+			},
+			dist: {
+				src: ['dist/*.js']
+			}
+		},
+	});
+
+	// Register default task
+	grunt.registerTask('default', ['clean', 'rollup', 'screeps']);
 };
