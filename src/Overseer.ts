@@ -255,6 +255,8 @@ export class Overseer implements IOverseer {
 		const feederSettings = Memory.settings.feeder;
 	if (!feederSettings || !feederSettings.enabled) return false;
 	if (!colony.hatchery) return false;
+	if (!colony.bunker) return false;
+
 	// If a Feeder directive already exists in this room, consider it ensured
 	if (DirectiveFeeder.isPresent(colony.room.name)) return true;
 		// Optional cadence to reduce overhead
@@ -294,7 +296,7 @@ export class Overseer implements IOverseer {
 			Game.map.getRoomLinearDistance(other.room.name, colony.room.name));
 		if (!donor) return false;
 		// Create a feeder directive at the receiver's hatchery, owned by the donor colony
-		const res = DirectiveFeeder.createIfNotPresent(colony.hatchery.pos, 'pos', {memory: {[MEM.COLONY]: donor.name}});
+		const res = DirectiveFeeder.createIfNotPresent(colony.bunker?.anchor, 'pos', {memory: {[MEM.COLONY]: donor.name}});
 		// If already present, res will be undefined; we still consider that success
 		return true;
 	}
