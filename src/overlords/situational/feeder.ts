@@ -83,7 +83,7 @@ export class FeederOverlord extends Overlord {
 			return 0; // don't need this once you have a terminal
 		}
 		const roundTripDistance = 1.5 /* todo */ * this.directive.distanceFromColony.terrainWeighted;
-		const energyPerTick = 20;
+		const energyPerTick = 10;
 		return energyPerTick * roundTripDistance;
 	}
 
