@@ -69,6 +69,9 @@ export class Overseer implements IOverseer {
 	combatPlanner: CombatPlanner;
 	notifier: Notifier;
 
+	// Track receivers fed this tick to avoid duplicate feeder assignments
+	private fedReceiversThisTick: Set<string>;
+
 	static settings = {
 		outpostCheckFrequency: onPublicServer() ? 250 : 100
 	};
@@ -81,11 +84,14 @@ export class Overseer implements IOverseer {
 		this._overlordsCached = false;
 		this.notifier = new Notifier();
 		this.combatPlanner = new CombatPlanner();
+		this.fedReceiversThisTick = new Set<string>();
 	}
 
 	refresh() {
 		this.memory = Mem.wrap(Memory, 'overseer', getDefaultOverseerMemory);
 		this.notifier.clear();
+		// reset per-tick feeder tracking
+		this.fedReceiversThisTick = new Set<string>();
 	}
 
 	private try(callback: () => any, identifier?: string): void {
@@ -257,8 +263,14 @@ export class Overseer implements IOverseer {
 	if (!colony.hatchery) return false;
 	if (!colony.bunker) return false;
 
+	// If we've already attempted to feed this colony this tick, treat as ensured
+	if (this.fedReceiversThisTick.has(colony.name)) return true;
+
 	// If a Feeder directive already exists in this room, consider it ensured
-	if (DirectiveFeeder.isPresent(colony.room.name)) return true;
+	if (DirectiveFeeder.isPresent(colony.room.name)) {
+		this.fedReceiversThisTick.add(colony.name);
+		return true;
+	}
 		// Optional cadence to reduce overhead
 		const freq = feederSettings.checkFrequency || 0;
 		if (freq > 0 && Game.time % freq != 0) return false;
@@ -298,6 +310,7 @@ export class Overseer implements IOverseer {
 		// Create a feeder directive at the receiver's hatchery, owned by the donor colony
 		const res = DirectiveFeeder.createIfNotPresent(colony.bunker?.anchor, 'pos', {memory: {[MEM.COLONY]: donor.name}});
 		// If already present, res will be undefined; we still consider that success
+		this.fedReceiversThisTick.add(colony.name);
 		colony.state.beingFed = true;
 		return true;
 	}

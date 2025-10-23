@@ -46,11 +46,7 @@ export class DirectiveFeeder extends Directive {
 			this.remove();
 			this.colony.state.beingFed = false;
 		}
-		if (DirectiveFeeder.findInColony(this.colony).length > 1) {
-			this.remove();
-			return;
-		}
-		if (this.room && DirectiveFeeder.isPresent(this.pos) || this.colony.state.beingFed) {
+		if (this.room && DirectiveFeeder.isPresent(this.pos)) {
 			this.remove();
 			return;
 		}
