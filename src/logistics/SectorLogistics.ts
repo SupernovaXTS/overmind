@@ -19,6 +19,8 @@ export class SectorLogistics {
 		room: string;
 		manifest: StoreDefinitionUnlimited;
 		tick: number;
+		storageId?: Id<StructureStorage>;
+		maxRange?: number; // linear room distance hint for suppliers
 	} } {
 		const root = (Memory as any).Overmind || (Memory.Overmind = {} as any);
 		if (!root.sectorLogistics) root.sectorLogistics = {};
@@ -53,16 +55,33 @@ export class SectorLogistics {
 	 * Only publishes if the colony has storage (designated inter-colony deposit).
 	 */
 	publishUnfulfilledRequests(): void {
+		// Only colonies with storage should participate
 		if (!this.colony.storage) {
-			// Only colonies with storage should participate
 			delete SectorLogistics.pool[this.colony.name];
 			return;
 		}
 		const merged = this.getUnfulfilledRequests();
 		const manifest: StoreDefinitionUnlimited = {} as any;
 		for (const res in merged.resourceRequests) {
-			const amt = merged.resourceRequests[res as ResourceConstant] || 0;
-			if (amt > 0) (manifest as any)[res] = Math.ceil(amt);
+			const resource = res as ResourceConstant;
+			const amt = merged.resourceRequests[resource] || 0;
+			if (amt <= 0) continue;
+			// If this colony has a terminal, first check if the terminal network can obtain this amount.
+			// Only include in the sector manifest if the network cannot fulfill it.
+			if (this.colony.terminal && Overmind.terminalNetwork) {
+				try {
+					const totalDesired = (this.colony.assets[resource] || 0) + amt;
+					const tnCan = Overmind.terminalNetwork.canObtainResource(this.colony, resource, totalDesired);
+					if (!tnCan) {
+						(manifest as any)[resource] = Math.ceil(amt);
+					}
+				} catch (e) {
+					// If any error occurs (phase, etc.), fall back to not publishing for terminals this tick
+				}
+			} else {
+				// No terminal; always include
+				(manifest as any)[resource] = Math.ceil(amt);
+			}
 		}
 		// If nothing to request, remove any previous entry and return
 		const totalRequested = _.sum(_.values(manifest as any) as number[]);
@@ -70,11 +89,14 @@ export class SectorLogistics {
 			delete SectorLogistics.pool[this.colony.name];
 			return;
 		}
+		const maxRange = ((Memory.settings as any)?.logistics?.intercolony?.rangeLimit as number) || undefined;
 		SectorLogistics.pool[this.colony.name] = {
 			colony : this.colony.name,
 			room   : this.colony.room.name,
 			manifest,
 			tick   : Game.time,
+			storageId: this.colony.storage?.id,
+			maxRange,
 		};
 	}
 

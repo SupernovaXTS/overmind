@@ -8,11 +8,15 @@ import {Overlord, OverlordMemory} from '../Overlord';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {SectorLogistics} from '../../logistics/SectorLogistics';
 import {Stats} from '../../stats/stats';
+import {SpawnGroup} from '../../logistics/SpawnGroup';
+import {Cartographer} from '../../utilities/Cartographer';
 
 interface Shipment {
 	dest: string; // destination colony name
 	resource: ResourceConstant;
 	amount: number; // remaining amount to ship
+	// True if this shipment is a backfill for a destination with a terminal that the TradeNetwork couldn't fulfill
+	tnBackfill?: boolean;
 }
 
 export interface SectorTransportOverlordMemory extends OverlordMemory {
@@ -43,6 +47,9 @@ export class SectorTransportOverlord extends Overlord {
 	constructor(colony: Colony) {
 		super(colony, 'sectorTransport', OverlordPriority.sectorLogi.intersectorTransport, getDefaultSectorTransportOverlordMemory);
 		this.transporters = this.zerg(Roles.sectorTransport);
+		// Create a spawn group covering colonies within configured range to help spawn sector transporters
+		const maxPathDistance = this.getRangeLimit() * 50; // rough path upper bound per room
+		this.spawnGroup = new SpawnGroup(this, { maxPathDistance, requiredRCL: 4 });
 	}
 
 	private getRangeLimit(): number {
@@ -59,14 +66,12 @@ export class SectorTransportOverlord extends Overlord {
 		return (typeof def === 'number') ? def : SectorTransportOverlord.DEFAULT_BUFFER;
 	}
 
-	private roomsWithinRange(destRoomName: string): boolean {
-		const src = this.colony.room.name;
-		const dist = Game.map.getRoomLinearDistance(src, destRoomName);
-		return dist <= this.getRangeLimit();
+	private sameSector(destRoomName: string): boolean {
+		return Cartographer.sameSector(this.colony.room.name, destRoomName);
 	}
 
 	private rebuildQueueFromPool(): void {
-		const pool = (SectorLogistics as any).pool as { [colony: string]: { colony: string; manifest: StoreDefinitionUnlimited } };
+		const pool = (SectorLogistics as any).pool as { [colony: string]: { colony: string; room: string; manifest: StoreDefinitionUnlimited; storageId?: Id<StructureStorage>; maxRange?: number } };
 		if (!pool) return;
 		const shipments: Shipment[] = [];
 		for (const key in pool) {
@@ -74,19 +79,35 @@ export class SectorTransportOverlord extends Overlord {
 			if (!entry || entry.colony == this.colony.name) continue; // don't fulfill own
 			const destColony = Overmind.colonies[entry.colony];
 			if (!destColony || !destColony.storage) continue; // require storage at dest
-			if (!this.roomsWithinRange(destColony.room.name)) continue; // out of range
+			// Enforce "one sector" max range: must be in the same 10x10 sector
+			if (!this.sameSector(destColony.room.name)) continue;
 			// For each requested resource, compute available to send from this colony (respect simple buffer)
 			for (const res in entry.manifest) {
 				const resource = res as ResourceConstant;
 				const requested = (entry.manifest[resource] as number) || 0;
 				if (requested <= 0) continue;
+				// If destination has a terminal, only send if the terminal network cannot obtain this request
+				let tnBackfill = false;
+				if (destColony.terminal && Overmind.terminalNetwork) {
+					try {
+						const totalDesired = (destColony.assets[resource] || 0) + requested;
+						const tnCan = Overmind.terminalNetwork.canObtainResource(destColony, resource, totalDesired);
+						if (tnCan) {
+							continue; // TradeNetwork can handle it; skip creep shipment
+						}
+						// TN cannot obtain: mark as backfill
+						tnBackfill = true;
+					} catch (e) {
+						// If we can't evaluate, fall through and allow creep shipment
+					}
+				}
 				const available = (this.colony.assets[resource] as number) || 0;
 				// Use buffers from legacy LogisticsSector (configurable via Memory.settings.logistics.intercolony)
 				const buffer = this.getBuffer(resource);
 				const sendable = Math.max(0, available - buffer);
 				const shipAmt = Math.min(requested, sendable);
 				if (shipAmt > 0) {
-					shipments.push({dest: entry.colony, resource, amount: shipAmt});
+					shipments.push({dest: entry.colony, resource, amount: shipAmt, tnBackfill});
 				}
 			}
 		}
@@ -103,6 +124,7 @@ export class SectorTransportOverlord extends Overlord {
 		}
 		// Determine how many transporters to spawn dynamically based on setup carry capacity
 		const totalToShip = _.sum(this.memory.queue, s => s.amount);
+		const totalBackfill = _.sum(_.filter(this.memory.queue, s => s.tnBackfill), s => s.amount);
 		const setup = Setups.sectorTransporters.default;
 		const carryParts = setup.getBodyPotential(CARRY, this.colony) || 0;
 		const perCreepCapacity = Math.max(1, carryParts * CARRY_CAPACITY);
@@ -113,6 +135,8 @@ export class SectorTransportOverlord extends Overlord {
 		// Stats
 		Stats.log(`colonies.${this.colony.name}.sectorTransport.queueSize`, this.memory.queue.length);
 		Stats.log(`colonies.${this.colony.name}.sectorTransport.queueAmount`, totalToShip);
+		Stats.log(`colonies.${this.colony.name}.sectorTransport.backfill.queueAmount`, totalBackfill);
+		Stats.log(`colonies.${this.colony.name}.sectorTransport.backfill.queueSize`, _.sum(this.memory.queue, s => s.tnBackfill ? 1 : 0));
 	}
 
 	private assignOrContinueShipment(creep: Zerg): Shipment | undefined {
@@ -152,8 +176,11 @@ export class SectorTransportOverlord extends Overlord {
 			}
 			return;
 		}
-		const destColony = Overmind.colonies[shipment.dest];
-		const dest = destColony?.storage || destColony?.terminal;
+	const destColony = Overmind.colonies[shipment.dest];
+	// Prefer the specific storageId provided by the requester if available
+	const poolEntry = (SectorLogistics as any).pool?.[shipment.dest] as { storageId?: Id<StructureStorage> } | undefined;
+	const hintedStorage = poolEntry?.storageId ? (Game.getObjectById(poolEntry.storageId) as StructureStorage | null) : null;
+	const dest = (hintedStorage || destColony?.storage || destColony?.terminal);
 		if (!destColony || !dest) {
 			delete mem.shipment; // invalid destination
 			return;
@@ -188,8 +215,11 @@ export class SectorTransportOverlord extends Overlord {
 		// Periodic stats
 		if (Game.time % 8 === 0) {
 			const totalToShip = _.sum(this.memory.queue, s => s.amount);
+			const totalBackfill = _.sum(_.filter(this.memory.queue, s => s.tnBackfill), s => s.amount);
 			Stats.log(`colonies.${this.colony.name}.sectorTransport.queueSize`, this.memory.queue.length);
 			Stats.log(`colonies.${this.colony.name}.sectorTransport.queueAmount`, totalToShip);
+			Stats.log(`colonies.${this.colony.name}.sectorTransport.backfill.queueAmount`, totalBackfill);
+			Stats.log(`colonies.${this.colony.name}.sectorTransport.backfill.queueSize`, _.sum(this.memory.queue, s => s.tnBackfill ? 1 : 0));
 		}
 	}
 }

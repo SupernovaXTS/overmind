@@ -982,7 +982,9 @@ export class OvermindConsole {
 		if (!ov) return `No SectorTransportOverlord found for ${colony.name}`;
 		const q = ov.memory?.queue || [];
 		const total = _.sum(q, (s: any) => s.amount || 0);
-		return `${colony.name} sector queue: ${q.length} shipments, total=${total}\n` + JSON.stringify(q, undefined, 2);
+		const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
+		const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
+		return `${colony.name} sector queue: ${q.length} shipments, total=${total}, backfill: count=${backfillCount}, amount=${backfillAmount}\n` + JSON.stringify(q, undefined, 2);
 	}
 
 	static sectorSummary(): string {
@@ -997,7 +999,9 @@ export class OvermindConsole {
 			if (!ov) continue;
 			const q = ov.memory?.queue || [];
 			const total = _.sum(q, (s: any) => s.amount || 0);
-			msg += `  ${c.name}: queueSize=${q.length}, queueAmount=${total}\n`;
+			const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
+			const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
+			msg += `  ${c.name}: queueSize=${q.length}, queueAmount=${total}, backfillCount=${backfillCount}, backfillAmount=${backfillAmount}\n`;
 		}
 		return msg;
 	}

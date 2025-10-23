@@ -180,8 +180,8 @@ export class PrioritiesOverlords {
 				roomPoisoner: 561,
 			},
 			sectorLogi: {
-				feeder: 599,
-				intersectorTransport: 1105,
+				feeder: 580,
+				intersectorTransport: 599,
 			},
 			upgrading: {				// Spawning upgraders
 				upgrade: 600,

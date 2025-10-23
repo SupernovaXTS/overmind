@@ -227,6 +227,26 @@ export class Cartographer {
 		};
 	}
 
+	/**
+	 * Get the sector key for a room (10x10 blocks), e.g. E12N34 -> E1N3
+	 */
+	static getSectorKey(room: string | Room): string {
+		const roomName = typeof room === 'string' ? room : room.name;
+		const re = /^([WE])(\d+)([NS])(\d+)$/;
+		const m = re.exec(roomName);
+		if (!m) return roomName;
+		const xIdx = Math.floor(Number(m[2]) / 10);
+		const yIdx = Math.floor(Number(m[4]) / 10);
+		return `${m[1]}${xIdx}${m[3]}${yIdx}`;
+	}
+
+	/**
+	 * Whether two rooms are in the same sector (10x10 block)
+	 */
+	static sameSector(a: string | Room, b: string | Room): boolean {
+		return Cartographer.getSectorKey(a) === Cartographer.getSectorKey(b);
+	}
+
 	// static isNoviceRoom(roomName: string): boolean {
 	// 	if (Memory.zoneRooms) {
 	// 		const roomInfo = Memory.zoneRooms[roomName];
