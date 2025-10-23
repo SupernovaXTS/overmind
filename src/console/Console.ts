@@ -75,6 +75,13 @@ export class OvermindConsole {
 		global.requestFromPairs = this.requestFromPairs;
 		global.requestFromPairsOk = this.requestFromPairsOk;
 		global.setCurrentColony = this.setCurrentColony;
+		global.buyPixels = this.buyPixels;
+		global.setPixelSettings = this.setPixelSettings;
+		global.setCPUUnlockSettings = this.setCPUUnlockSettings;
+		global.getAccountResourcesSettings = this.getAccountResourcesSettings;
+		global.setPixelGeneration = this.setPixelGeneration;
+		global.setPixelTrading = this.setPixelTrading;
+		global.setCPUUnlockTrading = this.setCPUUnlockTrading;
 	}
 
 	static refresh(): void {
@@ -158,6 +165,13 @@ export class OvermindConsole {
 		descr['requestFromPairs(roomName, pairs)'] = 'queues a haul request using [[resource, amount], ...]';
 		descr['requestFromPairsOk(roomName, pairs)'] = 'boolean variant of requestFromPairs';
 		descr['getZerg(creepName)'] = 'returns the Zerg instance associated with the specified creep name';
+		descr['buyPixels(amount)'] = 'buys the specified number of pixels at the cheapest market price';
+		descr['getAccountResourcesSettings()'] = 'displays current account resources settings';
+		descr['setPixelSettings(options)'] = 'set pixel thresholds: {min, max, buyThreshold, sellThreshold}';
+		descr['setCPUUnlockSettings(options)'] = 'set CPU unlock thresholds: {min, max, buyThreshold, sellThreshold}';
+		descr['setPixelGeneration(enabled)'] = 'enable/disable automatic pixel generation (true/false)';
+		descr['setPixelTrading(enabled)'] = 'enable/disable automatic pixel buying/selling (true/false)';
+		descr['setCPUUnlockTrading(enabled)'] = 'enable/disable automatic CPU unlock buying/selling (true/false)';
 		// Console list
 		const descrMsg = toColumns(descr, { justify: true, padChar: '.' });
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -833,4 +847,182 @@ export class OvermindConsole {
 		return `Canceled ${_.values(ordersToCancel).length} orders.`;
 	}
 
+	/**
+	 * Buys the specified amount of pixels at the cheapest price available on the market
+	 * @param amount - Number of pixels to buy
+	 * @returns A message indicating the result of the purchase
+	 */
+	static buyPixels(amount: number): string {
+		if (!Overmind.accountResources) {
+			return 'Error: AccountResources not initialized';
+		}
+
+		if (!amount || amount <= 0) {
+			return 'Error: Please specify a valid amount of pixels to buy (must be greater than 0)';
+		}
+
+		const currentPixels = Game.resources[PIXEL] || 0;
+		const currentCredits = Game.market.credits;
+
+		log.info(`Attempting to buy ${amount} pixels...`);
+		log.info(`Current pixels: ${currentPixels}, Current credits: ${currentCredits.toFixed(2)}`);
+
+		const result = Overmind.accountResources.buyPixelsAtCheapestPrice(amount);
+
+		if (result === OK) {
+			const newPixels = Game.resources[PIXEL] || 0;
+			const creditsSpent = currentCredits - Game.market.credits;
+			return `Successfully bought ${amount} pixels for ${creditsSpent.toFixed(2)} credits! ` +
+				   `New pixel count: ${newPixels}`;
+		} else if (result === ERR_INVALID_ARGS) {
+			return `Error: Invalid amount specified`;
+		} else if (result === ERR_NOT_FOUND) {
+			return `Error: No pixel sell orders available on the market`;
+		} else if (result === ERR_NOT_ENOUGH_RESOURCES) {
+			return `Error: Insufficient credits or pixels unavailable on market`;
+		} else if (result === ERR_FULL) {
+			const newPixels = Game.resources[PIXEL] || 0;
+			const bought = newPixels - currentPixels;
+			return `Partial success: Only bought ${bought}/${amount} pixels`;
+		} else {
+			return `Error: Failed to buy pixels (error code: ${result})`;
+		}
+	}
+
+	/**
+	 * Get current account resources settings
+	 */
+	static getAccountResourcesSettings(): string {
+		const settings = Memory.settings.accountResources || {};
+		let msg = 'Account Resources Settings:\n';
+		msg += '========================\n';
+		msg += `Pixel Generation: ${settings.pixelGenerationEnabled ? 'ENABLED' : 'DISABLED'}\n`;
+		msg += `Pixel Trading: ${settings.tradePixels ? 'ENABLED' : 'DISABLED'}\n`;
+		msg += `CPU Unlock Trading: ${settings.tradeCPUUnlocks ? 'ENABLED' : 'DISABLED'}\n\n`;
+		
+		msg += 'Pixel Settings:\n';
+		msg += `  Min: ${settings.pixel?.min ?? 'default'}\n`;
+		msg += `  Max: ${settings.pixel?.max ?? 'default'}\n`;
+		msg += `  Buy Threshold: ${settings.pixel?.buyThreshold ?? 'default'}\n`;
+		msg += `  Sell Threshold: ${settings.pixel?.sellThreshold ?? 'default'}\n\n`;
+		
+		msg += 'CPU Unlock Settings:\n';
+		msg += `  Min: ${settings.cpuUnlock?.min ?? 'default'}\n`;
+		msg += `  Max: ${settings.cpuUnlock?.max ?? 'default'}\n`;
+		msg += `  Buy Threshold: ${settings.cpuUnlock?.buyThreshold ?? 'default'}\n`;
+		msg += `  Sell Threshold: ${settings.cpuUnlock?.sellThreshold ?? 'default'}\n`;
+		
+		return msg;
+	}
+
+	/**
+	 * Set pixel threshold settings
+	 */
+	static setPixelSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		if (!Memory.settings.accountResources.pixel) {
+			Memory.settings.accountResources.pixel = {};
+		}
+
+		const pixel = Memory.settings.accountResources.pixel;
+		const changes: string[] = [];
+
+		if (options.min !== undefined) {
+			pixel.min = options.min;
+			changes.push(`min: ${options.min}`);
+		}
+		if (options.max !== undefined) {
+			pixel.max = options.max;
+			changes.push(`max: ${options.max}`);
+		}
+		if (options.buyThreshold !== undefined) {
+			pixel.buyThreshold = options.buyThreshold;
+			changes.push(`buyThreshold: ${options.buyThreshold}`);
+		}
+		if (options.sellThreshold !== undefined) {
+			pixel.sellThreshold = options.sellThreshold;
+			changes.push(`sellThreshold: ${options.sellThreshold}`);
+		}
+
+		if (changes.length === 0) {
+			return 'No settings changed. Provide at least one of: {min, max, buyThreshold, sellThreshold}';
+		}
+
+		return `Pixel settings updated: ${changes.join(', ')}`;
+	}
+
+	/**
+	 * Set CPU unlock threshold settings
+	 */
+	static setCPUUnlockSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		if (!Memory.settings.accountResources.cpuUnlock) {
+			Memory.settings.accountResources.cpuUnlock = {};
+		}
+
+		const cpuUnlock = Memory.settings.accountResources.cpuUnlock;
+		const changes: string[] = [];
+
+		if (options.min !== undefined) {
+			cpuUnlock.min = options.min;
+			changes.push(`min: ${options.min}`);
+		}
+		if (options.max !== undefined) {
+			cpuUnlock.max = options.max;
+			changes.push(`max: ${options.max}`);
+		}
+		if (options.buyThreshold !== undefined) {
+			cpuUnlock.buyThreshold = options.buyThreshold;
+			changes.push(`buyThreshold: ${options.buyThreshold}`);
+		}
+		if (options.sellThreshold !== undefined) {
+			cpuUnlock.sellThreshold = options.sellThreshold;
+			changes.push(`sellThreshold: ${options.sellThreshold}`);
+		}
+
+		if (changes.length === 0) {
+			return 'No settings changed. Provide at least one of: {min, max, buyThreshold, sellThreshold}';
+		}
+
+		return `CPU unlock settings updated: ${changes.join(', ')}`;
+	}
+
+	/**
+	 * Enable or disable automatic pixel generation
+	 */
+	static setPixelGeneration(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.pixelGenerationEnabled = enabled;
+		return `Pixel generation ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	/**
+	 * Enable or disable automatic pixel trading
+	 */
+	static setPixelTrading(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.tradePixels = enabled;
+		return `Pixel trading ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	/**
+	 * Enable or disable automatic CPU unlock trading
+	 */
+	static setCPUUnlockTrading(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.tradeCPUUnlocks = enabled;
+		return `CPU unlock trading ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
 }
+

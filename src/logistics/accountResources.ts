@@ -1,5 +1,23 @@
 import {log} from '../console/log';
 
+interface AccountResourcesSettings {
+	pixelGenerationEnabled: boolean;
+	tradePixels: boolean;
+	tradeCPUUnlocks: boolean;
+	pixel: {
+		min: number;
+		max: number;
+		buyThreshold: number;
+		sellThreshold: number;
+	};
+	cpuUnlock: {
+		min: number;
+		max: number;
+		buyThreshold: number;
+		sellThreshold: number;
+	};
+}
+
 /**
  * Manages account-level resources (pixels and CPU unlocks) including automatic
  * generation, buying, selling, and usage based on configurable thresholds.
@@ -7,12 +25,12 @@ import {log} from '../console/log';
 export class AccountResources {
 	private trader: IIntershardTradeNetwork;
 
-	settings = {
+	private readonly defaultSettings: AccountResourcesSettings = {
 		pixelGenerationEnabled: true,
 		tradePixels: false,
 		tradeCPUUnlocks: false,
 		pixel: {
-			min: 590,           // Minimum pixels to maintain in account
+			min: 500,           // Minimum pixels to maintain in account
 			max: 500,           // Maximum pixels before selling excess
 			buyThreshold: 50,   // Buy pixels when below this amount
 			sellThreshold: 500, // Sell pixels when above this amount
@@ -27,6 +45,87 @@ export class AccountResources {
 
 	constructor(trader: IIntershardTradeNetwork) {
 		this.trader = trader;
+		this.initializeMemorySettings();
+	}
+
+	/**
+	 * Initialize memory settings with defaults if not present
+	 */
+	private initializeMemorySettings(): void {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		
+		const memSettings = Memory.settings.accountResources;
+		
+		// Initialize top-level settings
+		if (memSettings.pixelGenerationEnabled === undefined) {
+			memSettings.pixelGenerationEnabled = this.defaultSettings.pixelGenerationEnabled;
+		}
+		if (memSettings.tradePixels === undefined) {
+			memSettings.tradePixels = this.defaultSettings.tradePixels;
+		}
+		if (memSettings.tradeCPUUnlocks === undefined) {
+			memSettings.tradeCPUUnlocks = this.defaultSettings.tradeCPUUnlocks;
+		}
+		
+		// Initialize pixel settings
+		if (!memSettings.pixel) {
+			memSettings.pixel = {};
+		}
+		if (memSettings.pixel.min === undefined) {
+			memSettings.pixel.min = this.defaultSettings.pixel.min;
+		}
+		if (memSettings.pixel.max === undefined) {
+			memSettings.pixel.max = this.defaultSettings.pixel.max;
+		}
+		if (memSettings.pixel.buyThreshold === undefined) {
+			memSettings.pixel.buyThreshold = this.defaultSettings.pixel.buyThreshold;
+		}
+		if (memSettings.pixel.sellThreshold === undefined) {
+			memSettings.pixel.sellThreshold = this.defaultSettings.pixel.sellThreshold;
+		}
+		
+		// Initialize CPU unlock settings
+		if (!memSettings.cpuUnlock) {
+			memSettings.cpuUnlock = {};
+		}
+		if (memSettings.cpuUnlock.min === undefined) {
+			memSettings.cpuUnlock.min = this.defaultSettings.cpuUnlock.min;
+		}
+		if (memSettings.cpuUnlock.max === undefined) {
+			memSettings.cpuUnlock.max = this.defaultSettings.cpuUnlock.max;
+		}
+		if (memSettings.cpuUnlock.buyThreshold === undefined) {
+			memSettings.cpuUnlock.buyThreshold = this.defaultSettings.cpuUnlock.buyThreshold;
+		}
+		if (memSettings.cpuUnlock.sellThreshold === undefined) {
+			memSettings.cpuUnlock.sellThreshold = this.defaultSettings.cpuUnlock.sellThreshold;
+		}
+	}
+
+	/**
+	 * Get current settings from memory with fallback to defaults
+	 */
+	get settings(): AccountResourcesSettings {
+		const memSettings = Memory.settings.accountResources || {};
+		return {
+			pixelGenerationEnabled: memSettings.pixelGenerationEnabled ?? this.defaultSettings.pixelGenerationEnabled,
+			tradePixels: memSettings.tradePixels ?? this.defaultSettings.tradePixels,
+			tradeCPUUnlocks: memSettings.tradeCPUUnlocks ?? this.defaultSettings.tradeCPUUnlocks,
+			pixel: {
+				min: memSettings.pixel?.min ?? this.defaultSettings.pixel.min,
+				max: memSettings.pixel?.max ?? this.defaultSettings.pixel.max,
+				buyThreshold: memSettings.pixel?.buyThreshold ?? this.defaultSettings.pixel.buyThreshold,
+				sellThreshold: memSettings.pixel?.sellThreshold ?? this.defaultSettings.pixel.sellThreshold,
+			},
+			cpuUnlock: {
+				min: memSettings.cpuUnlock?.min ?? this.defaultSettings.cpuUnlock.min,
+				max: memSettings.cpuUnlock?.max ?? this.defaultSettings.cpuUnlock.max,
+				buyThreshold: memSettings.cpuUnlock?.buyThreshold ?? this.defaultSettings.cpuUnlock.buyThreshold,
+				sellThreshold: memSettings.cpuUnlock?.sellThreshold ?? this.defaultSettings.cpuUnlock.sellThreshold,
+			},
+		};
 	}
 
 	/**
@@ -74,6 +173,93 @@ export class AccountResources {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Buys exactly x pixels at the cheapest price available on the market.
+	 * This function directly queries market orders and purchases from the cheapest seller.
+	 * @param amount - Number of pixels to buy
+	 * @returns ScreepsReturnCode - OK if successful, error code otherwise
+	 */
+	buyPixelsAtCheapestPrice(amount: number): ScreepsReturnCode {
+		if (amount <= 0) {
+			log.warning(`Invalid pixel amount: ${amount}`);
+			return ERR_INVALID_ARGS;
+		}
+
+		// Get all sell orders for pixels, sorted by price (lowest first)
+		const orders = Game.market.getAllOrders({
+			type: ORDER_SELL,
+			resourceType: PIXEL
+		});
+
+		if (!orders || orders.length === 0) {
+			log.warning(`No pixel sell orders available on the market`);
+			return ERR_NOT_FOUND;
+		}
+
+		// Sort by price ascending (cheapest first)
+		const sortedOrders = _.sortBy(orders, (order: Order) => order.price);
+
+		let remainingAmount = amount;
+		let totalCost = 0;
+		const purchases: Array<{orderId: string, amount: number, price: number}> = [];
+
+		// Calculate which orders to buy from
+		for (const order of sortedOrders) {
+			if (remainingAmount <= 0) break;
+
+			const buyAmount = Math.min(remainingAmount, order.amount);
+			const cost = buyAmount * order.price;
+
+			purchases.push({
+				orderId: order.id,
+				amount: buyAmount,
+				price: order.price
+			});
+
+			remainingAmount -= buyAmount;
+			totalCost += cost;
+		}
+
+		// Check if we can afford it
+		if (Game.market.credits < totalCost) {
+			log.warning(`Insufficient credits to buy ${amount} pixels. Need: ${totalCost.toFixed(2)}, Have: ${Game.market.credits.toFixed(2)}`);
+			return ERR_NOT_ENOUGH_RESOURCES;
+		}
+
+		// Check if enough pixels are available
+		if (remainingAmount > 0) {
+			log.warning(`Not enough pixels available on market. Requested: ${amount}, Available: ${amount - remainingAmount}`);
+			return ERR_NOT_ENOUGH_RESOURCES;
+		}
+
+		// Execute the purchases
+		log.info(`Buying ${amount} pixels for ${totalCost.toFixed(2)} credits from ${purchases.length} order(s)`);
+		
+		let totalBought = 0;
+		for (const purchase of purchases) {
+			const result = Game.market.deal(purchase.orderId, purchase.amount);
+			
+			if (result === OK) {
+				totalBought += purchase.amount;
+				log.info(`Bought ${purchase.amount} pixels at ${purchase.price} credits/pixel from order ${purchase.orderId}`);
+			} else {
+				log.warning(`Failed to buy from order ${purchase.orderId}: ${result}`);
+				// Continue trying other orders
+			}
+		}
+
+		if (totalBought === amount) {
+			log.info(`Successfully bought ${totalBought} pixels for ${totalCost.toFixed(2)} credits`);
+			return OK;
+		} else if (totalBought > 0) {
+			log.warning(`Partially bought ${totalBought}/${amount} pixels`);
+			return ERR_FULL; // Using this to indicate partial success
+		} else {
+			log.error(`Failed to buy any pixels`);
+			return ERR_INVALID_TARGET;
+		}
 	}
 
 	/**

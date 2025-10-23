@@ -81,6 +81,23 @@ interface Memory {
 				maxRetries?: number;
 				maxAge?: number; // ticks
 			}
+		},
+		accountResources?: {
+			pixelGenerationEnabled?: boolean;
+			tradePixels?: boolean;
+			tradeCPUUnlocks?: boolean;
+			pixel?: {
+				min?: number;           // Minimum pixels to maintain in account
+				max?: number;           // Maximum pixels before selling excess
+				buyThreshold?: number;  // Buy pixels when below this amount
+				sellThreshold?: number; // Sell pixels when above this amount
+			};
+			cpuUnlock?: {
+				min?: number;           // Minimum CPU unlocks to keep (reserve for emergencies)
+				max?: number;           // Maximum CPU unlocks before selling excess
+				buyThreshold?: number;  // Buy CPU unlocks when below this amount
+				sellThreshold?: number; // Sell CPU unlocks when above this amount
+			};
 		}
 	};
 

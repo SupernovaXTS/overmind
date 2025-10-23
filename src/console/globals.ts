@@ -65,3 +65,10 @@ global.PERMACACHE = {};
 // global._MNRL_MINERALTYPE = 't';
 // global._MNRL_DENSITY = 'd';
 
+declare function buyPixels(amount: number): string;
+declare function getAccountResourcesSettings(): string;
+declare function setPixelSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
+declare function setCPUUnlockSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
+declare function setPixelGeneration(enabled: boolean): string;
+declare function setPixelTrading(enabled: boolean): string;
+declare function setCPUUnlockTrading(enabled: boolean): string;

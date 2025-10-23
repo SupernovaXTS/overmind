@@ -101,6 +101,8 @@ interface IOvermind {
 	memory: IOvermindMemory;
 	terminalNetwork: ITerminalNetwork;			// is actually TerminalNetwork
 	tradeNetwork: ITradeNetwork;				// is actually TradeNetwork
+	tradeNetworkIntershard: IIntershardTradeNetwork; // is actually IntershardTradeNetwork
+	accountResources: any;						// is actually AccountResources
 	expansionPlanner: IExpansionPlanner;
 	exceptions: Error[];
 
