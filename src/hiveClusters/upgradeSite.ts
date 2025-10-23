@@ -316,7 +316,8 @@ export class UpgradeSite extends HiveCluster {
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.progressTotal`, this.memory.stats.progressTotal);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.downtime`, this.memory.stats.downtime);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPerTick`, this.memory.stats.energyPerTick);
-		Stats.log(`colonies.${this.colony.name}.upgradeSite.ticksTillUpgrade`, this.memory.stats.ticksTillUpgrade);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.ticksTillUpgrade`, this.memory.stats.ticksTillUpgrade);\
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.secondsTillUpgrade`, this.memory.stats.secondsTillUpgrade);
 	}
 
 	run(): void {
