@@ -39,7 +39,7 @@ export class RoomPoisonerOverlord extends Overlord {
 		}
 
 		if (this.room && this.room.dangerousPlayerHostiles.length == 0) {
-			this.wishlist(1, Setups.roomPoisoner);
+			this.wishlist(1, Setups.roomPoisoner, {reassignIdle: true});
 		}
 	}
 

@@ -133,8 +133,8 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		const hydraliskPriority = this.healers.length < this.zerglings.length ? this.priority - 0.1 : this.priority + 0.1;
 		const hydraliskSetup = CombatSetups.hydralisks.boosted.armored;
 
-		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority},
-							 {setup: healerSetup, amount: 2, priority: healerPriority}];
+		const swarmConfig = [{setup: zerglingSetup, amount: 2, priority: zerglingPriority, reassignIdle: true},
+							 {setup: healerSetup, amount: 2, priority: healerPriority, reassignIdle: true}];
 		this.swarmWishlist(numSwarms, swarmConfig);
 
 		// const rangedSwarmConfig = [{setup: hydraliskSetup, amount: 4, priority: hydraliskPriority}];

@@ -19,7 +19,7 @@ export class StationaryScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(1, Setups.scout);
+		this.wishlist(1, Setups.scout, {reassignIdle: true});
 	}
 
 	run() {

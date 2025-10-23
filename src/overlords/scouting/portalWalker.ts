@@ -25,7 +25,7 @@ export class PortalScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
+		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout, {reassignIdle: true});
 	}
 
 	private portalSays(creep: Zerg, isPublic: boolean) {

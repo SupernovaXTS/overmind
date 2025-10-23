@@ -84,7 +84,7 @@ export class HarassOverlord extends CombatOverlord {
 		this.reassignIdleCreeps(Roles.melee);
 		const setup = CombatSetups.hydralisks.default;
 		const numtoSpawn = (!this.directive.memory.nextSpawnTime || Game.time >= this.directive.memory.nextSpawnTime) ? 1 : 0;
-		this.wishlist(numtoSpawn, setup);
+		this.wishlist(numtoSpawn, setup, {prespawn: HarassOverlord.settings.prespawn, reassignIdle: true});
 	}
 
 	run() {

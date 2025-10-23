@@ -119,7 +119,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 		// const amount = this.colony.spawns.length > 1 ? 2 : 1;
 		const amount = this.colony.room.energyCapacityAvailable >= 2000 ? 2 : 1;
-		this.wishlist(amount, this.queenSetup);
+		this.wishlist(amount, this.queenSetup, {reassignIdle: true});
 	}
 
 	// Builds a series of tasks to empty unnecessary carry contents, withdraw required resources, and supply structures

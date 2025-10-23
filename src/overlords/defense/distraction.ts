@@ -48,7 +48,7 @@ export class DistractionOverlord extends CombatOverlord {
 	init() {
 		// this.reassignIdleCreeps(Roles.ranged); until it's it's own role don't reassign
 		const setup = CombatSetups.distractors.ranged;
-		this.wishlist(1, setup);
+		this.wishlist(1, setup, {reassignIdle: true});
 	}
 
 	run() {

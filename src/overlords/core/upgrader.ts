@@ -51,7 +51,7 @@ export class UpgradingOverlord extends Overlord {
 			
 			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);
 			const upgradersNeeded = Math.ceil(this.upgradeSite.upgradePowerNeeded / upgradePowerEach);
-			this.wishlist(upgradersNeeded, setup);
+			this.wishlist(upgradersNeeded, setup, {reassignIdle: true});
 	
 		}
 		else {

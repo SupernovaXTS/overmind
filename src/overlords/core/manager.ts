@@ -124,7 +124,7 @@ export class CommandCenterOverlord extends Overlord {
 				directions: [this.colony.bunker.coreSpawn.pos.getDirectionTo(this.colony.bunker.anchor)]
 			};
 		}
-		this.wishlist(1, setup, {options: spawnRequestOptions});
+		this.wishlist(1, setup, {options: spawnRequestOptions,});
 	}
 
 	/**

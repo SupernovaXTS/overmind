@@ -333,7 +333,7 @@ export class MiningOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(this.minersNeeded, this.setup);
+		this.wishlist(this.minersNeeded, this.setup, {reassignIdle: true});
 		this.registerEnergyRequests();
 	}
 

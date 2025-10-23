@@ -58,7 +58,7 @@ export class DismantleOverlord extends Overlord {
 		const dismantleNeeded = Math.ceil((this.target ? this.target.hits : 50000) / dismantleLifetimePower);
 		const numDismantlers = Math.min(nearbySpots, MAX_DISMANTLERS, dismantleNeeded);
 		// Request the dismantlers
-		this.wishlist(numDismantlers, setup);
+		this.wishlist(numDismantlers, setup,{reassignIdle: true});
 	}
 
 	private runDismantler(dismantler: Zerg) {

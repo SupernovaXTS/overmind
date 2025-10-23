@@ -44,8 +44,8 @@ export class PioneerOverlord extends Overlord {
 				numPos += source.pos.availableNeighbors(true).length;
 			}
 		}
-		
-		this.wishlist(numPos * 2, Setups.pioneers[type]);
+
+		this.wishlist(numPos * 2, Setups.pioneers[type], {reassignIdle: true});
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {

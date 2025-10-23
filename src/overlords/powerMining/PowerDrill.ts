@@ -45,8 +45,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.wishlist(1, CombatSetups.drill.default);
-		this.wishlist(2, CombatSetups.coolant.small);
+		this.wishlist(1, CombatSetups.drill.default,{reassignIdle: true});
+		this.wishlist(2, CombatSetups.coolant.small,{reassignIdle: true});
 	}
 
 	private getHostileDrill(powerBank: StructurePowerBank) {

@@ -131,7 +131,7 @@ export class PowerHaulingOverlord extends Overlord {
 
 	run() {
 		if (Game.time >= this.tickToSpawnOn && this.directive.memory.state < 4) {
-			this.wishlist(this.numHaulers, Setups.transporters.default);
+			this.wishlist(this.numHaulers, Setups.transporters.default,	{prespawn: this.prespawnAmount, reassignIdle: true});
 		}
 
 		this.autoRun(this.haulers, this.handleHauler);

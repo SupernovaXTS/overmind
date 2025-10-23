@@ -44,7 +44,7 @@ export class BunkerDefenseOverlord extends CombatOverlord {
 	init() {
 		this.reassignIdleCreeps(Roles.bunkerDefender);
 
-		this.wishlist(1, CombatSetups.bunkerDefender.boosted);
+		this.wishlist(1, CombatSetups.bunkerDefender.boosted,{reassignIdle: true});
 	}
 
 	run() {

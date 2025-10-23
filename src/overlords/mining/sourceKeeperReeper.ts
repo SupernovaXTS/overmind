@@ -64,8 +64,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 	init() {
 		const defenderAmount = this.room && (this.room.invaders.length > 0
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
-		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
+		this.wishlist(1, CombatSetups.zerglings.sourceKeeper,{reassignIdle: true});
+		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper,{reassignIdle: true});
 	}
 
 	private handleReaper(reaper: CombatZerg) {

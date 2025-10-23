@@ -102,11 +102,9 @@ export class FeederOverlord extends Overlord {
 		}
 
 		if (this.boosted) {
-			this.wishlist(neededFeeders, Setups.transporters.boosted, {priority: this.priority});
-			this.wishlist(8, Setups.upgraders.remote_boosted, {priority: this.priority + 1});
+			this.wishlist(neededFeeders, Setups.transporters.boosted, {priority: this.priority,reassignIdle: true});
 		} else {
-			this.wishlist(neededFeeders, Setups.transporters.default, {priority: this.priority});
-			this.wishlist(8, Setups.upgraders.remote, {priority: this.priority + 1});
+			this.wishlist(neededFeeders, Setups.transporters.default, {priority: this.priority,reassignIdle: true});
 		}
 	}
 	private supplyActions(queen: Zerg) {

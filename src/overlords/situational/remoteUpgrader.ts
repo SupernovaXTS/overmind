@@ -105,11 +105,11 @@ export class RemoteUpgradingOverlord extends Overlord {
 		}
 
 		if (this.boosted) {
-			this.wishlist(neededCarriers, Setups.transporters.boosted, {priority: this.priority});
-			this.wishlist(8, Setups.upgraders.remote_boosted, {priority: this.priority + 1});
+			this.wishlist(neededCarriers, Setups.transporters.boosted, {priority: this.priority,reassignIdle: true});
+			this.wishlist(8, Setups.upgraders.remote_boosted, {priority: this.priority + 1,reassignIdle: true});
 		} else {
-			this.wishlist(neededCarriers, Setups.transporters.default, {priority: this.priority});
-			this.wishlist(8, Setups.upgraders.remote, {priority: this.priority + 1});
+			this.wishlist(neededCarriers, Setups.transporters.default, {priority: this.priority,reassignIdle: true});
+			this.wishlist(8, Setups.upgraders.remote, {priority: this.priority + 1,reassignIdle: true});
 		}
 	}
 

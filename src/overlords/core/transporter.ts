@@ -97,9 +97,9 @@ export class TransportOverlord extends Overlord {
 		numTransporters = Math.min(numTransporters, MAX_TRANSPORTER);
 
 		if (this.transporters.length == 0) {
-			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});
+			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport,reassignIdle: true});
 		} else {
-			this.wishlist(numTransporters, setup);
+			this.wishlist(numTransporters, setup, {reassignIdle: true});
 		}
 	}
 
