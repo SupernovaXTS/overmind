@@ -266,8 +266,7 @@ export default class _Overmind implements IOvermind {
 		for (const colonyName in this.colonies) {
 			try { new SectorLogistics(this.colonies[colonyName]).publishUnfulfilledRequests(); } catch (e) { /* noop */ }
 		}
-		// Attempt to fulfill central pool requests (rate limited per tick)
-		this.try(() => SectorLogistics.processPool());
+		// Central pool is consumed by SectorTransportOverlords; no directive-based processing needed here
 		this.try(() => this.terminalNetwork.run());
 		this.try(() => this.tradeNetwork.run());
 		this.try(() => this.expansionPlanner.run());

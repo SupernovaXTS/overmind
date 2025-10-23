@@ -22,6 +22,7 @@ export const Roles = {
 	queen           : 'queen',
 	scout           : 'changeling',
 	transport       : 'transport',
+	sectorTransport : 'sectorTransport',
 	hauler          : 'hauler',
 	worker          : 'worker',
 	upgrader        : 'upgrader',
@@ -190,6 +191,15 @@ export const Setups = {
 		}),
 
 		boosted: new CarrierSetup({boosted: true}),
+
+	},
+
+	sectorTransporters: {
+
+		default: new CreepSetup(Roles.sectorTransport, {
+			pattern  : [CARRY, CARRY, MOVE],
+			sizeLimit: Infinity,
+		}),
 
 	},
 

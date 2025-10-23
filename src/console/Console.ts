@@ -3,7 +3,6 @@ import {Roles, Setups} from '../creepSetups/setups';
 import {Directive} from '../directives/Directive';
 import {Directives} from '../directives/directives';
 import {RoomIntel} from '../intel/RoomIntel';
-import {LogisticsSector} from '../logistics/LogisticsSector';
 import {Overlord} from '../overlords/Overlord';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer} from '../utilities/Cartographer';
@@ -212,94 +211,6 @@ export class OvermindConsole {
 		}
 		global.c = colony;
 		return `Current colony set to ${colony.name}`;
-	}
-
-	static getLogisticsSector(input: string | Room): LogisticsSector | undefined {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		return col?.logisticsSector;
-	}
-
-	static requestEnergy(
-		input: string | Room,
-		amount: number
-	): number | string | undefined | false {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		return col.logisticsSector.requestEnergy(amount);
-	}
-
-	static requestEnergyOk(input: string | Room, amount: number): boolean {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		return col.logisticsSector.requestEnergyOk(amount);
-	}
-
-	static requestResource(
-		input: string | Room,
-		resource: ResourceConstant | string,
-		amount: number
-	): number | string | undefined | false {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		const amt = Math.floor(Number(amount) || 0);
-		if (amt <= 0) return false;
-		const res = resource as ResourceConstant;
-		if (!((RESOURCES_ALL as ResourceConstant[]).includes(res))) return false;
-		return col.logisticsSector.requestFromPairs([[res, amt]]);
-	}
-
-	static requestResourceOk(
-		input: string | Room,
-		resource: ResourceConstant | string,
-		amount: number
-	): boolean {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		const amt = Math.floor(Number(amount) || 0);
-		if (amt <= 0) return false;
-		const res = resource as ResourceConstant;
-		if (!((RESOURCES_ALL as ResourceConstant[]).includes(res))) return false;
-		return col.logisticsSector.requestFromPairsOk([[res, amt]]);
-	}
-
-	static requestFromPairs(
-		input: string | Room,
-		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
-	): number | string | undefined | false {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		let normalized: Array<[ResourceConstant, number]>;
-		if (Array.isArray(pairs) && pairs.length === 2
-			&& typeof (pairs as any)[0] === 'string') {
-			// single tuple passed: [res, amt]
-			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
-		} else {
-			normalized = pairs as Array<[ResourceConstant, number]>;
-		}
-		return col.logisticsSector.requestFromPairs(normalized);
-	}
-
-	static requestFromPairsOk(
-		input: string | Room,
-		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
-	): boolean {
-		const roomName = OvermindConsole.normalizeRoomName(input);
-		const col = Overmind.colonies?.[roomName];
-		if (!col) return false;
-		let normalized: Array<[ResourceConstant, number]>;
-		if (Array.isArray(pairs) && pairs.length === 2
-			&& typeof (pairs as any)[0] === 'string') {
-			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
-		} else {
-			normalized = pairs as Array<[ResourceConstant, number]>;
-		}
-		return col.logisticsSector.requestFromPairsOk(normalized);
 	}
 
 	static getZerg(input: string): Zerg | undefined {
