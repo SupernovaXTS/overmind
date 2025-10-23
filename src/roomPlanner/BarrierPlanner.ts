@@ -65,7 +65,7 @@ export class BarrierPlanner {
 		
 		// Add tunnel positions (roads through walls)
 		positions = positions.concat(this.getTunnelPositions());
-			
+
 		return positions;
 	}
 
@@ -187,22 +187,40 @@ export class BarrierPlanner {
 		}
 	}
 	private getTunnelPositions(): RoomPosition[] {
-		// Only get tunnels in the owned colony room (you can't build ramparts in remotes)
-		const tunnels: RoomPosition[] = [];
+		// Get adjacent open spaces around tunnels (roads through walls) to protect them with ramparts
+		const barrierPositions: RoomPosition[] = [];
 		const roadPlanner = this.roomPlanner.roadPlanner;
-		if (!roadPlanner) return tunnels;
+		if (!roadPlanner) return barrierPositions;
 		const roomName = this.colony.room.name;
 		const packed = (roadPlanner as any).memory.roadCoordsPacked;
-		if (!packed || !packed[roomName]) return tunnels;
+		if (!packed || !packed[roomName]) return barrierPositions;
 		const terrain = Game.map.getRoomTerrain(roomName);
 		const positions = roadPlanner.getRoadPositions(roomName);
+		
 		for (const pos of positions) {
 			// A tunnel is represented by a road coordinate on wall terrain
 			if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
-				tunnels.push(pos);
+				// Add all adjacent non-wall positions around this tunnel
+				for (let dx = -1; dx <= 1; dx++) {
+					for (let dy = -1; dy <= 1; dy++) {
+						if (dx === 0 && dy === 0) continue; // Skip the tunnel itself
+						const x = pos.x + dx;
+						const y = pos.y + dy;
+						if (x < 0 || x > 49 || y < 0 || y > 49) continue; // Skip out of bounds
+						
+						// Only add positions that are not walls
+						if (terrain.get(x, y) !== TERRAIN_MASK_WALL) {
+							const adjacentPos = new RoomPosition(x, y, roomName);
+							// Avoid duplicates
+							if (!barrierPositions.some(p => p.isEqualTo(adjacentPos))) {
+								barrierPositions.push(adjacentPos);
+							}
+						}
+					}
+				}
 			}
 		}
-		return tunnels;
+		return barrierPositions;
 	}
 
 	private protectTunnels(): void {
