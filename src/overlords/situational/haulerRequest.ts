@@ -53,9 +53,12 @@ export class HaulingOverlordRequest extends Overlord {
 			return 0;
 		}
 		
+		// Get total resources to haul (default to a reasonable amount if unknown)
+		const totalResources = this.directive.totalResources || 1000;
+		
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		const tripDistance = 2 * (Pathing.distance(this.destination.pos, this.source.pos) || 0);
-		const haulingPowerNeeded = Math.min(this.directive.totalResources,
+		const haulingPowerNeeded = Math.min(totalResources,
 											this.colony.storage.store.capacity
 											- _.sum(this.colony.storage.store)) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
@@ -63,13 +66,17 @@ export class HaulingOverlordRequest extends Overlord {
 		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
 		
 		// Prevent division by zero or invalid calculations
-		if (haulingPowerPerLifetime <= 0 || haulingPowerNeeded <= 0) {
-			return 0;
+		if (haulingPowerPerLifetime <= 0) {
+			return 1; // At least spawn one hauler to attempt the job
+		}
+		
+		if (haulingPowerNeeded <= 0) {
+			return 1; // At least spawn one hauler if there's a request
 		}
 		
 		// Calculate number of haulers
 		const numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), this.maxHaulers);
-		return numHaulers;
+		return Math.max(1, numHaulers); // Always return at least 1 hauler
 	}
 
 	init() {
