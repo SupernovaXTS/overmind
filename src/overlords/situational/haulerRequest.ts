@@ -39,9 +39,16 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 
 	get calculateHaulers() {
-		if (!this.colony.storage || _.sum(this.colony.storage.store) > Energetics.settings.storage.total.cap) {
-			return;
+		// Don't spawn haulers if there's no storage or if storage is already near capacity
+		if (!this.colony.storage) {
+			return undefined;
 		}
+		const storageUsed = _.sum(this.colony.storage.store);
+		const storageCap = Energetics.settings.storage.total.cap;
+		if (storageUsed > storageCap) {
+			return undefined;
+		}
+		
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		const tripDistance = 2 * (Pathing.distance(this.destination.pos, this.source.pos) || 0);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
