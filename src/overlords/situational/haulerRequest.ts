@@ -42,15 +42,15 @@ export class HaulingOverlordRequest extends Overlord {
 		return this.colony.room;
 	}
 
-	get calculateHaulers() {
+	get calculateHaulers(): number {
 		// Don't spawn haulers if there's no storage or if storage is already near capacity
 		if (!this.colony.storage) {
-			return undefined;
+			return 0;
 		}
 		const storageUsed = _.sum(this.colony.storage.store);
 		const storageCap = Energetics.settings.storage.total.cap;
 		if (storageUsed > storageCap) {
-			return undefined;
+			return 0;
 		}
 		
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
@@ -61,6 +61,12 @@ export class HaulingOverlordRequest extends Overlord {
 		// Calculate amount of hauling each hauler provides in a lifetime
 		const haulerCarryParts = this.haulerSetup.getBodyPotential(CARRY, this.colony);
 		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
+		
+		// Prevent division by zero or invalid calculations
+		if (haulingPowerPerLifetime <= 0 || haulingPowerNeeded <= 0) {
+			return 0;
+		}
+		
 		// Calculate number of haulers
 		const numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), this.maxHaulers);
 		return numHaulers;
@@ -68,7 +74,7 @@ export class HaulingOverlordRequest extends Overlord {
 
 	init() {
 		const haulersNeeded = this.calculateHaulers;
-		if (haulersNeeded == undefined) {
+		if (haulersNeeded === 0) {
 			return;
 		}
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max;
