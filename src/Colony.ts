@@ -1,3 +1,4 @@
+import { LogisticsSector } from 'logistics/LogisticsSector';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {Roles} from './creepSetups/setups';
@@ -184,6 +185,7 @@ export class Colony {
 	linkNetwork: LinkNetwork;
 	logisticsNetwork: LogisticsNetwork;
 	transportRequests: TransportRequestGroup;
+	logisticsSector: LogisticsSector;
 	// Overlords
 	overlords: {
 		default: DefaultOverlord;
@@ -430,6 +432,7 @@ export class Colony {
 		this.linkNetwork = new LinkNetwork(this);
 		this.logisticsNetwork = new LogisticsNetwork(this);
 		this.transportRequests = new TransportRequestGroup();
+		this.logisticsSector = new LogisticsSector(this);
 		// Register a room planner
 		this.roomPlanner = new RoomPlanner(this);
 		if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
@@ -610,6 +613,7 @@ export class Colony {
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network
+		this.logisticsSector.run();											// Process deferred logistics requests
 		this.roomPlanner.run();												// Run the room planner
 		this.stats();														// Log stats per tick
 	}
