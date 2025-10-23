@@ -257,6 +257,8 @@ export class Overseer implements IOverseer {
 
 	private handleFeeding(colony: Colony): boolean {
 		const maxFeed = DirectiveFeeder.maxFeed;
+
+		if (colony.terminal) { return false }
 		if (colony.storage && colony.assets.energy > maxFeed) return false;
 		const feederSettings = Memory.settings.feeder;
 	if (!feederSettings || !feederSettings.enabled) return false;
