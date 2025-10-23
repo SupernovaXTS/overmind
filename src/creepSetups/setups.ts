@@ -16,6 +16,7 @@ export const Roles = {
 	drone           : 'drone',
 	filler          : 'filler',
 	claim           : 'infestor',
+	feeder          : 'feeder',
 	pioneer         : 'pioneer',
 	manager         : 'manager',
 	queen           : 'queen',

@@ -48,7 +48,7 @@ export class FeederOverlord extends Overlord {
 	parentColony: Colony;
 	childColony: Colony;
 
-	carriers: Zerg[];
+	feeders: Zerg[];
 
 	private boosted: boolean;
 
@@ -70,7 +70,7 @@ export class FeederOverlord extends Overlord {
 		}
 		this.upgradeSite = this.childColony.upgradeSite;
 		// If new colony or boosts overflowing to storage
-		this.carriers = this.zerg(Roles.transport);
+		this.feeders = this.zerg(Roles.feeder);
 
 		this.boosted = true; // TODO
 	}
@@ -88,24 +88,24 @@ export class FeederOverlord extends Overlord {
 	}
 
 	init() {
-		let neededCarriers = this.carriers.length;
-		if (this.carriers.length == 0) {
-			neededCarriers = 1;
+		let neededFeeders = this.feeders.length;
+		if (this.feeders.length == 0) {
+			neededFeeders = 1;
 		} else {
 			const neededCarryCapacity = this.computeNeededCarrierCapacity();
-			const currentCarryCapacity = _.sum(this.carriers, carrier =>
-				CARRY_CAPACITY * CombatIntel.getCarryPotential(carrier.creep, true));
-			const avgCarrierCapactiy = currentCarryCapacity / this.carriers.length;
+			const currentCarryCapacity = _.sum(this.feeders, feeder =>
+				CARRY_CAPACITY * CombatIntel.getCarryPotential(feeder.creep, true));
+			const avgFeederCapacity = currentCarryCapacity / this.feeders.length;
 			this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
-			neededCarriers = Math.ceil(neededCarryCapacity / avgCarrierCapactiy);
-			this.debug(`Needed carriers: ${neededCarriers}`);
+			neededFeeders = Math.ceil(neededCarryCapacity / avgFeederCapacity);
+			this.debug(`Needed feeders: ${neededFeeders}`);
 		}
 
 		if (this.boosted) {
-			this.wishlist(neededCarriers, Setups.transporters.boosted, {priority: this.priority});
+			this.wishlist(neededFeeders, Setups.transporters.boosted, {priority: this.priority});
 			this.wishlist(8, Setups.upgraders.remote_boosted, {priority: this.priority + 1});
 		} else {
-			this.wishlist(neededCarriers, Setups.transporters.default, {priority: this.priority});
+			this.wishlist(neededFeeders, Setups.transporters.default, {priority: this.priority});
 			this.wishlist(8, Setups.upgraders.remote, {priority: this.priority + 1});
 		}
 	}
@@ -198,21 +198,21 @@ export class FeederOverlord extends Overlord {
 		// }
 	}
 
-	private handleCarrier(carrier: Zerg): void {
+	private handleFeeder(feeder: Zerg): void {
 		var beQueen = false;
 		if (beQueen) {
-			this.handleQueen(carrier);
+			this.handleQueen(feeder);
 			return;
 		}
-		if (carrier.getActiveBodyparts(HEAL) > 0) {
-			carrier.heal(carrier);
+		if (feeder.getActiveBodyparts(HEAL) > 0) {
+			feeder.heal(feeder);
 		}
 
 		// Get energy from the parent colony if you need it
-		if (carrier.carry.energy == 0) {
+		if (feeder.carry.energy == 0) {
 			// If you are in the child room and there are valuable resources in a storage/terminal that isn't mine,
 			// then take those back before you go home
-			if (carrier.room == this.childColony.room && carrier.carry.getFreeCapacity() > 0) {
+			if (feeder.room == this.childColony.room && feeder.carry.getFreeCapacity() > 0) {
 				const storeStructuresNotMy =
 						  _.filter(_.compact([this.childColony.room.storage,
 											  this.childColony.room.terminal]),
@@ -222,35 +222,35 @@ export class FeederOverlord extends Overlord {
 												  structure => structure.store.getUsedCapacity(resource) > 0);
 					if (withdrawTarget) {
 						const amount = Math.min(withdrawTarget.store.getUsedCapacity(resource),
-												carrier.carry.getFreeCapacity());
-						carrier.task = Tasks.withdraw(withdrawTarget, resource, amount);
+												feeder.carry.getFreeCapacity());
+						feeder.task = Tasks.withdraw(withdrawTarget, resource, amount);
 						return;
 					}
 				}
 			}
 			// Go to the parent room for energy
-			if (!carrier.safelyInRoom(this.parentColony.room.name)) {
-				carrier.goToRoom(this.parentColony.room.name);
+			if (!feeder.safelyInRoom(this.parentColony.room.name)) {
+				feeder.goToRoom(this.parentColony.room.name);
 				return;
 			}
 
 			const target = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
-								  s => s!.store[RESOURCE_ENERGY] >= carrier.carryCapacity);
+								  s => s!.store[RESOURCE_ENERGY] >= feeder.carryCapacity);
 			if (!target) {
-				log.warning(`${this.print}: no energy withdraw target for ${carrier.print}!`);
+				log.warning(`${this.print}: no energy withdraw target for ${feeder.print}!`);
 				return;
 			}
-			if (carrier.carry.getUsedCapacity() > carrier.carry.getUsedCapacity(RESOURCE_ENERGY)) {
-				carrier.task = Tasks.transferAll(target);
+			if (feeder.carry.getUsedCapacity() > feeder.carry.getUsedCapacity(RESOURCE_ENERGY)) {
+				feeder.task = Tasks.transferAll(target);
 			} else {
-				carrier.task = Tasks.withdraw(target);
+				feeder.task = Tasks.withdraw(target);
 			}
 
 		} else {
 
 			// Go to the room
-			if (!carrier.safelyInRoom(this.childColony.room.name)) {
-				carrier.goToRoom(this.childColony.room.name);
+			if (!feeder.safelyInRoom(this.childColony.room.name)) {
+				feeder.goToRoom(this.childColony.room.name);
 				return;
 			}
 
@@ -259,31 +259,31 @@ export class FeederOverlord extends Overlord {
 			const childColony = this.childColony;
 
 			const depositPos = this.upgradeSite.batteryPos || this.upgradeSite.pos;
-			const carriersWaitingToUnload = _.filter(this.carriers, c =>
+			const feedersWaitingToUnload = _.filter(this.feeders, c =>
 				c.carry.energy > 0 && c.pos.inRangeToPos(depositPos, 5));
-			const firstCarrierInQueue = minBy(carriersWaitingToUnload, c =>
+			const firstFeederInQueue = minBy(feedersWaitingToUnload, c =>
 				c.carry.energy + (c.ticksToLive || Infinity) / 10000);
 
 			let hatcheryBattery: StructureContainer | undefined;
 			if (childColony.hatchery && childColony.hatchery.batteries.length > 0) {
 				const candidates = _.filter(childColony.hatchery.batteries,
 					b => b.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
-				hatcheryBattery = carrier.pos.findClosestByRange(candidates) as StructureContainer | null || undefined;
+				hatcheryBattery = feeder.pos.findClosestByRange(candidates) as StructureContainer | null || undefined;
 			}
 
 			// Put in storage if you can
 			if (hatcheryBattery) {
-				carrier.task = Tasks.transfer(hatcheryBattery as StructureContainer);
+				feeder.task = Tasks.transfer(hatcheryBattery as StructureContainer);
 				return;
 			}
-			if (this.childColony.storage && firstCarrierInQueue && firstCarrierInQueue != carrier) {
-				carrier.task = Tasks.transfer(this.childColony.storage);
+			if (this.childColony.storage && firstFeederInQueue && firstFeederInQueue != feeder) {
+				feeder.task = Tasks.transfer(this.childColony.storage);
 				return;
 			}
 			// If we dont have a queen in the colony, become the queen temporarily
 			if (childColony.getCreepsByRole(Roles.queen).length < 1) {
 				beQueen = true;
-				this.handleQueen(carrier);
+				this.handleQueen(feeder);
 				return;
 			}
 			else {
@@ -293,6 +293,6 @@ export class FeederOverlord extends Overlord {
 }
 
 	run() {
-		this.autoRun(this.carriers, carrier => this.handleCarrier(carrier));
+		this.autoRun(this.feeders, feeder => this.handleFeeder(feeder));
 	}
 }
