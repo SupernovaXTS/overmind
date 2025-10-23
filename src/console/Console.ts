@@ -67,13 +67,6 @@ export class OvermindConsole {
 		global.getDirective = this.getDirective;
 		global.getOverlord = this.getOverlord;
 		global.getColony = this.getColony;
-		global.getLogisticsSector = this.getLogisticsSector;
-		global.requestEnergy = this.requestEnergy;
-		global.requestEnergyOk = this.requestEnergyOk;
-		global.requestResource = this.requestResource;
-		global.requestResourceOk = this.requestResourceOk;
-		global.requestFromPairs = this.requestFromPairs;
-		global.requestFromPairsOk = this.requestFromPairsOk;
 		global.setCurrentColony = this.setCurrentColony;
 		global.buyPixels = this.buyPixels;
 		global.setPixelSettings = this.setPixelSettings;
@@ -83,6 +76,15 @@ export class OvermindConsole {
 		global.setPixelTrading = this.setPixelTrading;
 		global.setCPUUnlockTrading = this.setCPUUnlockTrading;
 		global.progress = this.progress;
+		// Sector logistics console helpers grouped under global.sector
+		(global as any).sector = {
+			pool: this.sectorPool.bind(this),
+			queue: this.sectorQueue.bind(this),
+			summary: this.sectorSummary.bind(this),
+			setBuffer: this.sectorSetBuffer.bind(this),
+			setDefaultBuffer: this.sectorSetDefaultBuffer.bind(this),
+			setRangeLimit: this.sectorSetRangeLimit.bind(this),
+		};
 	}
 
 	static refresh(): void {
@@ -174,6 +176,12 @@ export class OvermindConsole {
 		descr['setPixelTrading(enabled)'] = 'enable/disable automatic pixel buying/selling (true/false)';
 		descr['setCPUUnlockTrading(enabled)'] = 'enable/disable automatic CPU unlock buying/selling (true/false)';
 		descr['progress()'] = 'print GCL/RCL ETA overview with progress bars';
+		descr['sector.pool()'] = 'list intercolony pool requests (destination -> manifest)';
+		descr['sector.queue(room?)'] = 'show SectorTransportOverlord shipment queue for a colony (default: current)';
+		descr['sector.summary()'] = 'show summary of pool size and queues per colony';
+		descr['sector.setBuffer(resource, amount)'] = 'set per-resource buffer for intercolony shipments';
+		descr['sector.setDefaultBuffer(amount)'] = 'set default buffer for all resources (unless overridden)';
+		descr['sector.setRangeLimit(limit)'] = 'set max room linear distance for intercolony shipments';
 		// Console list
 		const descrMsg = toColumns(descr, { justify: true, padChar: '.' });
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
@@ -941,6 +949,75 @@ export class OvermindConsole {
 		}
 		Memory.settings.accountResources.tradeCPUUnlocks = enabled;
 		return `CPU unlock trading ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	// =========================
+	// Sector logistics helpers
+	// =========================
+
+	private static ensureIntercolonySettings() {
+		(Memory as any).settings = Memory.settings || {} as any;
+		(Memory.settings as any).logistics = (Memory.settings as any).logistics || {};
+		(Memory.settings as any).logistics.intercolony = (Memory.settings as any).logistics.intercolony || {};
+		(Memory.settings as any).logistics.intercolony.buffers = (Memory.settings as any).logistics.intercolony.buffers || {};
+	}
+
+	static sectorPool(): string {
+		const root = (Memory as any).Overmind || {};
+		const pool = (root.sectorLogistics && root.sectorLogistics.pool) || {};
+		const entries = _.values(pool) as Array<{colony: string; room: string; manifest: StoreDefinitionUnlimited; tick: number}>;
+		if (!entries.length) return 'Sector pool is empty';
+		let msg = `Sector pool (${entries.length}):\n`;
+		for (const e of entries) {
+			const total = _.sum(_.values(e.manifest as any) as number[]);
+			msg += `  -> ${e.colony} (${e.room}) total=${total} manifest=${JSON.stringify(e.manifest)}\n`;
+		}
+		return msg;
+	}
+
+	static sectorQueue(input?: string | Room): string {
+		const colony = input ? this.getColony(input) : (global.c as Colony | undefined);
+		if (!colony) return 'No colony specified or current colony (global.c) unset';
+		const ov = colony.overlords?.sector as any;
+		if (!ov) return `No SectorTransportOverlord found for ${colony.name}`;
+		const q = ov.memory?.queue || [];
+		const total = _.sum(q, (s: any) => s.amount || 0);
+		return `${colony.name} sector queue: ${q.length} shipments, total=${total}\n` + JSON.stringify(q, undefined, 2);
+	}
+
+	static sectorSummary(): string {
+		const root = (Memory as any).Overmind || {};
+		const pool = (root.sectorLogistics && root.sectorLogistics.pool) || {};
+		const poolCount = _.keys(pool).length;
+		let msg = `Intercolony logistics summary\n`; 
+		msg += `  Pool entries: ${poolCount}\n`;
+		for (const name in Overmind.colonies) {
+			const c = Overmind.colonies[name];
+			const ov = (c.overlords as any)?.sector;
+			if (!ov) continue;
+			const q = ov.memory?.queue || [];
+			const total = _.sum(q, (s: any) => s.amount || 0);
+			msg += `  ${c.name}: queueSize=${q.length}, queueAmount=${total}\n`;
+		}
+		return msg;
+	}
+
+	static sectorSetBuffer(resource: ResourceConstant, amount: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.buffers[resource] = Math.max(0, Math.floor(Number(amount) || 0));
+		return `Set intercolony buffer for ${resource} to ${(Memory.settings as any).logistics.intercolony.buffers[resource]}`;
+	}
+
+	static sectorSetDefaultBuffer(amount: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.defaultBuffer = Math.max(0, Math.floor(Number(amount) || 0));
+		return `Set intercolony default buffer to ${(Memory.settings as any).logistics.intercolony.defaultBuffer}`;
+	}
+
+	static sectorSetRangeLimit(limit: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.rangeLimit = Math.max(1, Math.floor(Number(limit) || 1));
+		return `Set intercolony rangeLimit to ${(Memory.settings as any).logistics.intercolony.rangeLimit}`;
 	}
 
 }
