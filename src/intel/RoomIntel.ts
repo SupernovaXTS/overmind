@@ -851,7 +851,7 @@ export class RoomIntel {
 			if (Game.time >= (room.memory[MEM.EXPIRATION] || 0)) {
 				this.recordPermanentObjects(room);
 
-				ExpansionEvaluator.computeExpansionData(room)
+				ExpansionEvaluator.computeExpansionData(room);
 
 				// Refresh cache
 				const recacheTime = room.owner ? OWNED_RECACHE_TIME : RECACHE_TIME;

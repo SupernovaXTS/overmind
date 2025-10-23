@@ -1,13 +1,13 @@
+import {OutpostDefenseOverlord } from 'overlords/defense/outpostDefense';
 import {log} from '../../console/log';
+import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
+import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
+import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
+import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {profile} from '../../profiler/decorator';
 import {CombatPlanner, SiegeAnalysis} from '../../strategy/CombatPlanner';
 import {Visualizer} from '../../visuals/Visualizer';
 import {Directive} from '../Directive';
-import {ControllerAttackerOverlord} from '../../overlords/offense/controllerAttacker';
-import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
-import {SwarmDestroyerOverlord} from '../../overlords/offense/swarmDestroyer';
-import {OutpostDefenseOverlord } from 'overlords/defense/outpostDefense';
-import {PairDestroyerOverlord} from '../../overlords/offense/pairDestroyer';
 interface DirectiveAutoSiegeMemory extends FlagMemory {
 	siegeAnalysis?: SiegeAnalysis;
 }

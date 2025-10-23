@@ -1,6 +1,9 @@
 import {Colony, ColonyMemory, getAllColonies} from '../Colony';
+import {Roles, Setups} from '../creepSetups/setups';
 import {Directive} from '../directives/Directive';
+import {Directives} from '../directives/directives';
 import {RoomIntel} from '../intel/RoomIntel';
+import {LogisticsSector} from '../logistics/LogisticsSector';
 import {Overlord} from '../overlords/Overlord';
 import {ExpansionEvaluator} from '../strategy/ExpansionEvaluator';
 import {Cartographer} from '../utilities/Cartographer';
@@ -8,13 +11,9 @@ import {EmpireAnalysis} from '../utilities/EmpireAnalysis';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, printRoomName, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
+import {Zerg} from '../zerg/Zerg';
 import {DEFAULT_OVERMIND_SIGNATURE, USE_SCREEPS_PROFILER} from '../~settings';
 import {log} from './log';
-import { Directives } from '../directives/directives';
-import { Setups, Roles } from 'creepSetups/setups';
-import { set } from 'lodash';
-import {Zerg} from '../zerg/Zerg';
-import { LogisticsSector } from 'logistics/LogisticsSector';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
@@ -107,10 +106,13 @@ export class OvermindConsole {
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
 		descr['listActiveRoomPlanners()'] = 'display a list of colonies with open room planners';
-		descr['destroyErrantStructures(roomName)'] = 'destroys all misplaced structures within an owned room';
-		descr['destroyAllHostileStructures(roomName)'] = 'destroys all hostile structures in an owned room';
+		descr['destroyErrantStructures(roomName)'] =
+			'destroys all misplaced structures within an owned room';
+		descr['destroyAllHostileStructures(roomName)'] =
+			'destroys all hostile structures in an owned room';
 		descr['destroyAllBarriers(roomName)'] = 'destroys all ramparts and barriers in a room';
-		descr['listConstructionSites(filter?)'] = 'list all construction sites matching an optional filter';
+		descr['listConstructionSites(filter?)'] =
+			'list all construction sites matching an optional filter';
 		descr['removeUnbuiltConstructionSites()'] = 'removes all construction sites with 0 progress';
 		descr['listDirectives(filter?)'] = 'list directives, matching a filter if specified';
 		descr['listPersistentDirectives()'] = 'print type, name, pos of every persistent directive';
@@ -120,10 +122,13 @@ export class OvermindConsole {
 		descr['profileMemory(root=Memory, depth=1)'] = 'scan through memory to get the size of various objects';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		descr['setRoomUpgradeRate(room, upgradeRate)'] = 'changes the rate which a room upgrades at, default is 1';
-		descr['getEmpireMineralDistribution()'] = 'returns current census of colonies and mined sk room minerals';
+		descr['getEmpireMineralDistribution()'] =
+			'returns current census of colonies and mined sk room minerals';
 		descr['getPortals(rangeFromColonies)'] = 'returns active portals within colony range';
-		descr['evaluateOutpostEfficiencies()'] = 'prints all colony outposts efficiency';
-		descr['evaluatePotentialOutpostEfficiencies()'] = 'prints all nearby unmined outposts';
+		descr['evaluateOutpostEfficiencies()'] =
+			'prints all colony outposts efficiency';
+		descr['evaluatePotentialOutpostEfficiencies()'] =
+			'prints all nearby unmined outposts';
 		descr['getDirective(flagName)'] = 'returns the directive associated with the specified flag name';
 		descr['getOverlord(directive, overlordName)'] = 'returns the overlord associated with the directive and name';
 		descr['getColony(roomName)'] = 'returns the colony associated with the specified room name';
@@ -136,16 +141,17 @@ export class OvermindConsole {
 		descr['requestFromPairsOk(roomName, pairs)'] = 'boolean variant of requestFromPairs';
 		descr['getZerg(creepName)'] = 'returns the Zerg instance associated with the specified creep name';
 		// Console list
-		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
+		const descrMsg = toColumns(descr, { justify: true, padChar: '.' });
 		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
-		msg += 'Console Commands: '.padRight(maxLineLength, '=') + '\n' + descrMsg.join('\n');
+		msg += 'Console Commands: '.padRight(maxLineLength, '=') + '\n'
+			   + descrMsg.join('\n');
 
 		msg += '\n\nRefer to the repository for more information\n';
 
 		return msg;
 	}
 	
-	static getColony(input:string): Colony | undefined {
+	static getColony(input: string): Colony | undefined {
 		return Overmind.colonies?.[input];
 	}
 
@@ -154,7 +160,10 @@ export class OvermindConsole {
 		return col?.logisticsSector;
 	}
 
-	static requestEnergy(roomName: string, amount: number): number | string | undefined | false {
+	static requestEnergy(
+		roomName: string,
+		amount: number
+	): number | string | undefined | false {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		return col.logisticsSector.requestEnergy(amount);
@@ -166,7 +175,11 @@ export class OvermindConsole {
 		return col.logisticsSector.requestEnergyOk(amount);
 	}
 
-	static requestResource(roomName: string, resource: ResourceConstant | string, amount: number): number | string | undefined | false {
+	static requestResource(
+		roomName: string,
+		resource: ResourceConstant | string,
+		amount: number
+	): number | string | undefined | false {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		const amt = Math.floor(Number(amount) || 0);
@@ -176,7 +189,11 @@ export class OvermindConsole {
 		return col.logisticsSector.requestFromPairs([[res, amt]]);
 	}
 
-	static requestResourceOk(roomName: string, resource: ResourceConstant | string, amount: number): boolean {
+	static requestResourceOk(
+		roomName: string,
+		resource: ResourceConstant | string,
+		amount: number
+	): boolean {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		const amt = Math.floor(Number(amount) || 0);
@@ -186,11 +203,15 @@ export class OvermindConsole {
 		return col.logisticsSector.requestFromPairsOk([[res, amt]]);
 	}
 
-	static requestFromPairs(roomName: string, pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]): number | string | undefined | false {
+	static requestFromPairs(
+		roomName: string,
+		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
+	): number | string | undefined | false {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		let normalized: Array<[ResourceConstant, number]>;
-		if (Array.isArray(pairs) && pairs.length === 2 && typeof (pairs as any)[0] === 'string') {
+		if (Array.isArray(pairs) && pairs.length === 2
+			&& typeof (pairs as any)[0] === 'string') {
 			// single tuple passed: [res, amt]
 			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
 		} else {
@@ -199,11 +220,15 @@ export class OvermindConsole {
 		return col.logisticsSector.requestFromPairs(normalized);
 	}
 
-	static requestFromPairsOk(roomName: string, pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]): boolean {
+	static requestFromPairsOk(
+		roomName: string,
+		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
+	): boolean {
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		let normalized: Array<[ResourceConstant, number]>;
-		if (Array.isArray(pairs) && pairs.length === 2 && typeof (pairs as any)[0] === 'string') {
+		if (Array.isArray(pairs) && pairs.length === 2
+			&& typeof (pairs as any)[0] === 'string') {
 			normalized = [[pairs[0] as ResourceConstant, pairs[1] as number]];
 		} else {
 			normalized = pairs as Array<[ResourceConstant, number]>;
@@ -211,26 +236,28 @@ export class OvermindConsole {
 		return col.logisticsSector.requestFromPairsOk(normalized);
 	}
 
-	static getZerg(input:string): Zerg | undefined {
+	static getZerg(input: string): Zerg | undefined {
 		return Overmind.zerg?.[input];
 	}
 
-	static getOverlord(input:Directive,name:string): Overlord | undefined {
+	static getOverlord(input: Directive, name: string): Overlord | undefined {
 		return input.overlords?.[name];
 	}
 
 	static printUpdateMessage(aligned = false): void {
 		const joinChar = aligned ? alignedNewline : '\n';
-		const msg = `Codebase updated or global reset. Type "help" for a list of console commands.` + joinChar +
-					color(asciiLogoSmall.join(joinChar), '#ff00ff') + joinChar +
-					OvermindConsole.info(aligned);
+		const msg =
+			`Codebase updated or global reset. Type "help" for a list of console commands.`
+			+ joinChar + color(asciiLogoSmall.join(joinChar), '#ff00ff') + joinChar
+			+ OvermindConsole.info(aligned);
 		log.alert(msg);
 	}
 
 	static printTrainingMessage(): void {
 		console.log('\n' + asciiLogoRL.join('\n') + '\n');
 	}
-	static getDirective(name:string): Directive | undefined {
+
+	static getDirective(name: string): Directive | undefined {
 		return _.find(Overmind.directives, { name });
 	}
 	static info(aligned = false): string {

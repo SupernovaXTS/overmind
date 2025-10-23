@@ -65,7 +65,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_BROWN:
 					// used when settling on a new shard as the controller ref
 					// must be placed manually
-					return undefined
+					return undefined;
 			}
 			break;
 

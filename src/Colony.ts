@@ -1,3 +1,4 @@
+import { LogisticsSector } from 'logistics/LogisticsSector';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {Roles} from './creepSetups/setups';
@@ -33,7 +34,6 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
-import { LogisticsSector } from 'logistics/LogisticsSector';
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
 	Pupa  = 1,		// Has storage but RCL < 8
@@ -306,7 +306,7 @@ export class Colony {
 		this.refreshUtilities();
 
 		// refresh in reverse order
-		_.forEachRight(this.hiveClusters, h => h.refresh())
+		_.forEachRight(this.hiveClusters, h => h.refresh());
 	}
 
 	/**
@@ -347,8 +347,8 @@ export class Colony {
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));
 
 		// these are more volatile															
-		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites))
-		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones))
+		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
+		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		this.ruins = _.flatten(_.map(this.rooms, room => room.ruins));
 
@@ -363,8 +363,8 @@ export class Colony {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
 				  'storage', 'terminal', 'factory', 'labs', 'sources', 'extractors', 'repairables', 'rechargeables');
 		// these are more volatile															
-		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites))
-		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones))
+		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
+		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		this.ruins = _.flatten(_.map(this.rooms, room => room.ruins));
 		// Re-compute assets
@@ -572,7 +572,7 @@ export class Colony {
 	 * Get a list of zerg in the colony which have a specified role name
 	 */
 	getZergByRole(roleName: string): Zerg[] {
-		return _.compact(_.map(this.getCreepsByRole(roleName), creep => Overmind.zerg[creep.name]))
+		return _.compact(_.map(this.getCreepsByRole(roleName), creep => Overmind.zerg[creep.name]));
 	}
 
 	/**
@@ -600,7 +600,7 @@ export class Colony {
 		this.linkNetwork.init();											// Initialize link network
 		this.roomPlanner.init();											// Initialize the room planner
 		if (Game.time % EXPANSION_EVALUATION_FREQ == 5 * this.id) {			// Re-evaluate expansion data if needed
-			log.debug(`refreshExpansionData: ${this.room.name}`)
+			log.debug(`refreshExpansionData: ${this.room.name}`);
 			ExpansionEvaluator.refreshExpansionData(this.memory.expansionData, this.room.name);
 		}
 	}

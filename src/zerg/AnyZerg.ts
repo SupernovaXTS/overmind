@@ -219,7 +219,7 @@ export abstract class AnyZerg {
 	}
 
 	move(direction: DirectionConstant, force = false) {
-		if (this.blockMovement && !force) return ERR_BUSY
+		if (this.blockMovement && !force) return ERR_BUSY;
 
 		const result = this.creep.move(direction);
 		if (result == OK) {
@@ -339,20 +339,20 @@ export abstract class AnyZerg {
 		return Overmind.colonyMap[this.room.name] == this.memory[MEM.COLONY];
 	}
 	get inFriendlyRoom(): boolean {
-		var room = this.room
-		return (room.isColony || room.isOutpost)
+		const room = this.room;
+		return (room.isColony || room.isOutpost);
 	}
 	getCurrentColony() {
-		var colony = Overmind.colonies[this.room.name]
+		const colony = Overmind.colonies[this.room.name];
 		if (colony) {
-			return colony
+			return colony;
 		}
 	}
 	towersAvaliable(colony: Colony) {
 		if (colony && colony.towers.length >= 1) {
-			return true
+			return true;
 		}
-		return false
+		return false;
 	}
 	// Movement and location -------------------------------------------------------------------------------------------
 
@@ -388,7 +388,8 @@ export abstract class AnyZerg {
 	/**
 	 * Kite around hostiles in the room
 	 */
-	kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
+	kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles,
+		 options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange: 5
 		});
@@ -413,9 +414,9 @@ export abstract class AnyZerg {
 			return false;
 		}
 
-		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) return false
+		if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) return false;
 		// if bootstrapping keep going
-		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false
+		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false;
 
 		const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
 		if (fleeing) {
@@ -461,9 +462,9 @@ export abstract class AnyZerg {
 			}
 		}
 		
-		if (this.room.isSafe && this.hits == this.hitsMax) return false
+		if (this.room.isSafe && this.hits == this.hitsMax) return false;
 		// if in colony room and you are healthy, just do your job
-		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false
+		if (this.colony?.room.name == this.room.name && this.hits == this.hitsMax) return false;
 
 		if (Cartographer.roomType(this.room.name) == ROOMTYPE_SOURCEKEEPER) {
 			// If you're in an SK room, you can skip the danger avoidance as long as you have max hp, there are no

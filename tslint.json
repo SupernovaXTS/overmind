@@ -5,6 +5,7 @@
   "linterOptions": {
     "exclude": [
       "src/deprecated/*.ts",
+      "src/profiler/*.js",
       "node_modules/**/*"
     ]
   },

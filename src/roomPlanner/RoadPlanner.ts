@@ -292,7 +292,8 @@ export class RoadPlanner {
 			roomPlannerRoads = this.roomPlanner.map[STRUCTURE_ROAD];
 		} else { // retrieve from memory
 			if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
-				const layout = this.roomPlanner.getStructureMapForBunkerAt(this.roomPlanner.memory.bunkerData.anchor, this.colony.controller.level);
+				const layout = this.roomPlanner.getStructureMapForBunkerAt(
+					this.roomPlanner.memory.bunkerData.anchor, this.colony.controller.level);
 				roomPlannerRoads = layout[STRUCTURE_ROAD];
 			} else if (this.roomPlanner.memory.mapsByLevel) {
 				roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[this.colony.controller.level][STRUCTURE_ROAD],
@@ -354,7 +355,7 @@ export class RoadPlanner {
 				const ret = pos.createConstructionSite(STRUCTURE_ROAD);
 				if (ret == OK) {
 					count--;
-					continue
+					continue;
 				}
 
 				if (ret == ERR_NOT_OWNER) {
@@ -407,7 +408,7 @@ export class RoadPlanner {
 	private cleanRoadCoverage() {
 		const colonyDestinations = this.colony.destinations.map(dest => `${dest.pos.roomName}:${dest.pos.x}:${dest.pos.y}`);
 		for (const roadCoverageKey of Object.keys(this.memory.roadCoverages)) {
-			if (colonyDestinations.includes(roadCoverageKey)) continue
+			if (colonyDestinations.includes(roadCoverageKey)) continue;
 			
 			log.alert(`Colony does not have destination of ${roadCoverageKey}, deleting.`);
 			delete this.memory.roadCoverages[roadCoverageKey];
@@ -427,12 +428,12 @@ export class RoadPlanner {
 		// Once in a blue moon, recalculate the entire network and write to memory to keep it up to date
 		if (this.colony.level >= RoadPlanner.settings.buildRoadsAtRCL && this.roomPlanner.storagePos) {
 			if (Game.time % RoadPlanner.settings.recalculateRoadNetworkInterval == this.colony.id) {
-				log.debug("recalculate road network")
+				log.debug('recalculate road network');
 				this.recalculateRoadNetwork(this.roomPlanner.storagePos, this.roomPlanner.getObstacles(8));
 			}
 
 			if (Game.time % RoadPlanner.settings.recomputeCoverageInterval == this.colony.id) {
-				log.debug("recalculate road coverage")
+				log.debug('recalculate road coverage');
 				this.cleanRoadCoverage();
 				this.recomputeRoadCoverages(this.roomPlanner.storagePos);
 			}

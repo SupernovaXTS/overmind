@@ -1,4 +1,6 @@
+import { max } from 'lodash';
 import {SpawnGroup} from 'logistics/SpawnGroup';
+import { getMyUsername } from 'utilities/utils';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveControllerAttack} from '../../directives/offense/controllerAttack';
@@ -6,8 +8,6 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import { getMyUsername } from 'utilities/utils';
-import { max } from 'lodash';
 
 /**
  * Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
@@ -31,7 +31,7 @@ export class ControllerAttackerOverlord extends Overlord {
 		super.refresh();
 		if (!this.room || !this.room.controller) {
 			this.attackPositions = [];
-			return
+			return;
 		}
 		this.attackPositions = this.room.controller.pos.availableNeighbors(true);
 		this.assignments = this.getPositionAssignments();
@@ -49,50 +49,56 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	init() {
-		if ((this.controllerIsNeutral() != true && this.controllerAttackers.length < this.attackPositions.length) && !(this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0)) {
+		if ((this.controllerIsNeutral() != true && this.attackPositions.length &&
+			this.controllerAttackers.length < this.attackPositions.length) &&
+			!(this.room && this.room.controller && this.room.controller.upgradeBlocked &&
+			this.room.controller.upgradeBlocked > 0)) {
 			// spawn one infestor for each tile that is close to the controller
-			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true, reassignIdle: true});
+			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker,
+				{noLifetimeFilter: true, reassignIdle: true});
 		}
 	}
 
 	private controllerIsNeutral(): boolean | undefined {
-		if (!this.room || !this.room.controller) return undefined
-		if (this.room.controller.reservation && !this.room.controller.reservedByMe) return false
-		if (this.room.controller.owner && this.room.controller.owner.username != getMyUsername()) return false
-		if (this.room.controller.level > 0) return false
-		return true
+		if (!this.room || !this.room.controller) return undefined;
+		if (this.room.controller.reservation && !this.room.controller.reservedByMe) return false;
+		if (this.room.controller.owner && this.room.controller.owner.username != getMyUsername()) return false;
+		if (this.room.controller.level > 0) return false;
+		return true;
 	}
 
 	run() {
-		if (!this.room || !this.room.controller) return
-		if (this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0) return
+		if (!this.room || !this.room.controller) return;
+		if (this.room && this.room.controller && this.room.controller.upgradeBlocked &&
+			this.room.controller.upgradeBlocked > 0) return;
 		// TODO sign controller
-		//(infestor.signController(this.room.controller, 'this is mine!') == OK);
-		var ready = 0
+		// (infestor.signController(this.room.controller, 'this is mine!') == OK);
+		let ready = 0;
 		for (const controllerAttacker of this.controllerAttackers) {
 			const attackPos = this.assignments[controllerAttacker.name];
-			if (this.room && this.room.controller && this.room.controller.upgradeBlocked && this.room.controller.upgradeBlocked > 0) return
+			if (this.room && this.room.controller && this.room.controller.upgradeBlocked &&
+				this.room.controller.upgradeBlocked > 0) return;
 			if (!attackPos) {
 				log.error(`No attack position for ${controllerAttacker.print}!`);
-				continue
+				continue;
 			}
 
 			if (!attackPos.inRangeTo(controllerAttacker.pos, 0)) {
 				controllerAttacker.goTo(attackPos);
-				continue
+				continue;
 			}
 
 			if (this.controllerIsNeutral()) {
-				log.debug(`Controller already neutral: ${this.room?.name}`)
-				return
+				log.debug(`Controller already neutral: ${this.room?.name}`);
+				return;
 			}
 			if (!(controllerAttacker.getActiveBodyparts(CLAIM) == controllerAttacker.getBodyparts(CLAIM))) {
-				controllerAttacker.retire()
-				return
+				controllerAttacker.retire();
+				return;
 				// We got attacked on the way and cant use all of our parts, suicide
 			}
 			if (attackPos.inRangeTo(controllerAttacker.pos,0)) {
-				ready += 1
+				ready += 1;
 			}
 			
 
@@ -109,11 +115,11 @@ export class ControllerAttackerOverlord extends Overlord {
 				*/
 				// FIXME: type it
 				if (ret != 0 && ret != -11) {
-					log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`)
-					continue
+					log.error(`Attacking Controller: ${this.room.controller.pos} Ret: ${ret}`);
+					continue;
 				
 				}
-				this.finish(false)
+				this.finish(false);
 			}
 		}
 	}

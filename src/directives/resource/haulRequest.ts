@@ -1,8 +1,8 @@
+import { Colony } from 'Colony';
+import { HaulingOverlordRequest } from 'overlords/situational/haulerRequest';
 import {$} from '../../caching/GlobalCache';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-import { HaulingOverlordRequest } from 'overlords/situational/haulerRequest';
-import { Colony } from 'Colony';
 
 
 interface DirectiveHaulRequestMemory extends FlagMemory {
@@ -56,10 +56,10 @@ export class DirectiveHaulRequest extends Directive {
 		if (this.memory.destination) this._destination = this.memory.destination;
 	}
 
-	public get manifest() {
-		var request = this.memory.manifest || {};
-		var store = this.store || {};
-		var manifest: StoreDefinitionUnlimited = {};
+	get manifest() {
+		const request = this.memory.manifest || {};
+		const store = this.store || {};
+		const manifest: StoreDefinitionUnlimited = {};
 		if (store) {
 			for (const resourceType in store) {
 				if (request[resourceType as ResourceConstant] == undefined) {
@@ -68,8 +68,8 @@ export class DirectiveHaulRequest extends Directive {
 				if (store[resourceType as ResourceConstant] == undefined) {
 					store[resourceType as ResourceConstant] = 0;
 				}
-				var requestResource = request[resourceType as ResourceConstant] || 0;
-				var sourceResource = store[resourceType as ResourceConstant] || 0;
+				const requestResource = request[resourceType as ResourceConstant] || 0;
+				const sourceResource = store[resourceType as ResourceConstant] || 0;
 				if (requestResource == 0 || sourceResource == 0) {
 					continue;
 				}

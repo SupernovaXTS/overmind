@@ -133,7 +133,7 @@ export class Hatchery extends HiveCluster {
 	}
 
 	spawnMoarOverlords() {
-		return BunkerQueenOverlord.canFunction(this.colony) ? new BunkerQueenOverlord(this) : new QueenOverlord(this)
+		return BunkerQueenOverlord.canFunction(this.colony) ? new BunkerQueenOverlord(this) : new QueenOverlord(this);
 	}
 
 	/**

@@ -1,14 +1,14 @@
+import {DirectiveColonizeShard} from 'directives/colony/colonize_shard';
+import { property } from 'lodash';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {Directive} from '../../directives/Directive';
-import {DirectiveColonizeShard} from 'directives/colony/colonize_shard';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import { property } from 'lodash';
 
 /**
  * Spawn pioneers - early workers which help to build a spawn in a new colony, then get converted to workers or drones
@@ -35,13 +35,13 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	init() {
-		var type = this.directive.type as 'armored' | 'default';
-		var numSources = this.room?.sources
-		var numPos = 0
+		const type = this.directive.type as 'armored' | 'default';
+		const numSources = this.room?.sources;
+		let numPos = 0;
 		
 		if (numSources) {
-			for (var source of numSources) {
-				numPos += source.pos.availableNeighbors(true).length
+			for (const source of numSources) {
+				numPos += source.pos.availableNeighbors(true).length;
 			}
 		}
 		
@@ -58,20 +58,21 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
-		var viable = true
-		if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable)
+		let viable = true;
+		if (pioneer.getActiveBodyparts(WORK) <= 0 || !viable) {
 			// If we don't have any active work parts we retire
-			pioneer.retire()
+			pioneer.retire();
+		}
 		if (pioneer.room != this.room || pioneer.pos.isEdge) {
 			pioneer.goTo(this.pos, {pathOpts: {ensurePath: true, avoidSK: true}});
-			return
+			return;
 		}
 
 		if (!this.room.controller && this.directive.directiveName == DirectiveColonizeShard.directiveName) {
 			// this is a portal room, just go on the portal
 			// the creep is already in the room
-			pioneer.goToSameRoom(this.pos)
-			return
+			pioneer.goToSameRoom(this.pos);
+			return;
 		}
 
 		// Remove any blocking structures preventing claimer from reaching controller
@@ -87,7 +88,7 @@ export class PioneerOverlord extends Overlord {
 			
 			pioneer.task = Tasks.recharge();
 			if (pioneer.task && !pioneer.task.isValidTask()) {
-				viable = false
+				viable = false;
 			}	
 		} else if (this.room && this.room.controller && (this.room.controller.ticksToDowngrade <
 															(0.1 * CONTROLLER_DOWNGRADE[this.room.controller.level])
@@ -96,14 +97,14 @@ export class PioneerOverlord extends Overlord {
 			// Save controller if it's about to downgrade or if you have nothing else to do
 			pioneer.task = Tasks.upgrade(this.room.controller);
 			if (pioneer.task && !pioneer.task.isValidTask()) {
-				viable = false
+				viable = false;
 			}
 		} else if (this.spawnSite) {
 			pioneer.task = Tasks.build(this.spawnSite);
-			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false;}
 		} else if (this.room.spawns?.length > 0) { 
-			pioneer.task = Tasks.transfer(this.room.spawns[0])
-			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false}
+			pioneer.task = Tasks.transfer(this.room.spawns[0]);
+			if (pioneer.task && !pioneer.task.isValidTask()) {viable = false;}
 		}
 		
 	}

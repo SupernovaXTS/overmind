@@ -6,10 +6,10 @@ import {AttackStructurePriorities, AttackStructureScores} from '../priorities/pr
 import {profile} from '../profiler/decorator';
 import {maxBy} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
+import {RANGES} from '../zerg/AnyZerg';
 import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {MY_USERNAME} from '../~settings';
-import {RANGES} from '../zerg/AnyZerg';
 
 @profile
 export class CombatTargeting {
@@ -119,7 +119,8 @@ export class CombatTargeting {
 	/**
 	 * Finds the best (friendly) target in range that a zerg can currently heal
 	 */
-	static findBestHealingTargetInRange(healer: Zerg, range = RANGES.RANGED_HEAL, friendlies = healer.room.friendlies): Creep | undefined {
+	static findBestHealingTargetInRange(healer: Zerg, range = RANGES.RANGED_HEAL,
+										 friendlies = healer.room.friendlies): Creep | undefined {
 		const tempHitsPredicted: { [id: string]: number } = {};
 		return maxBy(_.filter(friendlies, f => f.hits < f.hitsMax && healer.pos.getRangeTo(f) <= range), friend => {
 			if (friend.hitsPredicted == undefined) friend.hitsPredicted = friend.hits;

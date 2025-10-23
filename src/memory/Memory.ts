@@ -3,12 +3,12 @@ import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {isIVM} from '../utilities/utils';
 import {
+	ALLIES,
 	DEFAULT_OPERATION_MODE,
 	DEFAULT_OVERMIND_SIGNATURE,
 	MY_USERNAME,
 	PROFILER_COLONY_LIMIT,
-	USE_SCREEPS_PROFILER,
-	ALLIES
+	USE_SCREEPS_PROFILER
 } from '../~settings';
 
 export enum Autonomy {
@@ -58,7 +58,7 @@ export class Mem {
 		}
 
 		// only run the reset Bucket on shard3 so we can generate pixels on the others
-		if (Game.cpu.bucket < 500 && Game.shard.name == "shard3") {
+		if (Game.cpu.bucket < 500 && Game.shard.name == 'shard3') {
 			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
@@ -121,7 +121,7 @@ export class Mem {
 	static garbageCollect(quick?: boolean) {
 		if (!global.gc) {
 			// sometimes garbage collection isn't available
-			return
+			return;
 		}
 
 		const start = Game.cpu.getUsed();

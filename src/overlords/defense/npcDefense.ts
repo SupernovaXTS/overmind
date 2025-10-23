@@ -68,23 +68,24 @@ export class DefenseNPCOverlord extends Overlord {
 	}
 
 	init() {
-		let amount = 0
+		let amount = 0;
 		if (!this.room && !this.colony.observer) {
 			// i have no vision, at least spawn one defender
-			amount = 1
+			amount = 1;
 		}
 
 		if (this.room && (this.room.invaders.length > 0 || this.room.invaderCore || RoomIntel.isInvasionLikely(this.room))) {
-			amount = 1
+			amount = 1;
 		}
 
-		const setup = this.colony.stage == ColonyStage.Larva ? CombatSetups.broodlings.early : CombatSetups.broodlings.default
+		const setup = this.colony.stage == ColonyStage.Larva ? CombatSetups.broodlings.early
+																: CombatSetups.broodlings.default;
 		this.wishlist(amount, setup, {reassignIdle: true});
 	}
 
 	run() {
 		// TODO: maybe switch to guard.autoCombat
-		this.autoRun(this.guards, guard => this.handleGuard(guard))
+		this.autoRun(this.guards, guard => this.handleGuard(guard));
 		
 	}
 }

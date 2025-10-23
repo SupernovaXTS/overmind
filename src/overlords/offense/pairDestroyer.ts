@@ -100,15 +100,15 @@ export class PairDestroyerOverlord extends Overlord {
 
 	private handleHealer(healer: CombatZerg): void {
 		// If we can't heal we should either return to the colony or suicide
-		var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()))
+		const towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
 		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
-            if (this.colony.towers.length > 0) {
-                healer.goToRoom(this.colony.room.name);
-            }
-            else {
-                healer.suicide();
-            }
-        }
+			if (this.colony.towers.length > 0) {
+				healer.goToRoom(this.colony.room.name);
+			}
+			else {
+				healer.suicide();
+			}
+		}
 		// If there are no hostiles in the designated room, run medic actions
 		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
 			healer.doMedicActions(this.room.name);

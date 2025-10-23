@@ -58,7 +58,7 @@ export class ExtractorOverlord extends Overlord {
 	}
 
 	private registerOutputRequests(): void {
-		if (!this.container) return
+		if (!this.container) return;
 		const exhausted = this.mineral?.mineralAmount === 0
 				&& (this.mineral?.ticksToRegeneration ?? 0) > 0;
 		const outputThreshold = this.drones.length == 0 ? this.container.store.getCapacity() : 0;

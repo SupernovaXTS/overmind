@@ -9,12 +9,13 @@ import {TaskHarvest} from './harvest';
 import {pickupTaskName, TaskPickup} from './pickup';
 import {TaskWithdraw, withdrawTaskName} from './withdraw';
 
-export type rechargeTargetType = HasRef & _HasRoomPosition;  // This is handled better in the Tasks.recharge() dispatcher
+// This is handled better in the Tasks.recharge() dispatcher
+export type rechargeTargetType = HasRef & _HasRoomPosition;
 // export type rechargeTargetType = null;
 export const rechargeTaskName = 'recharge';
 
 // This is a "dispenser task" which is not itself a valid task, but dispenses a task when assigned to a creep.
-const rechargeWorkerBootstrapping = true
+const rechargeWorkerBootstrapping = true;
 @profile
 export class TaskRecharge extends Task<rechargeTargetType> {
 

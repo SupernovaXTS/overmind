@@ -712,9 +712,9 @@ export class RoomPlanner {
 
 		if (this.colony.defcon > DEFCON.safe) {
 			// queue up one building after another to prevent players from demolishing construction sites by walking over them
-			remainingSites = 1
+			remainingSites = 1;
 			// only allow one construction site at a time
-			if (this.colony.constructionSites.length > 1) return
+			if (this.colony.constructionSites.length > 1) return;
 		}
 
 		// Recall the appropriate map
@@ -764,7 +764,7 @@ export class RoomPlanner {
 		}
 
 		// Build extractor on mineral deposit if not already present
-		const mineral = this.colony.room.mineral
+		const mineral = this.colony.room.mineral;
 		if (mineral) {
 			const extractor = mineral.pos.lookForStructure(STRUCTURE_EXTRACTOR);
 			if (!extractor) {

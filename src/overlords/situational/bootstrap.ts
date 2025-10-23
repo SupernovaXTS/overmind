@@ -106,7 +106,7 @@ export class BootstrappingOverlord extends Overlord {
 			} else {
 				
 				// wish for rcl fillers
-				var fillerAmt = Math.ceil(this.colony.controller.level);
+				const fillerAmt = Math.ceil(this.colony.controller.level);
 				this.wishlist(fillerAmt, Setups.filler);
 				this.wishlist(1,Setups.transporters.default);
 				this.debug(`Enqueueing bootstrap filler (total fillers: ${this.fillers.length}/${fillerAmt})`);
@@ -114,7 +114,7 @@ export class BootstrappingOverlord extends Overlord {
 			}
 		}
 		// bugfix
-		//this.wishlist(2,Setups.filler)
+		// this.wishlist(2,Setups.filler)
 		// Then spawn the rest of the needed miners
 		this.spawnBootstrapMiners();
 	}
@@ -129,7 +129,8 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private rechargeActions(filler: Zerg) {
-		const target = filler.pos.findClosestByRange(this.room.droppedEnergy) || filler.pos.findClosestByRange(this.withdrawStructures);
+		const target = filler.pos.findClosestByRange(this.room.droppedEnergy) ||
+			filler.pos.findClosestByRange(this.withdrawStructures);
 		if (target) {
 			if (isResource(target)) {
 				filler.task = Tasks.pickup(target);
@@ -150,6 +151,6 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	run() {
-		this.autoRun(this.fillers, filler => this.handleFiller(filler))
+		this.autoRun(this.fillers, filler => this.handleFiller(filler));
 	}
 }

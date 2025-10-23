@@ -557,7 +557,8 @@ export abstract class Overlord {
 	/**
 	 * Standard sequence of actions for running task-based creeps
 	 */
-	autoRun<T extends Zerg | CombatZerg>(roleCreeps: T[], taskHandler: (creep: T) => void, fleeCallback?: (creep: T) => boolean) {
+	autoRun<T extends Zerg | CombatZerg>(roleCreeps: T[], taskHandler: (creep: T) => void,
+										  fleeCallback?: (creep: T) => boolean) {
 		for (const creep of roleCreeps) {
 			if (creep.spawning) {
 				continue;

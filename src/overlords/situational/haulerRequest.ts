@@ -1,4 +1,6 @@
+import { Colony } from 'Colony';
 import { CreepSetup } from 'creepSetups/CreepSetup';
+import { DirectiveHaulRequest } from 'directives/resource/haulRequest';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveHaul} from '../../directives/resource/haul';
@@ -9,8 +11,6 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import { DirectiveHaulRequest } from 'directives/resource/haulRequest';
-import { Colony } from 'Colony';
 
 /**
  * Spawns special-purpose haulers for transporting resources to/from a specified target
@@ -47,7 +47,7 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 
 	init() {
-		var haulersNeeded = this.calculateHaulers();
+		const haulersNeeded = this.calculateHaulers();
 		if (haulersNeeded == undefined) {
 			return;
 		}

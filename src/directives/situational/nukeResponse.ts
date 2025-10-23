@@ -66,7 +66,7 @@ export class DirectiveNukeResponse extends Directive {
 						// Build a rampart if there isn't one already
 						if (!pos.lookForStructure(STRUCTURE_RAMPART)) {
 							const res = pos.createConstructionSite(STRUCTURE_RAMPART);
-							if (res == ERR_FULL) break
+							if (res == ERR_FULL) break;
 						}
 					}
 					log.alert(`Incoming nuke at ${nuke.pos.print}! Time until impact: ${nuke.timeToLand}`);

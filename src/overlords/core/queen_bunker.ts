@@ -73,10 +73,10 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	static canFunction(colony: Colony): boolean {
-		return (colony.layout === "bunker"
+		return (colony.layout === 'bunker'
 			&& insideBunkerBounds(colony.spawns[0].pos, colony)
 			&& (!!colony.storage || !!colony.terminal)
-		)
+		);
 	}
 
 	/**

@@ -69,14 +69,15 @@ export class WorkerOverlord extends Overlord {
 				if (structure.structureType == STRUCTURE_CONTAINER) {
 					// only repair containers in owned room
 					if (structure.pos.roomName != this.colony.name) {
-						return false
+						return false;
 					}
 
 					return structure.hits < 0.5 * structure.hitsMax;
 				}
 
-				if (!this.colony.roomPlanner.structureShouldBeHere(structure.structureType, structure.pos))
-					return false
+				if (!this.colony.roomPlanner.structureShouldBeHere(structure.structureType, structure.pos)) {
+					return false;
+				}
 
 				return structure.hits < structure.hitsMax;
 			}));
@@ -87,7 +88,7 @@ export class WorkerOverlord extends Overlord {
 		// Filter constructionSites to only build valid ones
 		const room = this.colony.room as any;
 		const level = this.colony.controller.level;
-		this.constructionSites = _.filter(this.colony.constructionSites, function (site) {
+		this.constructionSites = _.filter(this.colony.constructionSites, function(site) {
 			// If site will be more than max amount of a structure at current level, ignore (happens after downgrade)
 			const structureAmount = room[site.structureType + 's'] ? room[site.structureType + 's'].length :
 				(room[site.structureType] ? 1 : 0);
@@ -168,7 +169,7 @@ export class WorkerOverlord extends Overlord {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 30; // Maximum number of workers to spawn
-				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function (site) {
+				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site) {
 					const overlord = site.overlords.mine;
 					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));
 					const saturation = Math.min(miningPowerAssigned / overlord.miningPowerNeeded, 1);
@@ -227,10 +228,11 @@ export class WorkerOverlord extends Overlord {
 		if (this.useBoostedRepair) {
 			setup = CreepSetup.boosted(setup, ['construct']);
 		}
-		if (!this.colony.state.bootstrapping)
+		if (!this.colony.state.bootstrapping) {
 			this.wishlist(numWorkers, setup);
+		}
 		else {
-			this.wishlist(0,setup)
+			this.wishlist(0,setup);
 		}
 	}
 
@@ -395,7 +397,7 @@ export class WorkerOverlord extends Overlord {
 			// Acquire more energy
 			const workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 200 : 100;
 			worker.task = Tasks.recharge(workerWithdrawLimit);
-			return
+			return;
 		}
 		if (this.colony.state.bootstrapping) {
 			this.handleBootstrapping(worker);
@@ -427,7 +429,8 @@ export class WorkerOverlord extends Overlord {
 			if (this.nukeFortifyActions(worker, this.nukeDefenseRamparts)) return;
 		}
 		// Build and maintain roads
-		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe && !this.colony.state.bootstrapping) {
+		if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe &&
+			!this.colony.state.bootstrapping) {
 			if (this.pavingActions(worker)) return;
 		}
 		// Dismantle marked structures

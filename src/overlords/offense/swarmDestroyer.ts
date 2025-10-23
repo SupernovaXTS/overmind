@@ -1,3 +1,4 @@
+import {DirectiveAutoSiege} from 'directives/offense/autoSiege';
 import {$} from '../../caching/GlobalCache';
 import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
@@ -11,7 +12,6 @@ import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Swarm} from '../../zerg/Swarm';
 import {SwarmOverlord} from '../SwarmOverlord';
-import {DirectiveAutoSiege} from 'directives/offense/autoSiege';
 const DEBUG = false;
 
 /**

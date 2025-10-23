@@ -4,8 +4,8 @@ import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {GoalFinder} from '../targeting/GoalFinder';
 import {randomHex} from '../utilities/utils';
-import {Zerg} from './Zerg';
 import {RANGES} from './AnyZerg';
+import {Zerg} from './Zerg';
 
 interface CombatZergMemory extends CreepMemory {
 	recovering: boolean;
@@ -62,7 +62,7 @@ export class CombatZerg extends Zerg {
 			}
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	findSwarm(partners: CombatZerg[], maxByRole: { [role: string]: number },
@@ -128,7 +128,7 @@ export class CombatZerg extends Zerg {
 			return this.heal(this);
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	/**
@@ -161,7 +161,7 @@ export class CombatZerg extends Zerg {
 			return this.attack(target);
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	/**
@@ -181,7 +181,7 @@ export class CombatZerg extends Zerg {
 			}
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	private kiteIfNecessary() { // Should filter by melee at some point
@@ -192,7 +192,7 @@ export class CombatZerg extends Zerg {
 			return this.kite(nearbyHostiles);
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	/**
@@ -203,7 +203,7 @@ export class CombatZerg extends Zerg {
 			this, allowRangedHeal ? RANGES.RANGED_HEAL : RANGES.HEAL, friendlies,
 		);
 
-		if (!target) return undefined
+		if (!target) return undefined;
 
 		this.debug(`Heal target: ${target}`);
 		if (this.pos.getRangeTo(target) <= RANGES.HEAL) {
@@ -295,7 +295,7 @@ export class CombatZerg extends Zerg {
 			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], avoid, options);
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	autoBunkerCombat(roomName: string, verbose = false) {
@@ -326,7 +326,7 @@ export class CombatZerg extends Zerg {
 			});
 		}
 
-		return undefined
+		return undefined;
 	}
 
 	needsToRecover(recoverThreshold  = CombatIntel.minimumDamageTakenMultiplier(this.creep) < 1 ? 0.85 : 0.75,

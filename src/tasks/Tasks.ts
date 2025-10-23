@@ -104,7 +104,7 @@ export class Tasks {
 	// }
 
 	static goTo(target: goToTargetType, options = {} as TaskOptions): TaskGoTo {
-		return new TaskGoTo(target, options)
+		return new TaskGoTo(target, options);
 	}
 
 	static goToRoom(roomName: string, options = {} as TaskOptions): TaskGoToRoom {

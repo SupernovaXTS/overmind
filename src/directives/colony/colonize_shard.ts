@@ -29,7 +29,7 @@ export class DirectiveColonizeShard extends Directive {
 		super(flag, colony => colony.level >= DirectiveColonizeShard.requiredRCL
 							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
 		// Remove if misplaced
-		const roomType = Cartographer.roomType(this.pos.roomName)
+		const roomType = Cartographer.roomType(this.pos.roomName);
 		if (roomType != ROOMTYPE_CONTROLLER && roomType != ROOMTYPE_CROSSROAD) {
 			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller or crossroad (portal) room; ` +
 						`removing directive!`);
@@ -55,6 +55,6 @@ export class DirectiveColonizeShard extends Directive {
 		// TODO remove directive once zergs are gone
 		// NOTE: currently this needs to manually removed once bootstrapped
 		// Remove the directive
-		//this.remove();
+		// this.remove();
 	}
 }

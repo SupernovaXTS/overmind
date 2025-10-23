@@ -187,16 +187,16 @@ export class MiningOverlord extends Overlord {
 		const dismantleStructures: Structure[] = [];
 		if (!this.room) {
 			log.error(`MiningOverlord.getDismantleStructures() called with no vision in room ${this.pos.roomName}!`);
-			return []
+			return [];
 		}
 		
 		// cannot calculate blocking position when in different room than target
 		if (this.room.name != this.colony.room.name) {
 			if (this.memory.dismantleNeeded) {
-				log.error(`dismantleNeeded is true but cannot find blockingPos when in outpost room: ${this.pos.roomName}`)
+				log.error(`dismantleNeeded is true but cannot find blockingPos when in outpost room: ${this.pos.roomName}`);
 			}
 
-			return []
+			return [];
 		}
 
 		const targets = _.compact([...this.room.sources, this.room.controller]) as RoomObject[];

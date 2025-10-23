@@ -1,5 +1,5 @@
-import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {log} from '../../console/log';
+import {CombatCreepSetup} from '../../creepSetups/CombatCreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
 import {CombatIntel, CombatPotentials} from '../../intel/CombatIntel';
@@ -35,7 +35,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleHealer(healer: CombatZerg) {
-		var towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()))
+		const towersAvaliable = (healer.inFriendlyRoom && healer.towersAvaliable(healer.getCurrentColony()));
 		if (CombatIntel.isHealer(healer) && healer.getActiveBodyparts(HEAL) == 0 && !towersAvaliable) {
 			if (this.colony.towers.length > 0) {
 				return healer.goToRoom(this.colony.room.name); // go get healed
@@ -74,12 +74,12 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 	private getEnemyPotentials(): CombatPotentials {
 		const d = {attack: 0, ranged: 1, heal: 0,};
-		if (!this.room) return d
+		if (!this.room) return d;
 
 		const pot = CombatIntel.getCombatPotentials(this.room.hostiles);
-		if (!pot.ranged && !pot.attack && !pot.heal) return d
+		if (!pot.ranged && !pot.attack && !pot.heal) return d;
 
-		return pot
+		return pot;
 	}
 
 	init() {

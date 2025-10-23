@@ -1,13 +1,13 @@
 import {$} from '../caching/GlobalCache';
 import {Colony, ColonyStage} from '../Colony';
 import {log} from '../console/log';
+import {Roles,Setups} from '../creepSetups/setups';
 import {Mem} from '../memory/Memory';
 import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
 import {HiveCluster} from './_HiveCluster';
-import {Setups,Roles} from '../creepSetups/setups';
 interface UpgradeSiteMemory {
 	stats: { 
 		downtime: number,
@@ -40,7 +40,9 @@ export class UpgradeSite extends HiveCluster {
 	lastProgress: number = 0;
 	static settings = {
 		energyBuffer     : 100000,	// Number of upgrader parts scales with energy minus this value
-		energyPerBodyUnit: 20000,	// Scaling factor: this much excess energy adds one extra body repetition // TODO: scaling needs to increase with new storage/terminal system
+		// Scaling factor: this much excess energy adds one extra body repetition
+		// TODO: scaling needs to increase with new storage/terminal system
+		energyPerBodyUnit: 20000,
 		minLinkDistance  : 10,		// Required distance to build link
 		linksRequestBelow: 200,		// Links request energy when less than this amount
 	};
@@ -97,7 +99,7 @@ export class UpgradeSite extends HiveCluster {
 	private getUpgradePowerNeeded(): number {
 		return $.number(this, 'upgradePowerNeeded', () => {
 			// Workers perform upgrading until storage is set up
-			if (!this.room.storage) return 0
+			if (!this.room.storage) return 0;
 
 			const amountOver = Math.max(this.colony.assets.energy - UpgradeSite.settings.energyBuffer, 0);
 			let upgradePower = 1 + Math.floor(amountOver / UpgradeSite.settings.energyPerBodyUnit);
@@ -214,15 +216,16 @@ export class UpgradeSite extends HiveCluster {
 		return this.controller.progressTotal/100;
 	}
 	private get progressPercent(): number {
-		var progressPercent = Math.floor(100 * this.controller.progress / this.controller.progressTotal);
+		const progressPercent = Math.floor(100 * this.controller.progress / this.controller.progressTotal);
 		return progressPercent;
 	}
 	private get energyPercent(): number {
-		var energyPercent = Math.floor(100 * this.energy / this.energyTotal);
+		const energyPercent = Math.floor(100 * this.energy / this.energyTotal);
 		return energyPercent;
 	}
 	private get ticksTillUpgrade(): number {
-		var ticksTillUpgrade = Math.ceil((this.controller.progressTotal - this.controller.progress) / (this.progressPerTick || 1));
+		const ticksTillUpgrade = Math.ceil((this.controller.progressTotal - this.controller.progress)
+			/ (this.progressPerTick || 1));
 		return ticksTillUpgrade;
 	}	
 	private stats() {

@@ -1,3 +1,7 @@
+import { DirectiveOutpostDefense } from 'directives/defense/outpostDefense';
+import { DirectiveControllerAttack } from 'directives/offense/controllerAttack';
+import { DirectivePairDestroy } from 'directives/offense/pairDestroy';
+import { RoomIntel } from 'intel/RoomIntel';
 import { TaskUpgrade } from 'tasks/instances/upgrade';
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
@@ -9,10 +13,6 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import { DirectiveControllerAttack } from 'directives/offense/controllerAttack';
-import { RoomIntel } from 'intel/RoomIntel';
-import { DirectiveOutpostDefense } from 'directives/defense/outpostDefense';
-import { DirectivePairDestroy } from 'directives/offense/pairDestroy';
 /**
  * Claims a new room and builds a spawn but does not incubate. Removes when spawn is constructed.
  */
@@ -41,23 +41,23 @@ export class DirectiveColonize extends Directive {
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		// Remove if misplaced
-		if (this.room) {var intel = RoomIntel.getAllRoomObjectInfo(this.room.name)}
+		if (this.room) {const intel = RoomIntel.getAllRoomObjectInfo(this.room.name);}
 		if (this.room && !!this.room.owner && this.room.owner != MY_USERNAME) {
 			log.notify(`Removing Colonize directive in ${this.pos.roomName}: room already owned by another player.`);
-			var scan = true
+			const scan = true;
 			if (scan) {
-				var intel = RoomIntel.getAllRoomObjectInfo(this.room.name)
-				var spawns = intel?.importantStructures?.spawnPositions
-				var towers = intel?.importantStructures?.towerPositions
-				var controller = intel?.controller
-				var owner = controller?.owner
-				var safemode = intel?.controller?.safemode
-				var safemodeActive = (safemode && safemode > 0)
-				var spawnP = (spawns?.length && spawns?.length <= 0)
-				var towerP = (towers?.length && towers?.length <= 0)
-				var viableRoom = (spawnP && towerP && !safemode)
+				const intel = RoomIntel.getAllRoomObjectInfo(this.room.name);
+				const spawns = intel?.importantStructures?.spawnPositions;
+				const towers = intel?.importantStructures?.towerPositions;
+				const controller = intel?.controller;
+				const owner = controller?.owner;
+				const safemode = intel?.controller?.safemode;
+				const safemodeActive = (safemode && safemode > 0);
+				const spawnP = (spawns?.length && spawns?.length <= 0);
+				const towerP = (towers?.length && towers?.length <= 0);
+				const viableRoom = (spawnP && towerP && !safemode);
 				if (viableRoom && (this.room.controller)) {
-					DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room')
+					DirectiveControllerAttack.createIfNotPresent(this.room.controller.pos, 'room');
 				}
 				// if room is occupied outpost defense
 				if ((this.room.controller) && this.room.playerHostiles.length > 0) {
@@ -66,7 +66,7 @@ export class DirectiveColonize extends Directive {
 				
 				// Unsure if this is needed?
 				if ((this.room.controller) && this.room.dangerousPlayerHostiles.length > 0) {
-					DirectivePairDestroy.createIfNotPresent(this.room.controller.pos,'room')
+					DirectivePairDestroy.createIfNotPresent(this.room.controller.pos,'room');
 				}
 			}
 			this.remove(true);

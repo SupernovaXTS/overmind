@@ -1,3 +1,4 @@
+import { log } from 'console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {UpgradeSite} from '../../hiveClusters/upgradeSite';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -5,7 +6,6 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import { log } from 'console/log';
 /**
  * Spawns an upgrader to upgrade the room controller
  */
@@ -32,9 +32,10 @@ export class UpgradingOverlord extends Overlord {
 
 		let setup = Setups.upgraders.default;
 		if (!(this.colony.assets.energy > UpgradeSite.settings.energyBuffer)) {
-			return
+			return;
 		}
-		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) || (this.upgradeSite.controller.ticksToDowngrade < 500)) {
+		if ((this.colony.assets.energy > UpgradeSite.settings.energyBuffer) ||
+			(this.upgradeSite.controller.ticksToDowngrade < 500)) {
 			if (this.colony.level == 8) {
 				setup = Setups.upgraders.rcl8;
 				if (this.colony.labs.length == 10 &&
@@ -45,7 +46,7 @@ export class UpgradingOverlord extends Overlord {
 
 			if (this.colony.level == 8) {
 				this.wishlist(1, setup);
-				return
+				return;
 			}
 			
 			const upgradePowerEach = setup.getBodyPotential(WORK, this.colony);

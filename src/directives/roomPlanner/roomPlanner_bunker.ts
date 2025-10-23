@@ -23,8 +23,8 @@ export class DirectiveRPBunker extends Directive {
 
 	init(): void {
 		// if rooms are not the same this directive is just for planning
-		if (!this.room) return
-		if (this.colony.room.name != this.room.name) return
+		if (!this.room) return;
+		if (this.colony.room.name != this.room.name) return;
 
 		this.colony.roomPlanner.addComponent('bunker', this.pos, this.memory.rotation);
 	}

@@ -134,6 +134,6 @@ export class PowerHaulingOverlord extends Overlord {
 			this.wishlist(this.numHaulers, Setups.transporters.default);
 		}
 
-		this.autoRun(this.haulers, this.handleHauler)
+		this.autoRun(this.haulers, this.handleHauler);
 	}
 }

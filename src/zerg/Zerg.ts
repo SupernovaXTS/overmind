@@ -693,7 +693,8 @@ export class Zerg extends AnyZerg {
 	// /**
 	//  * Kite around hostiles in the room
 	//  */
-	// kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles, options: MoveOptions = {}): number | undefined {
+	// kite(avoidGoals: (RoomPosition | _HasRoomPosition)[] = this.room.hostiles,
+	//      options: MoveOptions = {}): number | undefined {
 	// 	_.defaults(options, {
 	// 		fleeRange: 5
 	// 	});

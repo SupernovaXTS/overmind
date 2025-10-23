@@ -1,21 +1,21 @@
-import { getAllColonies } from "../Colony";
-import { log } from "../console/log";
-import { Mem } from "../memory/Memory";
-import { profile } from "../profiler/decorator";
-import { Abathur } from "../resources/Abathur";
+import { getAllColonies } from '../Colony';
+import { log } from '../console/log';
+import { Mem } from '../memory/Memory';
+import { profile } from '../profiler/decorator';
+import { Abathur } from '../resources/Abathur';
 import {
 	alignedNewline,
 	bullet,
 	leftArrow,
 	rightArrow,
-} from "../utilities/stringConstants";
+} from '../utilities/stringConstants';
 import {
 	maxBy,
 	minBy,
-	printRoomName,
 	onPublicServer,
-} from "../utilities/utils";
-import { RESERVE_CREDITS } from "../~settings";
+	printRoomName,
+} from '../utilities/utils';
+import { RESERVE_CREDITS } from '../~settings';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number; low: number } };
@@ -160,15 +160,15 @@ export class TraderJoe implements ITradeNetwork {
 	private ordersPlacedThisTick: number;
 
 	constructor() {
-		this.name = "TradeNetwork";
+		this.name = 'TradeNetwork';
 		this.refresh();
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(Memory.Overmind, "trader", getDefaultTraderMemory);
+		this.memory = Mem.wrap(Memory.Overmind, 'trader', getDefaultTraderMemory);
 		this.stats = Mem.wrap(
 			Memory.stats.persistent,
-			"trader",
+			'trader',
 			getDefaultTraderStats
 		);
 		this.notifications = [];
@@ -177,7 +177,7 @@ export class TraderJoe implements ITradeNetwork {
 
 	private debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert("TradeNetwork:", args);
+			log.alert('TradeNetwork:', args);
 		}
 	}
 
@@ -207,7 +207,7 @@ export class TraderJoe implements ITradeNetwork {
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */
 	private buildMarketCache(verbose = false, orderThreshold = 1000): void {
-		this.debug("Building market cache");
+		this.debug('Building market cache');
 		this.invalidateMarketCache();
 		const myActiveOrderIDs = _.map(
 			_.filter(Game.market.orders, (order) => order.active),
@@ -230,8 +230,9 @@ export class TraderJoe implements ITradeNetwork {
 			const prices = _.map(groupedBuyOrders[resourceType], (o) => o.price);
 			const high = _.max(prices);
 			const low = _.min(prices);
-			if (verbose)
+			if (verbose) {
 				console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
+			}
 			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
 			this.memory.cache.buy[resourceType] = { high: high, low: low };
 		}
@@ -240,8 +241,9 @@ export class TraderJoe implements ITradeNetwork {
 			const prices = _.map(groupedSellOrders[resourceType], (o) => o.price);
 			const high = _.max(prices);
 			const low = _.min(prices);
-			if (verbose)
+			if (verbose) {
 				console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
+			}
 			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
 			this.memory.cache.sell[resourceType] = { high: high, low: low };
 		}
@@ -252,7 +254,7 @@ export class TraderJoe implements ITradeNetwork {
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */
 	private buildMarketHistoryCache(): void {
-		this.debug("Building market history cache");
+		this.debug('Building market history cache');
 		const history = Game.market.getHistory();
 		const historyByResource = _.groupBy(history, (hist) => hist.resourceType);
 		// Compute stats for each resource
@@ -359,7 +361,7 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	getExistingOrders(
 		type: ORDER_BUY | ORDER_SELL,
-		resource: ResourceConstant | "any",
+		resource: ResourceConstant | 'any',
 		roomName?: string
 	): Order[] {
 		let orders: Order[];
@@ -368,10 +370,10 @@ export class TraderJoe implements ITradeNetwork {
 				Game.market.orders,
 				(order) =>
 					order.type == type &&
-					(order.resourceType == resource || resource == "any") &&
+					(order.resourceType == resource || resource == 'any') &&
 					order.roomName == roomName
 			);
-			if (orders.length > 1 && resource != "any") {
+			if (orders.length > 1 && resource != 'any') {
 				log.error(
 					`Multiple orders for ${resource} detected in ${printRoomName(
 						roomName
@@ -383,7 +385,7 @@ export class TraderJoe implements ITradeNetwork {
 				Game.market.orders,
 				(order) =>
 					order.type == type &&
-					(order.resourceType == resource || resource == "any")
+					(order.resourceType == resource || resource == 'any')
 			);
 		}
 		return orders;
@@ -467,7 +469,7 @@ export class TraderJoe implements ITradeNetwork {
 		// Get all orders for this resource and group by type
 		const allOrdersOfResource = _.groupBy(
 			Game.market.getAllOrders({ resourceType: resource }),
-			"type"
+			'type'
 		);
 		const allBuyOrders = allOrdersOfResource[ORDER_BUY];
 		const allSellOrders = allOrdersOfResource[ORDER_SELL];
@@ -698,7 +700,7 @@ export class TraderJoe implements ITradeNetwork {
 				roomName: terminal.room.name,
 			};
 			const ret = Game.market.createOrder(params);
-			let msg = "";
+			let msg = '';
 			if (type == ORDER_BUY) {
 				msg +=
 					`${printRoomName(terminal.room.name, true)} creating buy order:  ` +
@@ -1187,7 +1189,7 @@ export class TraderJoe implements ITradeNetwork {
 				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am selling to another person's buy order
 				if (transaction.order.type == ORDER_BUY) {
-					const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` sell direct: ${printRoomName(
@@ -1206,7 +1208,7 @@ export class TraderJoe implements ITradeNetwork {
 				}
 				// Someone else is buying from by sell order
 				else {
-					const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` sell order: ${printRoomName(
@@ -1237,7 +1239,7 @@ export class TraderJoe implements ITradeNetwork {
 				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am receiving resources from a direct purchase of someone else's sell order
 				if (transaction.order.type == ORDER_SELL) {
-					const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` buy direct: ${printRoomName(
@@ -1256,7 +1258,7 @@ export class TraderJoe implements ITradeNetwork {
 				}
 				// Another person is selling to my buy order
 				else {
-					const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` buy order: ${printRoomName(
@@ -1367,15 +1369,15 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 	private ordersPlacedThisTick: number;
 
 	constructor() {
-		this.name = "TradeNetwork";
+		this.name = 'TradeNetwork';
 		this.refresh();
 	}
 
 	refresh() {
-		this.memory = Mem.wrap(Memory.Overmind, "trader", getDefaultTraderMemory);
+		this.memory = Mem.wrap(Memory.Overmind, 'trader', getDefaultTraderMemory);
 		this.stats = Mem.wrap(
 			Memory.stats.persistent,
-			"trader",
+			'trader',
 			getDefaultTraderStats
 		);
 		this.notifications = [];
@@ -1384,7 +1386,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 
 	private debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert("TradeNetwork:", args);
+			log.alert('TradeNetwork:', args);
 		}
 	}
 
@@ -1392,7 +1394,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 		this.notifications.push(bullet + msg);
 	}
 	private buildMarketCache(verbose = false, orderThreshold = 1000): void {
-		this.debug("Building market cache");
+		this.debug('Building market cache');
 		this.invalidateMarketCache();
 		const myActiveOrderIDs = _.map(
 			_.filter(Game.market.orders, (order) => order.active),
@@ -1415,8 +1417,9 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 			const prices = _.map(groupedBuyOrders[resourceType], (o) => o.price);
 			const high = _.max(prices);
 			const low = _.min(prices);
-			if (verbose)
+			if (verbose) {
 				console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
+			}
 			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
 			this.memory.cache.buy[resourceType] = { high: high, low: low };
 		}
@@ -1425,8 +1428,9 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 			const prices = _.map(groupedSellOrders[resourceType], (o) => o.price);
 			const high = _.max(prices);
 			const low = _.min(prices);
-			if (verbose)
+			if (verbose) {
 				console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
+			}
 			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
 			this.memory.cache.sell[resourceType] = { high: high, low: low };
 		}
@@ -1437,7 +1441,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */
 	private buildMarketHistoryCache(): void {
-		this.debug("Building market history cache");
+		this.debug('Building market history cache');
 		const history = Game.market.getHistory();
 		const historyByResource = _.groupBy(history, (hist) => hist.resourceType);
 		// Compute stats for each resource
@@ -1473,7 +1477,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 	}
 	getExistingOrders(
 		type: ORDER_BUY | ORDER_SELL,
-		resource: InterShardResourceConstant | "any",
+		resource: InterShardResourceConstant | 'any',
 		roomName?: string
 	): Order[] {
 		let orders: Order[];
@@ -1482,10 +1486,10 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				Game.market.orders,
 				(order) =>
 					order.type == type &&
-					(order.resourceType == resource || resource == "any") &&
+					(order.resourceType == resource || resource == 'any') &&
 					order.roomName == roomName
 			);
-			if (orders.length > 1 && resource != "any") {
+			if (orders.length > 1 && resource != 'any') {
 				log.error(
 					`Multiple orders for ${resource} detected in ${printRoomName(
 						roomName
@@ -1497,7 +1501,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				Game.market.orders,
 				(order) =>
 					order.type == type &&
-					(order.resourceType == resource || resource == "any")
+					(order.resourceType == resource || resource == 'any')
 			);
 		}
 		return orders;
@@ -1882,7 +1886,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 	): number {
 		const allOrdersOfResource = _.groupBy(
 			Game.market.getAllOrders({ resourceType: resource }),
-			"type"
+			'type'
 		);
 		const allBuyOrders = allOrdersOfResource[ORDER_BUY];
 		const allSellOrders = allOrdersOfResource[ORDER_SELL];
@@ -1934,7 +1938,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 		// Get all orders for this resource and group by type
 		const allOrdersOfResource = _.groupBy(
 			Game.market.getAllOrders({ resourceType: resource }),
-			"type"
+			'type'
 		);
 		const allBuyOrders = allOrdersOfResource[ORDER_BUY];
 		const allSellOrders = allOrdersOfResource[ORDER_SELL];
@@ -2162,7 +2166,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				roomName: terminal.room.name,
 			};
 			const ret = Game.market.createOrder(params);
-			let msg = "";
+			let msg = '';
 			if (type == ORDER_BUY) {
 				msg +=
 					`${printRoomName(terminal.room.name, true)} creating buy order:  ` +
@@ -2423,7 +2427,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 			return ERR_SELL_DIRECT_PRICE_TOO_LOW;
 		}
 
-		let sellAmount = Math.min(order.amount, amount);
+		const sellAmount = Math.min(order.amount, amount);
 		const transactionCost = Game.market.calcTransactionCost(
 			sellAmount,
 			terminal.room.name,
@@ -2546,7 +2550,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am selling to another person's buy order
 				if (transaction.order.type == ORDER_BUY) {
-					const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` sell direct: ${printRoomName(
@@ -2565,7 +2569,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				}
 				// Someone else is buying from by sell order
 				else {
-					const coststr = `[+${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[+${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` sell order: ${printRoomName(
@@ -2596,7 +2600,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				const cost = (transaction.amount * transaction.order.price).toFixed(2);
 				// I am receiving resources from a direct purchase of someone else's sell order
 				if (transaction.order.type == ORDER_SELL) {
-					const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` buy direct: ${printRoomName(
@@ -2615,7 +2619,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				}
 				// Another person is selling to my buy order
 				else {
-					const coststr = `[-${cost}c]`.padRight("[-10000.00c]".length);
+					const coststr = `[-${cost}c]`.padRight('[-10000.00c]'.length);
 					msg =
 						coststr +
 						` buy order: ${printRoomName(

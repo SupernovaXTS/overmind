@@ -37,7 +37,7 @@ export class DirectiveExtract extends Directive {
 	}
 
 	init() {
-		const extractPos = this.overlords.extract.container?.pos ?? this.pos
+		const extractPos = this.overlords.extract.container?.pos ?? this.pos;
 		this.colony.destinations.push({pos: extractPos, order: this.memory[MEM.TICK] || Game.time});
 	}
 

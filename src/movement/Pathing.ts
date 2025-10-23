@@ -931,7 +931,8 @@ export class Pathing {
 	// 	}
 	// }
 
-	// static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition, range: number, cost = 30, add = false) {
+	// static setCostsInRange(matrix: CostMatrix, pos: RoomPosition | _HasRoomPosition,
+	//                        range: number, cost = 30, add = false) {
 	// 	pos = normalizePos(pos);
 	// 	const terrain = Game.map.getRoomTerrain(pos.roomName);
 	//

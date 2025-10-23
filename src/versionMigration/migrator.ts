@@ -492,9 +492,9 @@ export class VersionMigration {
 	}
 
 	static migrate_060_07X_part1() {
-		delete Memory["assimilator"]
-		delete Memory["segmenter"]
-		delete Memory["remoteDebugger"]
+		delete Memory['assimilator'];
+		delete Memory['segmenter'];
+		delete Memory['remoteDebugger'];
 
 		this.memory.versions['060to07X_part1'] = true;
 		log.alert(`Version migration from 0.6.0 -> 0.7.X part 1 completed successfully.`);

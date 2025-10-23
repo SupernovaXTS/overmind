@@ -70,11 +70,12 @@ export class TransportOverlord extends Overlord {
 			transportPower *= 0.5;
 		}
 		
-		var minTransportPower = 6
+		const minTransportPower = 6;
 		if (!this.colony.storage
 			&& !(this.colony.hatchery && this.colony.hatchery.batteries.length > 0)
 			&& !this.colony.upgradeSite.battery) {
-			return minTransportPower ; // If we are operating without containers, we should only spawn 4 carry parts worth of transporters
+			// If we are operating without containers, we should only spawn 4 carry parts worth of transporters
+			return minTransportPower ;
 		}
 		return transportPower / CARRY_CAPACITY;
 	}
@@ -91,9 +92,9 @@ export class TransportOverlord extends Overlord {
 		this.memory.transporterSaturation = currentTransportPower / neededTransportPower;
 
 		// prevent div by zero
-		let numTransporters = transportPowerEach ? Math.ceil(neededTransportPower / transportPowerEach) : 0
+		let numTransporters = transportPowerEach ? Math.ceil(neededTransportPower / transportPowerEach) : 0;
 		// when bootstrapping a colony, sometimes we request way too many small sized transporter
-		numTransporters = Math.min(numTransporters, MAX_TRANSPORTER)
+		numTransporters = Math.min(numTransporters, MAX_TRANSPORTER);
 
 		if (this.transporters.length == 0) {
 			this.wishlist(numTransporters, setup, {priority: OverlordPriority.ownedRoom.firstTransport});

@@ -128,8 +128,8 @@ export class Movement {
 	 * Handles creeps swapping rooms if they are on the edge
 	 */
 	static goToSameRoom(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
-		const options: MoveOptions = { ...opts, pathOpts: { ...opts.pathOpts, maxRooms: 1 } }
-		return Movement.goTo(creep, destination, options)
+		const options: MoveOptions = { ...opts, pathOpts: { ...opts.pathOpts, maxRooms: 1 } };
+		return Movement.goTo(creep, destination, options);
 	}
 
 	/**
@@ -496,10 +496,10 @@ export class Movement {
 		}
 		
 		if (creep.memory.role in MovePriorities) {
-			return MovePriorities[creep.memory.role]
+			return MovePriorities[creep.memory.role];
 		}
 
-		return MovePriorities.default
+		return MovePriorities.default;
 	}
 
 	private static shouldPush(pusher: AnyCreep | AnyZerg, pushee: AnyCreep | AnyZerg): boolean {
@@ -1244,7 +1244,8 @@ export class Movement {
 	/**
 	 * Kite around enemies in a single room, repathing every tick. More expensive than flee().
 	 */
-	static kite(creep: AnyZerg, avoidGoals: (RoomPosition | _HasRoomPosition)[], options: MoveOptions = {}): number | undefined {
+	static kite(creep: AnyZerg, avoidGoals: (RoomPosition | _HasRoomPosition)[],
+				options: MoveOptions = {}): number | undefined {
 		_.defaults(options, {
 			fleeRange   : 5,
 			terrainCosts: isPowerZerg(creep) ? {plainCost: 1, swampCost: 1} : getTerrainCosts((<Creep>creep.creep)),

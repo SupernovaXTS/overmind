@@ -179,11 +179,11 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	private runObserver(): void {
-		if (!this.observer) return
+		if (!this.observer) return;
 
 		if (this.observeRoom) {
 			this.observer.observeRoom(this.observeRoom);
-			return
+			return;
 		}
 
 		if (CommandCenter.settings.enableIdleObservation && Game.time % 1000 < 100) {

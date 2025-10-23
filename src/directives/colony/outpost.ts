@@ -1,11 +1,11 @@
 import {log} from '../../console/log';
+import {patternCost} from '../../creepSetups/CreepSetup';
+import {Setups} from '../../creepSetups/setups';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
 import {StationaryScoutOverlord} from '../../overlords/scouting/stationary';
 import {profile} from '../../profiler/decorator';
 import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
-import {Setups} from '../../creepSetups/setups';
-import {patternCost} from '../../creepSetups/CreepSetup';
 import {Directive} from '../Directive';
 
 /**

@@ -29,7 +29,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 	coolant: CombatZerg[];
 
 	constructor(directive: DirectivePowerMine, priority = OverlordPriority.powerMine.drill) {
-		super(directive, 'powerDrill', priority, PowerDrillOverlord.requiredRCL, Memory.settings.powerCollection.maxRange * 50);
+		super(directive, 'powerDrill', priority, PowerDrillOverlord.requiredRCL,
+			Memory.settings.powerCollection.maxRange * 50);
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.powerMine.roomIncrement;
 		this.drills = this.combatZerg(Roles.drill);

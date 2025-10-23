@@ -1,3 +1,5 @@
+import set = Reflect.set;
+import { SHARD3_MAX_OWNED_ROOMS } from '~settings';
 import {log} from '../console/log';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {CombatSetups, Setups} from '../creepSetups/setups';
@@ -13,8 +15,6 @@ import {
 	ROOMTYPE_CROSSROAD,
 	ROOMTYPE_SOURCEKEEPER
 } from '../utilities/Cartographer';
-import set = Reflect.set;
-import { SHARD3_MAX_OWNED_ROOMS } from '~settings';
 
 export const EXPANSION_EVALUATION_FREQ = 1000;
 export const MIN_EXPANSION_DISTANCE = 2;
@@ -56,8 +56,8 @@ export class ExpansionEvaluator {
 
 		// This gets run whenever function is called
 		for (const roomName in expansionData.possibleExpansions) {
-			if (!expansionData.possibleExpansions[roomName]) continue
-			if (!Memory.rooms[roomName]) continue
+			if (!expansionData.possibleExpansions[roomName]) continue;
+			if (!Memory.rooms[roomName]) continue;
 
 			const roomExpansionData = RoomIntel.getExpansionData(roomName);
 			if (roomExpansionData == false) {
@@ -187,9 +187,9 @@ export class ExpansionEvaluator {
 	// NOTE: if already at max colonies -> skip evaluating to safe CPU (important for shard3)
 	// TODO: use the same logic for all shards
 	static computeExpansionData(room: Room, verbose = false): boolean {
-		if (Game.shard.name == "shard3" && _.keys(Overmind.colonies).length >= SHARD3_MAX_OWNED_ROOMS) {
-			log.debug("Already on max rooms, no need to evaluate new expansions")
-			return false
+		if (Game.shard.name == 'shard3' && _.keys(Overmind.colonies).length >= SHARD3_MAX_OWNED_ROOMS) {
+			log.debug('Already on max rooms, no need to evaluate new expansions');
+			return false;
 		}
 
 		log.debug(`Computing score for ${room.print}...`);

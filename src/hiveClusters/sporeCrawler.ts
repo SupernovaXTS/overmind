@@ -1,3 +1,4 @@
+import {Mem} from 'memory/Memory';
 import {$} from '../caching/GlobalCache';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
@@ -6,7 +7,6 @@ import {WorkerOverlord} from '../overlords/core/worker';
 import {profile} from '../profiler/decorator';
 import {CombatTargeting} from '../targeting/CombatTargeting';
 import {HiveCluster} from './_HiveCluster';
-import {Mem} from "memory/Memory";
 
 
 /**
@@ -68,7 +68,7 @@ export class SporeCrawler extends HiveCluster {
 	}
 
 	private scatterShot(targets: Creep[]): void {
-		if (!targets) return
+		if (!targets) return;
 		for (const tower of this.towers) {
 			const target = _.sample(targets);
 			const result = tower.attack(target);
@@ -105,7 +105,7 @@ export class SporeCrawler extends HiveCluster {
 	// }
 
 	private preventStructureDecay(includeRoads=true) {
-		if (this.towers.length < 1) return
+		if (this.towers.length < 1) return;
 
 		// expensive to check all rampart hits; only run in intermediate RCL
 		const dyingRamparts = _.filter(this.room.ramparts, rampart =>

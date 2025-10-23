@@ -86,7 +86,7 @@ export class DirectiveHarvest extends Directive {
 
 	private computeStats() {
 		if (!(this.overlords.mine.source)) {
-			return
+			return;
 		}
 		const source = this.overlords.mine.source;
 		if (source && source.ticksToRegeneration == 1) {

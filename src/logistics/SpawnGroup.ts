@@ -127,7 +127,7 @@ export class SpawnGroup {
 		const distances: { [colonyName: string]: number } = {};
 		for (const colony of coloniesInRange) {
 			const spawn = colony.room.spawns[0];
-			if (!spawn) continue
+			if (!spawn) continue;
 
 			const path = Pathing.findPathToRoom(spawn.pos, this.roomName, { useFindRoute: true });
 			if (!path.incomplete && path.path.length <= DEFAULT_MAX_PATH_LENGTH + 25) {

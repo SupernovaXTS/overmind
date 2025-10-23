@@ -29,7 +29,7 @@ export abstract class Directive {
 	static secondaryColor: ColorConstant;		// Flag secondaryColor
 	
 	isDirective: true;
-	type: string
+	type: string;
 	name: string;								// The name of the flag
 	ref: string;								// Also the name of the flag; used for task targeting
 	colony: Colony; 							// The colony of the directive (directive is removed if undefined)
