@@ -298,7 +298,7 @@ export class FeederOverlord extends Overlord {
 			const target = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
 								  s => s!.store[RESOURCE_ENERGY] >= feeder.carryCapacity);
 			if (!target) {
-				log.warning(`${this.print}: no energy withdraw target for ${feeder.print}!`);
+				log.warning(`${this.print}: no energy withdraw target for ${feeder.print} in source colony ${this.parentColony.print}!`);
 				return;
 			}
 			if (feeder.carry.getUsedCapacity() > feeder.carry.getUsedCapacity(RESOURCE_ENERGY)) {
