@@ -244,7 +244,11 @@ declare var _cache: IGlobalCache;
 
 declare var PERMACACHE: { [key: string]: any };
 
+declare var c: any; // Current colony being viewed in console
+
 declare function print(...args: any[]): void;
+
+declare function setCurrentColony(roomName: string): string;
 
 interface Coord {
 	x: number;

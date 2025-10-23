@@ -74,6 +74,23 @@ export class OvermindConsole {
 		global.requestResourceOk = this.requestResourceOk;
 		global.requestFromPairs = this.requestFromPairs;
 		global.requestFromPairsOk = this.requestFromPairsOk;
+		global.setCurrentColony = this.setCurrentColony;
+	}
+
+	static refresh(): void {
+		// Auto-update global.c to the room the player is currently viewing (if it's a colony)
+		if (Game.rooms) {
+			// Get the first owned room visible (player is likely looking at it)
+			const visibleColonies = _.filter(_.values(Game.rooms),
+				(room: Room) => room.my && Overmind.colonies[room.name]);
+			if (visibleColonies.length > 0) {
+				// If we don't have a current colony set, or if player switched rooms, update it
+				const firstColony = Overmind.colonies[(visibleColonies[0] as Room).name];
+				if (!global.c || (global.c.name !== firstColony.name)) {
+					global.c = firstColony;
+				}
+			}
+		}
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -132,6 +149,7 @@ export class OvermindConsole {
 		descr['getDirective(flagName)'] = 'returns the directive associated with the specified flag name';
 		descr['getOverlord(directive, overlordName)'] = 'returns the overlord associated with the directive and name';
 		descr['getColony(roomName)'] = 'returns the colony associated with the specified room name';
+		descr['setCurrentColony(roomName)'] = 'sets global.c to reference the specified colony for quick access';
 		descr['getLogisticsSector(roomName)'] = 'returns the LogisticsSector for the specified colony room';
 		descr['requestEnergy(roomName, amount)'] = 'queues a haul request for energy for the specified colony';
 		descr['requestEnergyOk(roomName, amount)'] = 'same as requestEnergy but returns boolean success';
@@ -153,6 +171,15 @@ export class OvermindConsole {
 	
 	static getColony(input: string): Colony | undefined {
 		return Overmind.colonies?.[input];
+	}
+
+	static setCurrentColony(roomName: string): string {
+		const colony = Overmind.colonies?.[roomName];
+		if (!colony) {
+			return `Colony ${roomName} not found!`;
+		}
+		global.c = colony;
+		return `Current colony set to ${colony.name}`;
 	}
 
 	static getLogisticsSector(roomName: string): LogisticsSector | undefined {

@@ -49,6 +49,7 @@ function main(): void {
 	} else {
 		PHASE = 'refresh';
 		Overmind.refresh();						// Refresh phase: update the Overmind state
+		OvermindConsole.refresh();				// Update console globals like current colony
 	}
 
 	// Tick loop cycle: initialize and run each component --------------------------------------------------------------
