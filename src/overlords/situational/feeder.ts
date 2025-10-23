@@ -99,7 +99,7 @@ export class FeederOverlord extends Overlord {
 			const avgTransporterCapacity = currentCarryCapacity / this.transporters.length;
 			this.debug(`Needed carry capacity: ${neededCarryCapacity}; Current carry capacity: ${currentCarryCapacity}`);
 			neededTransporters = Math.ceil(neededCarryCapacity / avgTransporterCapacity);
-			neededTransporters = Math.max(neededTransporters, maxTransporters);
+			neededTransporters = Math.min(neededTransporters, this.maxTransporters);
 			this.debug(`Needed transporters: ${neededTransporters}`);
 		}
 
