@@ -81,6 +81,7 @@ export class UpgradeSite extends HiveCluster {
 		this.memory = Mem.wrap(this.colony.memory, 'upgradeSite');
 		$.refreshRoom(this);
 		$.refresh(this, 'controller', 'battery', 'link');
+		this.stats();
 	}
 
 	spawnMoarOverlords() {
