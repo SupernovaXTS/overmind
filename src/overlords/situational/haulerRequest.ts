@@ -80,18 +80,20 @@ export class HaulingOverlordRequest extends Overlord {
 	}
 
 	init() {
-		let haulersNeeded = this.calculateHaulers;
+		//let haulersNeeded = this.calculateHaulers;
+		/*
 		if (haulersNeeded === 0) {
 			haulersNeeded = 8;
 		}
+		 */
 		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max;
 		// Request the haulers
 		log.notify(`HaulingOverlordRequest in ${this.colony.name} requesting ${haulersNeeded} haulers.`);
-		this.wishlist(haulersNeeded, Setups.transporters.default);
-		
+		this.wishlist(8, Setups.transporters.default);
+		// temporary test
 		// Notify about hauler request
-		log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
-		`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
+		//log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
+		//`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
 		
 	}
 	private handleHauler(hauler: Zerg) {
