@@ -16,6 +16,7 @@ import {DirectivePowerMine} from './directives/resource/powerMine';
 import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
+import {DirectiveFeeder} from './directives/situational/feeder';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
@@ -248,10 +249,21 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	private handleFeeding(colony: Colony) {
+		if (!colony.hatchery) return;
+		// If this colony is within 4 linear rooms of any colony with RCL > 3, create a feeder directive
+		const nearbyHighRCL = _.some(getAllColonies(), other =>
+			other.name != colony.name
+			&& Game.map.getRoomLinearDistance(other.room.name, colony.room.name) <= 4
+			&& other.level > 3);
+		if (nearbyHighRCL) {
+			DirectiveFeeder.createIfNotPresent(colony.hatchery.pos, 'pos');
+		}
+	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
-		// Doesn't apply to incubating colonies.
-		if (colony.state.isIncubating) return;
+		// Doesn't apply to incubating or fed colonies.
+		if (colony.state.isIncubating && colony.state.beingFed) return;
 
 		const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
 		if (noQueen && colony.hatchery && !colony.spawnGroup) {
@@ -494,6 +506,8 @@ export class Overseer implements IOverseer {
 				if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
 					this.handleNewOutposts(colony);
 				}
+				// Feeder placement: ensure low RCL colonies near higher RCL colonies get fed
+				this.handleFeeding(colony);
 				// Place pioneer directives in case the colony doesn't have a spawn for some reason
 				if (Game.time % 25 == 0 && colony.spawns.length == 0) {
 					// verify that there are no spawns (not just a caching glitch)

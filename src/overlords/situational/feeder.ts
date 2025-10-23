@@ -136,8 +136,8 @@ export class FeederOverlord extends Overlord {
 
 	private idleActions(queen: Zerg): void {
 		// will only have one battery when this overlord is called
-	const batteries: StructureContainer[] = this.childColony.hatchery?.batteries ?? [];
-	const battery = queen.pos.findClosestByRange(batteries);
+		const batteries: StructureContainer[] = this.childColony.hatchery?.batteries ?? [];
+		const battery = queen.pos.findClosestByRange(batteries);
 		const hatchery = this.childColony.hatchery;
 
 		if (hatchery?.link) {
@@ -199,7 +199,11 @@ export class FeederOverlord extends Overlord {
 	}
 
 	private handleCarrier(carrier: Zerg): void {
-
+		var beQueen = false;
+		if (beQueen) {
+			this.handleQueen(carrier);
+			return;
+		}
 		if (carrier.getActiveBodyparts(HEAL) > 0) {
 			carrier.heal(carrier);
 		}
@@ -276,8 +280,17 @@ export class FeederOverlord extends Overlord {
 				carrier.task = Tasks.transfer(this.childColony.storage);
 				return;
 			}
-		}
+			// If we dont have a queen in the colony, become the queen temporarily
+			if (childColony.getCreepsByRole(Roles.queen).length < 1) {
+				beQueen = true;
+				this.handleQueen(carrier);
+				return;
+			}
+			else {
+				beQueen = false;
+			}
 	}
+}
 
 	run() {
 		this.autoRun(this.carriers, carrier => this.handleCarrier(carrier));

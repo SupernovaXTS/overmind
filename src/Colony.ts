@@ -168,6 +168,7 @@ export class Colony {
 	defcon: DEFCON;										//
 	state: {
 		bootstrapping?: boolean; 						// Whether colony is bootstrapping or recovering from crash
+		beingFed?: boolean;							// If colony is being fed by other colonies
 		isIncubating?: boolean;							// If the colony is incubating
 		lowPowerMode?: boolean; 						// Activate if RCL8 and full energy
 		isRebuilding?: boolean;							// If colony is doing major reconstruction (e.g. moving in room)
