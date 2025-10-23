@@ -82,10 +82,9 @@ export class HaulingOverlordRequest extends Overlord {
 		this.wishlist(haulersNeeded, this.haulerSetup);
 		
 		// Notify about hauler request
-		if (Game.time % 10 === 0) {
-			log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
-				`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
-		}
+		log.info(`${this.print}: requesting ${haulersNeeded} hauler(s) for ${this.directive.totalResources} ` +
+		`resources from ${this.source.pos.print} to ${this.destinationRoom.print}`);
+		
 	}
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
