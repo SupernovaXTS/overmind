@@ -54,6 +54,13 @@ interface Memory {
 		enableVisuals: boolean;
 		allies: string[];
 		resourceCollectionMode: resourceCollectionMode;
+		feeder?: {
+			enabled?: boolean;
+			maxRange?: number;        // linear room distance to search for donors
+			donorMinRCL?: number;      // donor colony minimum RCL
+			checkFrequency?: number;   // cadence in ticks to check (0 to check every tick)
+			feedAllLowRCL?: boolean;   // reserved for future behavior
+		};
 		powerCollection: {
 			enabled: boolean;
 			maxRange: number;

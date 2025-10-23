@@ -195,6 +195,12 @@ export class Mem {
 				enableVisuals         : true,
 				resourceCollectionMode: 0,
 				allies                : ALLIES,
+				feeder                : {
+					enabled     : true,
+					maxRange    : 4,    // Linear room distance to search for donor colonies
+					donorMinRCL : 4,    // Donor colony controller level must be >= this
+					checkFrequency: 25, // Optional cadence to re-check conditions (ticks)
+				},
 				powerCollection       : {
 					enabled : true,
 					maxRange: 5,

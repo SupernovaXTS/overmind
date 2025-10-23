@@ -249,16 +249,29 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private handleFeeding(colony: Colony) {
-		if (!colony.hatchery) return;
-		// If this colony is within 4 linear rooms of any colony with RCL > 3, create a feeder directive
-		const nearbyHighRCL = _.some(getAllColonies(), other =>
+	private handleFeeding(colony: Colony): boolean {	
+		const feederSettings = Memory.settings.feeder;
+		if (!feederSettings || !feederSettings.enabled) return false;
+		if (!colony.hatchery) return false;
+		// Optional cadence to reduce overhead
+		const freq = feederSettings.checkFrequency || 0;
+		if (freq > 0 && Game.time % freq != 0) 	return false;
+		const maxRange = feederSettings.maxRange ?? 4;
+		const donorMinRCL = feederSettings.donorMinRCL ?? 4;
+		// Find donor colonies within configured range and minimum RCL
+		const donors = _.filter(getAllColonies(), other =>
 			other.name != colony.name
-			&& Game.map.getRoomLinearDistance(other.room.name, colony.room.name) <= 4
-			&& other.level > 3);
-		if (nearbyHighRCL) {
-			DirectiveFeeder.createIfNotPresent(colony.hatchery.pos, 'pos');
-		}
+			&& Game.map.getRoomLinearDistance(other.room.name, colony.room.name) <= maxRange
+			&& other.level >= donorMinRCL);
+	if (donors.length == 0) return false;
+		// Choose the closest donor by linear distance
+		const donor = minBy(donors, other =>
+			Game.map.getRoomLinearDistance(other.room.name, colony.room.name));
+		if (!donor) return false;
+		// Create a feeder directive at the receiver's hatchery, owned by the donor colony
+		const res = DirectiveFeeder.createIfNotPresent(colony.hatchery.pos, 'pos', {memory: {[MEM.COLONY]: donor.name}});
+		// If already present, res will be undefined; we still consider that success
+		return true;
 	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
@@ -478,8 +491,7 @@ export class Overseer implements IOverseer {
 		if (LATEST_BUILD_TICK == Game.time) {
 			_.forEach(allColonies, colony => this.placeHarvestingDirectives(colony));
 		}
-
-		_.forEach(allColonies, colony => this.handleBootstrapping(colony));
+		_.forEach(allColonies, colony => this.handleSafeMode(colony));		_.forEach(allColonies, colony => this.handleBootstrapping(colony));
 
 		_.forEach(allColonies, colony => this.handleOutpostDefense(colony));
 
@@ -500,7 +512,6 @@ export class Overseer implements IOverseer {
 		if (Memory.settings.autoPoison.enabled && canClaimAnotherRoom() && Game.cpu.bucket > 9500) {
 			if (p(0.05)) this.handleAutoPoisoning();
 		}
-
 		if (getAutonomyLevel() > Autonomy.Manual) {
 			_.forEach(allColonies, colony => {
 				if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
