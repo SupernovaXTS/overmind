@@ -38,6 +38,10 @@ export class HaulingOverlordRequest extends Overlord {
 		return this.colony.storage || this.colony;
 	}
 
+	private get destinationRoom(): Room {
+		return this.colony.room;
+	}
+
 	get calculateHaulers() {
 		// Don't spawn haulers if there's no storage or if storage is already near capacity
 		if (!this.colony.storage) {
@@ -169,7 +173,7 @@ export class HaulingOverlordRequest extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 			} else {
 				// Travel to destination room
-				hauler.task = Tasks.goToRoom(this.destination.pos.roomName);
+				hauler.task = Tasks.goToRoom(this.destinationRoom.name);
 			}
 		}
 	}
