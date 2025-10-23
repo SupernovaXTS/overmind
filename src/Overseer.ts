@@ -249,21 +249,44 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	private handleFeeding(colony: Colony): boolean {	
+	private handleFeeding(colony: Colony): boolean {
+		const maxFeed = DirectiveFeeder.maxFeed;
+		if (colony.storage && colony.assets.energy > maxFeed) return false;
 		const feederSettings = Memory.settings.feeder;
 		if (!feederSettings || !feederSettings.enabled) return false;
 		if (!colony.hatchery) return false;
 		// Optional cadence to reduce overhead
 		const freq = feederSettings.checkFrequency || 0;
-		if (freq > 0 && Game.time % freq != 0) 	return false;
+		if (freq > 0 && Game.time % freq != 0) return false;
 		const maxRange = feederSettings.maxRange ?? 4;
 		const donorMinRCL = feederSettings.donorMinRCL ?? 4;
-		// Find donor colonies within configured range and minimum RCL
-		const donors = _.filter(getAllColonies(), other =>
-			other.name != colony.name
-			&& Game.map.getRoomLinearDistance(other.room.name, colony.room.name) <= maxRange
-			&& other.level >= donorMinRCL);
-	if (donors.length == 0) return false;
+
+		// Receiver allow/deny checks
+		const allowList = feederSettings.allowList || [];
+		const denyList = feederSettings.denyList || [];
+		if (denyList.includes(colony.name)) return false;
+		if (allowList.length > 0 && !allowList.includes(colony.name)) return false;
+
+		// Enforce global and per-donor concurrency limits
+		this.ensureDirectivesCached();
+		const feederDirectives = this.directivesByType[DirectiveFeeder.directiveName] || [];
+		const maxConcurrent = feederSettings.maxConcurrent ?? Infinity;
+		if (isFinite(maxConcurrent) && feederDirectives.length >= maxConcurrent) return false;
+		const perDonorMax = feederSettings.perDonorMaxConcurrent ?? Infinity;
+
+		// Find donor colonies within configured range, minimum RCL, energy threshold and per-donor cap
+		const donors = _.filter(getAllColonies(), other => {
+			if (other.name == colony.name) return false;
+			if (Game.map.getRoomLinearDistance(other.room.name, colony.room.name) > maxRange) return false;
+			if (other.level < donorMinRCL) return false;
+			if (other.assets.energy < maxFeed * 2) return false;
+			if (isFinite(perDonorMax)) {
+				const donorActive = _.filter(feederDirectives, d => d.colony && d.colony.name == other.name).length;
+				if (donorActive >= perDonorMax) return false;
+			}
+			return true;
+		});
+		if (donors.length == 0) return false;
 		// Choose the closest donor by linear distance
 		const donor = minBy(donors, other =>
 			Game.map.getRoomLinearDistance(other.room.name, colony.room.name));
@@ -275,6 +298,7 @@ export class Overseer implements IOverseer {
 	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
+		if (this.handleFeeding(colony)) return;
 		// Doesn't apply to incubating or fed colonies.
 		if (colony.state.isIncubating && colony.state.beingFed) return;
 
@@ -518,6 +542,7 @@ export class Overseer implements IOverseer {
 					this.handleNewOutposts(colony);
 				}
 				// Feeder placement: ensure low RCL colonies near higher RCL colonies get fed
+				// if we have under 100k energy in storage, feed
 				this.handleFeeding(colony);
 				// Place pioneer directives in case the colony doesn't have a spawn for some reason
 				if (Game.time % 25 == 0 && colony.spawns.length == 0) {

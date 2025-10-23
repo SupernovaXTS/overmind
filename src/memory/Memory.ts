@@ -200,6 +200,10 @@ export class Mem {
 					maxRange    : 4,    // Linear room distance to search for donor colonies
 					donorMinRCL : 4,    // Donor colony controller level must be >= this
 					checkFrequency: 25, // Optional cadence to re-check conditions (ticks)
+					allowList   : [] as string[], // Only feed these receiver colonies if non-empty
+					denyList    : [] as string[], // Never feed these receiver colonies
+					maxConcurrent: 2,   // Max total feeder directives active at once
+					perDonorMaxConcurrent: 1, // Max feeder directives per donor colony
 				},
 				powerCollection       : {
 					enabled : true,

@@ -60,6 +60,10 @@ interface Memory {
 			donorMinRCL?: number;      // donor colony minimum RCL
 			checkFrequency?: number;   // cadence in ticks to check (0 to check every tick)
 			feedAllLowRCL?: boolean;   // reserved for future behavior
+			allowList?: string[];      // receiver allow list
+			denyList?: string[];       // receiver deny list
+			maxConcurrent?: number;    // global max active feeder directives
+			perDonorMaxConcurrent?: number; // per-donor max active feeder directives
 		};
 		powerCollection: {
 			enabled: boolean;

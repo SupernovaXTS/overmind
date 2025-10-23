@@ -11,9 +11,9 @@ export class DirectiveFeeder extends Directive {
 	static directiveName = 'feeder';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_GREEN;
-
+	
 	static requiredRCL = 3;
-
+	static maxFeed: number = 100000; // Max total energy to be fed
 	overlords: {
 		feeder: FeederOverlord
 	};
@@ -32,7 +32,7 @@ export class DirectiveFeeder extends Directive {
 	}
 
 	run(): void {
-		if (this.room && this.room.controller && this.room.controller.level == 8) {
+		if (this.colony && this.colony.assets.energy <= DirectiveFeeder.maxFeed) {
 			this.remove();
 		}
 	}
