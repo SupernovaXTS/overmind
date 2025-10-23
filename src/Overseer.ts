@@ -17,6 +17,7 @@ import {DirectiveBootstrap} from './directives/situational/bootstrap';
 import {DirectiveNukeResponse} from './directives/situational/nukeResponse';
 import {DirectiveTerminalEvacuateState} from './directives/terminalState/terminalState_evacuate';
 import {DirectiveFeeder} from './directives/situational/feeder';
+import {SectorLogistics} from './logistics/SectorLogistics';
 import {RoomIntel} from './intel/RoomIntel';
 import {LogisticsNetwork} from './logistics/LogisticsNetwork';
 import {Autonomy, getAutonomyLevel, Mem} from './memory/Memory';
@@ -267,7 +268,7 @@ export class Overseer implements IOverseer {
 	// If we've already attempted to feed this colony this tick, treat as ensured
 	if (this.fedReceiversThisTick.has(colony.name)) return true;
 
-	// If a Feeder directive already exists in this room, consider it ensured
+	// If a Feeder directive already exists in this room, consider it ensured (legacy safety)
 	if (DirectiveFeeder.isPresent(colony.room.name)) {
 		this.fedReceiversThisTick.add(colony.name);
 		return true;
@@ -275,8 +276,6 @@ export class Overseer implements IOverseer {
 		// Optional cadence to reduce overhead
 		const freq = feederSettings.checkFrequency || 0;
 		if (freq > 0 && Game.time % freq != 0) return false;
-		const maxRange = feederSettings.maxRange ?? 4;
-		const donorMinRCL = feederSettings.donorMinRCL ?? 4;
 
 		// Receiver allow/deny checks
 		const allowList = feederSettings.allowList || [];
@@ -284,35 +283,22 @@ export class Overseer implements IOverseer {
 		if (denyList.includes(colony.name)) return false;
 		if (allowList.length > 0 && !allowList.includes(colony.name)) return false;
 
-		// Enforce global and per-donor concurrency limits
-		this.ensureDirectivesCached();
-		const feederDirectives = this.directivesByType[DirectiveFeeder.directiveName] || [];
-		const maxConcurrent = feederSettings.maxConcurrent ?? Infinity;
-		if (isFinite(maxConcurrent) && feederDirectives.length >= maxConcurrent) return false;
-		const perDonorMax = feederSettings.perDonorMaxConcurrent ?? Infinity;
-
-		// Find donor colonies within configured range, minimum RCL, energy threshold and per-donor cap
-		const donors = _.filter(getAllColonies(), other => {
-			if (other.name == colony.name) return false;
-			if (Game.map.getRoomLinearDistance(other.room.name, colony.room.name) > maxRange) return false;
-			if (other.level < donorMinRCL) return false;
-			if (other.assets.energy < maxFeed * 2) return false;
-			if (isFinite(perDonorMax)) {
-				const donorActive = _.filter(feederDirectives, d => d.colony && d.colony.name == other.name).length;
-				if (donorActive >= perDonorMax) return false;
-			}
-			return true;
-		});
-		if (donors.length == 0) return false;
-		// Choose the closest donor by linear distance
-		const donor = minBy(donors, other =>
-			Game.map.getRoomLinearDistance(other.room.name, colony.room.name));
-		if (!donor) return false;
-		// Create a feeder directive at the receiver's hatchery, owned by the donor colony
-		const res = DirectiveFeeder.createIfNotPresent(colony.bunker?.anchor, 'pos', {memory: {[MEM.COLONY]: donor.name}});
-		// If already present, res will be undefined; we still consider that success
+		// New behavior: create a SectorLogistics pool request for 100k energy instead of placing feeder directive
+		if (!colony.storage) return false; // require storage for intercolony shipment destination
+		const manifest: StoreDefinitionUnlimited = {} as any;
+		(manifest as any)[RESOURCE_ENERGY] = 100000;
+		// Directly enqueue into central pool (consumed by SectorTransportOverlord)
+		(SectorLogistics as any).pool[colony.name] = {
+			colony: colony.name,
+			room: colony.room.name,
+			manifest,
+			tick: Game.time,
+		};
 		this.fedReceiversThisTick.add(colony.name);
 		colony.state.beingFed = true;
+		if (colony.memory.debug || Game.time % 50 == 0) {
+			log.info(`${colony.print} requested sector feed: 100000 energy`);
+		}
 		return true;
 	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
