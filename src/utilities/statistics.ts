@@ -52,8 +52,39 @@ export const DATETIME_FORMATTER = new Intl.DateTimeFormat(LANGUAGE, {
     second: 'numeric',
 });
 
+/**
+ * Formats a room name as a clickable link for the Screeps console
+ */
+function roomLink(roomName: string): string {
+    return `<a href="#!/room/${Game.shard.name}/${roomName}">${roomName}</a>`;
+}
+
+/**
+ * Gets or computes the GCL average progress per tick from memory
+ */
+function getGclAverageTick(): number {
+    if (!Memory.stats) (Memory as any).stats = {};
+    if (!Memory.stats.persistent) Memory.stats.persistent = {} as any;
+    const gclStats = (Memory.stats.persistent as any).gclStats as { lastProgress?: number; avgTick?: number } | undefined;
+    
+    if (!gclStats) {
+        (Memory.stats.persistent as any).gclStats = { lastProgress: Game.gcl.progress, avgTick: 1 };
+        return 1;
+    }
+    
+    // Update GCL average if we have a previous reading
+    if (typeof gclStats.lastProgress === 'number' && Game.gcl.progress > gclStats.lastProgress) {
+        const diff = Game.gcl.progress - gclStats.lastProgress;
+        gclStats.avgTick = MM_AVG(diff, gclStats.avgTick || 1, 1000);
+    }
+    gclStats.lastProgress = Game.gcl.progress;
+    
+    return gclStats.avgTick || 1;
+}
+
 export function progress(): string {
-    const ticksTilGCL = (Game.gcl.progressTotal - Game.gcl.progress) / statsProc.stats.gclAverageTick;
+    const gclAvgTick = getGclAverageTick();
+    const ticksTilGCL = (Game.gcl.progressTotal - Game.gcl.progress) / gclAvgTick;
     let str = `Time till GCL ${(Game.gcl.level + 1)}: ${DATETIME_FORMATTER.format(estimate(ticksTilGCL))} <progress value="${Game.gcl.progress}" max="${Game.gcl.progressTotal}"/> \n`;
     _(Game.rooms)
         .map('controller')
@@ -70,7 +101,7 @@ export function progress(): string {
             const progressTotal = ctrl?.progressTotal ?? 0;
             const avgEt = _.round(((c?.room?.memory as any)?._rclStats?.avgTick) ?? 0, 2);
             const progressHtml = `<progress value="${progressVal}" max="${progressTotal}"/>`;
-            str += `Room: ${ROOM_LINK(roomName)}, RCL: ${rcl}, ${etaStr} ${progressHtml}, ${avgEt} e/t \n`;
+            str += `Room: ${roomLink(roomName)}, RCL: ${rcl}, ${etaStr} ${progressHtml}, ${avgEt} e/t \n`;
         })
         .commit();
     return str;
@@ -79,9 +110,6 @@ import {ema} from './utils';
 
 // Loose declarations to satisfy TS for optional console helpers present elsewhere
 declare const _: any;
-declare const ROOM_LINK: any;
-declare const kernel: any;
-declare const statsProc: any;
 declare function first(arg: any): any;
 
 /**
