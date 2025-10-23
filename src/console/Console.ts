@@ -169,11 +169,26 @@ export class OvermindConsole {
 		return msg;
 	}
 	
-	static getColony(input: string): Colony | undefined {
-		return Overmind.colonies?.[input];
+	private static normalizeRoomName(input: string | Room): string {
+		// If input is a Room object, use its name
+		if (typeof input === 'object' && input.name) {
+			return input.name;
+		}
+		// If input is 'c', use global.c's room name
+		if (input === 'c') {
+			return global.c?.name || '';
+		}
+		// Capitalize room name (e.g., 'e1s1' -> 'E1S1')
+		return (input as string).toUpperCase();
 	}
 
-	static setCurrentColony(roomName: string): string {
+	static getColony(input: string | Room): Colony | undefined {
+		const roomName = OvermindConsole.normalizeRoomName(input);
+		return Overmind.colonies?.[roomName];
+	}
+
+	static setCurrentColony(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const colony = Overmind.colonies?.[roomName];
 		if (!colony) {
 			return `Colony ${roomName} not found!`;
@@ -182,31 +197,35 @@ export class OvermindConsole {
 		return `Current colony set to ${colony.name}`;
 	}
 
-	static getLogisticsSector(roomName: string): LogisticsSector | undefined {
+	static getLogisticsSector(input: string | Room): LogisticsSector | undefined {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		return col?.logisticsSector;
 	}
 
 	static requestEnergy(
-		roomName: string,
+		input: string | Room,
 		amount: number
 	): number | string | undefined | false {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		return col.logisticsSector.requestEnergy(amount);
 	}
 
-	static requestEnergyOk(roomName: string, amount: number): boolean {
+	static requestEnergyOk(input: string | Room, amount: number): boolean {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		return col.logisticsSector.requestEnergyOk(amount);
 	}
 
 	static requestResource(
-		roomName: string,
+		input: string | Room,
 		resource: ResourceConstant | string,
 		amount: number
 	): number | string | undefined | false {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		const amt = Math.floor(Number(amount) || 0);
@@ -217,10 +236,11 @@ export class OvermindConsole {
 	}
 
 	static requestResourceOk(
-		roomName: string,
+		input: string | Room,
 		resource: ResourceConstant | string,
 		amount: number
 	): boolean {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		const amt = Math.floor(Number(amount) || 0);
@@ -231,9 +251,10 @@ export class OvermindConsole {
 	}
 
 	static requestFromPairs(
-		roomName: string,
+		input: string | Room,
 		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
 	): number | string | undefined | false {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		let normalized: Array<[ResourceConstant, number]>;
@@ -248,9 +269,10 @@ export class OvermindConsole {
 	}
 
 	static requestFromPairsOk(
-		roomName: string,
+		input: string | Room,
 		pairs: Array<[ResourceConstant, number]> | [ResourceConstant, number]
 	): boolean {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const col = Overmind.colonies?.[roomName];
 		if (!col) return false;
 		let normalized: Array<[ResourceConstant, number]>;
@@ -411,7 +433,8 @@ export class OvermindConsole {
 
 	// Colony suspension ===============================================================================================
 
-	static suspendColony(roomName: string): string {
+	static suspendColony(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		if (Overmind.colonies[roomName]) {
 			const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
 			if (colonyMemory) {
@@ -426,7 +449,8 @@ export class OvermindConsole {
 		}
 	}
 
-	static unsuspendColony(roomName: string): string {
+	static unsuspendColony(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
 		if (colonyMemory) {
 			if (!colonyMemory.suspend) {
@@ -455,7 +479,8 @@ export class OvermindConsole {
 
 	// Room planner control ============================================================================================
 
-	static openRoomPlanner(roomName: string): string {
+	static openRoomPlanner(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		if (Overmind.colonies[roomName]) {
 			if (Overmind.colonies[roomName].roomPlanner.active != true) {
 				Overmind.colonies[roomName].roomPlanner.active = true;
@@ -468,7 +493,8 @@ export class OvermindConsole {
 		}
 	}
 
-	static closeRoomPlanner(roomName: string, ignoreRoads=false): string {
+	static closeRoomPlanner(input: string | Room, ignoreRoads=false): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		if (Overmind.colonies[roomName]) {
 			if (Overmind.colonies[roomName].roomPlanner.active) {
 				Overmind.colonies[roomName].roomPlanner.finalize(ignoreRoads);
@@ -481,7 +507,8 @@ export class OvermindConsole {
 		}
 	}
 
-	static cancelRoomPlanner(roomName: string): string {
+	static cancelRoomPlanner(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		if (Overmind.colonies[roomName]) {
 			if (Overmind.colonies[roomName].roomPlanner.active) {
 				Overmind.colonies[roomName].roomPlanner.active = false;
@@ -583,7 +610,8 @@ export class OvermindConsole {
 
 	// Structure management ============================================================================================
 
-	static destroyErrantStructures(roomName: string): string {
+	static destroyErrantStructures(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const colony = Overmind.colonies[roomName] as Colony;
 		if (!colony) return `${roomName} is not a valid colony!`;
 		const room = colony.room;
@@ -601,7 +629,8 @@ export class OvermindConsole {
 		return `Destroyed ${i} misplaced structures in ${roomName}.`;
 	}
 
-	static destroyAllHostileStructures(roomName: string): string {
+	static destroyAllHostileStructures(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const room = Game.rooms[roomName];
 		if (!room) return `${roomName} is undefined! (No vision?)`;
 		if (!room.my) return `${roomName} is not owned by you!`;
@@ -612,7 +641,8 @@ export class OvermindConsole {
 		return `Destroyed ${hostileStructures.length} hostile structures.`;
 	}
 
-	static destroyAllBarriers(roomName: string): string {
+	static destroyAllBarriers(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const room = Game.rooms[roomName];
 		if (!room) return `${roomName} is undefined! (No vision?)`;
 		if (!room.my) return `${roomName} is not owned by you!`;
@@ -637,7 +667,8 @@ export class OvermindConsole {
 
 	// Colony Management =================================================================================================
 
-	static setRoomUpgradeRate(roomName: string, rate: number): string {
+	static setRoomUpgradeRate(input: string | Room, rate: number): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
 		const colony: Colony = Overmind.colonies[roomName];
 		colony.upgradeSite.memory.speedFactor = rate;
 
