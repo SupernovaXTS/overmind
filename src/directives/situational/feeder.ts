@@ -28,7 +28,11 @@ export class DirectiveFeeder extends Directive {
 	}
 
 	init(): void {
-		if (this.room && DirectiveFeeder.isPresent(this.room.name) || this.colony.state.beingFed) {
+		if (DirectiveFeeder.findInColony(this.colony).length > 1) {
+			this.remove();
+			return;
+		}
+		if (this.room && DirectiveFeeder.isPresent(this.pos) || this.colony.state.beingFed) {
 			this.remove();
 			return;
 		}
@@ -41,6 +45,14 @@ export class DirectiveFeeder extends Directive {
 		if (this.colony && this.colony.assets.energy <= DirectiveFeeder.maxFeed) {
 			this.remove();
 			this.colony.state.beingFed = false;
+		}
+		if (DirectiveFeeder.findInColony(this.colony).length > 1) {
+			this.remove();
+			return;
+		}
+		if (this.room && DirectiveFeeder.isPresent(this.pos) || this.colony.state.beingFed) {
+			this.remove();
+			return;
 		}
 	}
 }

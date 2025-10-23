@@ -305,7 +305,6 @@ export class Overseer implements IOverseer {
 	private handleBootstrapping(colony: Colony) {
 		// Doesn't apply to incubating or fed colonies.
 		if (colony.state.isIncubating || colony.state.beingFed) return;
-		if (this.handleFeeding(colony)) return;
 
 		const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
 		if (noQueen && colony.hatchery && !colony.spawnGroup) {
