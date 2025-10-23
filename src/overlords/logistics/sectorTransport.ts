@@ -5,6 +5,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord, OverlordMemory} from '../Overlord';
+import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {SectorLogistics} from '../../logistics/SectorLogistics';
 import {Stats} from '../../stats/stats';
 
@@ -40,7 +41,7 @@ export class SectorTransportOverlord extends Overlord {
 	};
 
 	constructor(colony: Colony) {
-		super(colony, 'sectorTransport', 1100 /* OverlordPriority.tasks.haul */, getDefaultSectorTransportOverlordMemory);
+		super(colony, 'sectorTransport', OverlordPriority.sectorLogi.intersectorTransport, getDefaultSectorTransportOverlordMemory);
 		this.transporters = this.zerg(Roles.sectorTransport);
 	}
 
@@ -100,10 +101,14 @@ export class SectorTransportOverlord extends Overlord {
 		if (!this.memory.queue || this.memory.queue.length == 0) {
 			this.rebuildQueueFromPool();
 		}
-		// Determine how many transporters to spawn: 1 per 2000 requested resources up to 3
+		// Determine how many transporters to spawn dynamically based on setup carry capacity
 		const totalToShip = _.sum(this.memory.queue, s => s.amount);
-		const desired = Math.min(3, Math.ceil(totalToShip / 2000));
 		const setup = Setups.sectorTransporters.default;
+		const carryParts = setup.getBodyPotential(CARRY, this.colony) || 0;
+		const perCreepCapacity = Math.max(1, carryParts * CARRY_CAPACITY);
+		const maxCreepsCap = (Memory.settings as any)?.logistics?.intercolony?.maxTransporters;
+		const maxCreeps = (typeof maxCreepsCap === 'number' && maxCreepsCap > 0) ? maxCreepsCap : 3;
+		const desired = Math.min(maxCreeps, Math.ceil(totalToShip / perCreepCapacity));
 		this.wishlist(desired, setup, {reassignIdle: true});
 		// Stats
 		Stats.log(`colonies.${this.colony.name}.sectorTransport.queueSize`, this.memory.queue.length);

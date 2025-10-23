@@ -81,8 +81,9 @@ export const OverlordPriority = {
 				mine         : 901,
 				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
 			},
-			feeding: {
+			sectorLogi: {
 				feeder: 950,
+				intersectorTransport: 1105,
 			},
 			remoteSKRoom: {
 				sourceReaper : 1000,
@@ -178,8 +179,9 @@ export class PrioritiesOverlords {
 				harass      : 560,
 				roomPoisoner: 561,
 			},
-			feeding: {
+			sectorLogi: {
 				feeder: 599,
+				intersectorTransport: 1105,
 			},
 			upgrading: {				// Spawning upgraders
 				upgrade: 600,
