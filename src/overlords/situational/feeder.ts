@@ -88,6 +88,7 @@ export class FeederOverlord extends Overlord {
 	}
 
 	init() {
+		
 		let neededFeeders = this.feeders.length;
 		if (this.feeders.length == 0) {
 			neededFeeders = 1;
