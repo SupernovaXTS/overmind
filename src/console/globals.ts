@@ -1,3 +1,5 @@
+import {progress as statsProgress} from '../utilities/statistics';
+
 declare const __VERSION__: string;
 global.__VERSION__ = '0.7.0';
 
@@ -17,6 +19,11 @@ global.derefRoomPosition = function(protoPos: ProtoPos): RoomPosition {
 global.NO_ACTION = 1;
 
 global.PERMACACHE = {};
+declare function progressStats(): string;
+
+global.progressStats = function(): string {
+	return statsProgress();
+};
 
 // // Assign values to the memory key aliases declared in memory.d.ts
 // global._TICK = 'T';

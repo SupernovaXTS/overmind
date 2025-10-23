@@ -7,6 +7,7 @@ import {UpgradingOverlord} from '../overlords/core/upgrader';
 import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {hasMinerals} from '../utilities/utils';
+import {getAvgTickLength, tickDelay, estimate, DATETIME_FORMATTER} from '../utilities/statistics';
 import {HiveCluster} from './_HiveCluster';
 interface UpgradeSiteMemory {
 	stats: { 
@@ -19,13 +20,13 @@ interface UpgradeSiteMemory {
 		progressTotal: number,
 		ticksTillUpgrade: number,
 		secondsTillUpgrade: number,
+		etaTimestamp?: number,
+		etaFormatted?: string,
 	};
 	speedFactor: number;		// Multiplier on upgrade parts for fast growth
 	progressHistory: number[];	// Array to track progress over last 100 ticks
 	lastProgress: number;		// Last recorded progress value
-	tickTimes: number[];		// Array to track millisecond timestamps for calculating tick duration
 }
-
 
 /**
  * Upgrade sites group upgrade-related structures around a controller, such as an input link and energy container
@@ -215,18 +216,8 @@ export class UpgradeSite extends HiveCluster {
 		return sum / this.memory.progressHistory.length;
 	}
 	private get averageTickDuration(): number {
-		// Calculate average tick duration in seconds based on recorded timestamps
-		if (!this.memory.tickTimes || this.memory.tickTimes.length < 2) {
-			return 3; // Default to 3 seconds if we don't have enough data
-		}
-		// Calculate time differences between consecutive ticks
-		const timeDiffs: number[] = [];
-		for (let i = 1; i < this.memory.tickTimes.length; i++) {
-			timeDiffs.push(this.memory.tickTimes[i] - this.memory.tickTimes[i - 1]);
-		}
-		// Return average in seconds
-		const avgMilliseconds = _.sum(timeDiffs) / timeDiffs.length;
-		return avgMilliseconds / 1000;
+		// Use global average tick length if available
+		return getAvgTickLength(3);
 	}
 	private get progress(): number {
 		return this.controller.progress;
@@ -248,10 +239,19 @@ export class UpgradeSite extends HiveCluster {
 		const energyPercent = Math.floor(100 * this.energy / this.energyTotal);
 		return energyPercent;
 	}
+
+	// Unified ETA date using statistics helpers and controller extension
+	private get etaDate(): Date | undefined {
+		return this.controller.estimate?.() ?? estimate(this.ticksTillUpgrade, getAvgTickLength(3));
+	}
 	private get ticksTillUpgrade(): number {
-		const ticksTillUpgrade = Math.ceil((this.controller.progressTotal - this.controller.progress)
-			/ (this.averageProgressPerTick || 1));
-		return ticksTillUpgrade;
+		// Prefer controller-provided estimate if available (uses rclAvgTick from statistics library)
+		const ticks = this.controller.estimateInTicks?.();
+		if (typeof ticks === 'number') return ticks;
+		// Fallback to local average progress per tick
+		const remaining = this.controller.progressTotal - this.controller.progress;
+		const avgProg = this.averageProgressPerTick || 1;
+		return Math.ceil(remaining / avgProg);
 	}	
 	private stats() {
 		const defaults = {
@@ -264,6 +264,8 @@ export class UpgradeSite extends HiveCluster {
 			progressTotal: 0,
 			ticksTillUpgrade: 0,
 			secondsTillUpgrade: 0,
+			etaTimestamp: 0,
+			etaFormatted: '',
 		};
 		if (!this.memory.stats) this.memory.stats = defaults;
 		_.defaults(this.memory.stats, defaults);
@@ -273,17 +275,9 @@ export class UpgradeSite extends HiveCluster {
 			this.memory.progressHistory = [];
 		}
 		
-		// Initialize tick times array if needed
-		if (!this.memory.tickTimes) {
-			this.memory.tickTimes = [];
-		}
-		
-		// Record current timestamp
-		this.memory.tickTimes.push(Date.now());
-		
-		// Keep only the last 100 ticks of timestamp data
-		if (this.memory.tickTimes.length > 100) {
-			this.memory.tickTimes.shift();
+		// Update controller RCL progress moving average for ETA calculations
+		if (typeof this.controller.updateRclAvg === 'function') {
+			this.controller.updateRclAvg();
 		}
 		
 		// Calculate and store progress for this tick
@@ -308,7 +302,15 @@ export class UpgradeSite extends HiveCluster {
 		this.memory.stats.progressPercent = this.progressPercent;
 		this.memory.stats.progressTotal = this.progressTotal;
 		this.memory.stats.ticksTillUpgrade = this.ticksTillUpgrade;
-		this.memory.stats.secondsTillUpgrade = Math.ceil(this.ticksTillUpgrade * this.averageTickDuration);
+		this.memory.stats.secondsTillUpgrade = Math.ceil(
+			tickDelay(this.memory.stats.ticksTillUpgrade, getAvgTickLength(3))
+		);
+		// Compute ETA date using unified getter
+		const etaDate: Date | undefined = this.etaDate;
+		if (etaDate instanceof Date && !isNaN(etaDate.getTime())) {
+			this.memory.stats.etaTimestamp = etaDate.getTime();
+			this.memory.stats.etaFormatted = DATETIME_FORMATTER.format(etaDate);
+		}
 		// Log stats
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energy`, this.memory.stats.energy);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPercent`, this.memory.stats.energyPercent);
@@ -319,6 +321,7 @@ export class UpgradeSite extends HiveCluster {
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.energyPerTick`, this.memory.stats.energyPerTick);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.ticksTillUpgrade`, this.memory.stats.ticksTillUpgrade);
 		Stats.log(`colonies.${this.colony.name}.upgradeSite.secondsTillUpgrade`, this.memory.stats.secondsTillUpgrade);
+		Stats.log(`colonies.${this.colony.name}.upgradeSite.etaTimestamp`, this.memory.stats.etaTimestamp || 0);
 	}
 
 	run(): void {

@@ -26,6 +26,7 @@ import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind';
 import {VersionMigration} from './versionMigration/migrator';
+import {recordAvgTickLength} from './utilities/statistics';
 // =====================================================================================================================
 
 // Main loop
@@ -37,6 +38,9 @@ function main(): void {
 	Mem.load();									// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;				// Suspend operation if necessary
 	Mem.clean();								// Clean memory contents
+
+	// Update global average tick length once per tick (used by ETA calculations)
+	recordAvgTickLength();
 
 	// Instantiation operations: build or refresh the game state -------------------------------------------------------
 	if (!global.Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {

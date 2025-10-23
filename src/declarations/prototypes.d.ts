@@ -233,6 +233,11 @@ interface StructureController {
 	signedByScreeps: boolean;
 
 	needsReserving(reserveBuffer: number): boolean;
+
+	// Extended at runtime in utilities/statistics.ts
+	updateRclAvg(): void;
+	estimateInTicks(): number | undefined;
+	estimate(): Date | undefined;
 }
 
 interface StructureExtension {

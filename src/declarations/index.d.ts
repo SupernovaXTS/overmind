@@ -1,6 +1,11 @@
 declare const require: (module: string) => any;
 declare var global: any;
 
+// Ambient globals used unqualified throughout the codebase
+declare const __VERSION__: string;
+declare function deref(ref: string): RoomObject | null;
+declare function derefRoomPosition(protoPos: ProtoPos): RoomPosition;
+
 declare const MARKET_FEE: 300; // missing in the typed-screeps declarations
 global.MARKET_FEE = MARKET_FEE;
 
