@@ -1,3 +1,4 @@
+import {progress as statsProgress} from '../utilities/statistics';
 
 global.__VERSION__ = '0.7.0';
 
@@ -17,6 +18,15 @@ global.derefRoomPosition = function(protoPos: ProtoPos): RoomPosition {
 global.NO_ACTION = 1;
 
 global.PERMACACHE = {};
+// Expose progress helpers at global scope (also available via OvermindConsole)
+// Assign early so it's usable before console init runs
+global.progressStats = function(): string {
+	return statsProgress();
+};
+
+global.progress = function(): string {
+	return statsProgress();
+};
 
 // // Assign values to the memory key aliases declared in memory.d.ts
 // global._TICK = 'T';
