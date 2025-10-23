@@ -310,7 +310,7 @@ export class Overseer implements IOverseer {
 		if (noQueen && colony.hatchery && !colony.spawnGroup) {
 			const energyToMakeQueen = bodyCost(Setups.queens.early.generateBody(colony.room.energyCapacityAvailable));
 			if (colony.room.energyAvailable < energyToMakeQueen || hasJustSpawned()) {
-				const result = DirectiveBootstrap.createIfNotPresent(colony.hatchery.pos, 'pos');
+				const result = DirectiveBootstrap.createIfNotPresent(colony.hatchery.pos, 'room');
 				if (typeof result == 'string' || result == OK) { // successfully made flag
 					colony.hatchery.settings.suppressSpawning = true;
 				}
