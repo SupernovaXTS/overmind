@@ -155,6 +155,15 @@ export class SpawnGroup {
 		// Most initialization needs to be done at init phase because colonies are still being constructed earlier
 		const colonies = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name])) as Colony[];
 		const hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
+		
+		// Early exit if no colonies or hatcheries are available
+		if (colonies.length === 0) {
+			if (this.requests.length > 0) {
+				log.error(`No colonies available in SpawnGroup ${this.ref}!`);
+			}
+			return;
+		}
+		
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 
 		// Enqueue each requests to the hatchery with least expected wait time, which is updated after each enqueue
@@ -162,10 +171,6 @@ export class SpawnGroup {
 			// Check if any hatchery can actually spawn this creep by generating the body
 			// The setup.create() method handles both CreepSetup and CombatCreepSetup
 			const maxColony = _.max(colonies, colony => colony.room.energyCapacityAvailable);
-			if (!maxColony) {
-				log.error(`No colonies available in SpawnGroup ${this.ref}!`);
-				continue;
-			}
 			
 			const {body, boosts} = request.setup.create(maxColony);
 			const bodyCostValue = bodyCost(body);
