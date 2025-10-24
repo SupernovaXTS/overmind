@@ -150,6 +150,7 @@ interface PublicSegment {
 interface CreepMemory {
 	[MEM.OVERLORD]: string | null;
 	[MEM.COLONY]: string | null;
+	[MEM.SHARD]?: string;
 	role: string;
 	task: ProtoTask | null;
 	sleepUntil?: number;
@@ -176,8 +177,8 @@ interface MoveData {
 	fleeWait?: number;
 	destination?: ProtoPos;
 	priority?: number;
-	// waypoints?: string[];
-	// waypointsVisited?: string[];
+	waypoints?: string[];
+	waypointsVisited?: string[];
 	portaling?: boolean;
 }
 
@@ -236,6 +237,7 @@ declare const enum MEM {
 	OVERLORD   = 'O',
 	DISTANCE   = 'D',
 	STATS      = 'S',
+	SHARD      = 'H',
 }
 
 declare const enum MEM_DISTANCE {

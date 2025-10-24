@@ -72,7 +72,7 @@ export interface MoveOptions {
 	noPush?: boolean;							// whether to ignore pushing behavior
 	// modifyRoomCallback?: (r: Room, m: CostMatrix) => CostMatrix; // modifications to default cost matrix calculations
 	// allowPortals?: boolean;
-	// waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
+	waypoints?: RoomPosition[];					// list of waypoints to visit on the way to target
 	pathOpts?: PathOptions;
 }
 

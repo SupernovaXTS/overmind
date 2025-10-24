@@ -19,6 +19,7 @@ import { Cartographer } from './utilities/Cartographer';
 import Sector from './sector/Sector';
 import { Mem } from './memory/Memory';
 import { Overseer } from './Overseer';
+import { Overshard } from './Overshard';
 import { profile } from './profiler/decorator';
 import { Stats } from './stats/stats';
 import { ExpansionPlanner } from './strategy/ExpansionPlanner';
@@ -35,6 +36,7 @@ export default class _Overmind implements IOvermind {
 	suspendedColonies: string[];
 	suppressedColonies: string[];
 	overseer: Overseer;
+	overshard: Overshard;
 	cache: GameCache;
 	shouldBuild: boolean;
 	expiration: number;
@@ -58,6 +60,7 @@ export default class _Overmind implements IOvermind {
 	constructor() {
 		this.memory = Memory.Overmind;
 		this.overseer = new Overseer();
+		this.overshard = new Overshard();
 		this.shouldBuild = true;
 		this.expiration = Game.time + NEW_OVERMIND_INTERVAL;
 		this.cache = new GameCache();
@@ -98,6 +101,7 @@ export default class _Overmind implements IOvermind {
 		}
 
 		this.cache.build();
+		this.overshard.build();
 		this.registerColonies();
 		this.registerDirectives();
 		_.forEach(this.colonies, c => c.spawnMoarOverlords());
@@ -123,6 +127,7 @@ export default class _Overmind implements IOvermind {
 		this.memory = Memory.Overmind;
 		this.exceptions = [];
 		this.cache.refresh();
+		this.overshard.refresh();
 		this.overseer.refresh();
 		this.terminalNetwork.refresh();
 		this.tradeNetwork.refresh();
@@ -256,6 +261,7 @@ export default class _Overmind implements IOvermind {
 
 	init() {
 		this.try(() => RoomIntel.init());
+		this.try(() => this.overshard.init(), 'overshard.init()');
 		this.try(() => this.tradeNetwork.init());
 		this.try(() => this.terminalNetwork.init());
 		this.try(() => this.overseer.init(), 'overseer.init()');
@@ -283,6 +289,7 @@ export default class _Overmind implements IOvermind {
 			this.try(() => this.spawnGroups[spawnGroupName].run(), spawnGroupName);
 		}
 
+		this.try(() => this.overshard.run(), 'overshard.run()');
 		this.try(() => this.overseer.run(), 'overseer.run()');
 
 		for (const colonyName in this.colonies) {

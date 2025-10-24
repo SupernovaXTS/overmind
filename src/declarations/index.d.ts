@@ -40,6 +40,18 @@ declare namespace NodeJS {
 	}
 }
 
+// InterShard memory interface
+interface InterShardMemory {
+	[shardName: string]: {
+		packets: {
+			[tick: number]: {
+				[creepName: string]: CreepMemory;
+			};
+		};
+		ack: number;
+	};
+}
+
 type Full<T> = {
 	[P in keyof T]-?: T[P];
 };
@@ -96,6 +108,7 @@ interface IOvermind {
 	expiration: number;
 	cache: ICache;								// is actually GameCache
 	overseer: IOverseer;						// is actually Overseer
+	overshard: any;								// is actually Overshard
 	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
 	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
 	powerZerg: { [creepName: string]: any };	// is actually { [creepName: string]: PowerZerg }
