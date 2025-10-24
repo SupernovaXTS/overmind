@@ -25,6 +25,7 @@ export class DefaultOverlord extends Overlord {
 		this.idleZerg = _.map(idleCreeps, creep => Overmind.zerg[creep.name] || new Zerg(creep));
 		for (const zerg of this.idleZerg) {
 			zerg.refresh();
+			zerg.retire();
 		}
 	}
 	refresh() {
@@ -32,6 +33,8 @@ export class DefaultOverlord extends Overlord {
 	}
 	
 	run() {
-
+		for (const zerg of this.idleZerg) {
+			zerg.retire();
+		}
 	}
 }
