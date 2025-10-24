@@ -153,6 +153,7 @@ interface CreepMemory {
 	[MEM.SHARD]?: string;
 	role: string;
 	task: ProtoTask | null;
+	mission?: ProtoMission;
 	sleepUntil?: number;
 	needBoosts?: ResourceConstant[];
 	data: {

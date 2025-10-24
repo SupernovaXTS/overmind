@@ -1,6 +1,8 @@
 import {log} from '../console/log';
 import {isCreep, isPowerCreep, isStandardZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
+import {Mission} from '../missions/Mission';
+import {initializeMission} from '../missions/initializer';
 import {Movement} from '../movement/Movement';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
@@ -83,6 +85,7 @@ export class Zerg extends AnyZerg {
 
 	// Cached properties
 	private _task: Task<any> | null;
+	private _mission: Mission | null;
 	private _neededBoosts: { [boostResource: string]: number } | undefined;
 
 	constructor(creep: Creep, notifyWhenAttacked = true) {
@@ -147,6 +150,7 @@ export class Zerg extends AnyZerg {
 			// this.actionLog = {};
 			// this.blockMovement = false;
 			this._task = null; // todo
+			this._mission = null;
 			this._neededBoosts = undefined;
 		} else {
 			// log.debug(`Deleting from global`);
@@ -621,6 +625,24 @@ export class Zerg extends AnyZerg {
 		}
 		// Clear cache
 		this._task = null;
+	}
+
+	/**
+	 * Wrapper for _mission
+	 */
+	get mission(): Mission | null {
+		if (!this._mission) {
+			this._mission = this.memory.mission ? initializeMission(this.memory.mission) : null;
+		}
+		return this._mission;
+	}
+
+	/**
+	 * Assign the creep a mission with the setter
+	 */
+	set mission(misn: Mission | null) {
+		this.memory.mission = misn?.proto;
+		this._mission = misn;
 	}
 
 	/**

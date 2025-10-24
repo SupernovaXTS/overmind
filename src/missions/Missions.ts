@@ -1,4 +1,4 @@
-import {initializeMission} from './initializer';
+import {initializeMission} from '../missions/initializer';
 
 export class Missions {
 	public static create(name: string, target: RoomPosition, waypoints: string[]) {
