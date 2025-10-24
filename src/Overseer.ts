@@ -257,10 +257,10 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleFeeding(colony: Colony): boolean {
-		const maxFeed = DirectiveFeeder.maxFeed;
-		if (colony.terminal) { return false }
-		if (colony.storage && colony.assets.energy > maxFeed) return false;
-		const feederSettings = Memory.settings.feeder;
+	const maxFeed = 100000; // Hardcoded feed amount threshold
+	if (colony.terminal) { return false }
+	if (colony.storage && colony.assets.energy > maxFeed) return false;
+	const feederSettings = Memory.settings.feeder;
 	if (!feederSettings || !feederSettings.enabled) return false;
 	if (!colony.hatchery) return false;
 	if (!colony.bunker) return false;
@@ -277,40 +277,82 @@ export class Overseer implements IOverseer {
 		const freq = feederSettings.checkFrequency || 0;
 		if (freq > 0 && Game.time % freq != 0) return false;
 
+		// ====== TOGGLE: Set to true for old DirectiveFeeder behavior, false for new SectorLogistics pool ======
+		const USE_OLD_FEEDER_DIRECTIVE = true;
+		// =================================================================================================
+
 		// Receiver allow/deny checks
 		const allowList = feederSettings.allowList || [];
 		const denyList = feederSettings.denyList || [];
 		if (denyList.includes(colony.name)) return false;
 		if (allowList.length > 0 && !allowList.includes(colony.name)) return false;
 
-		// New behavior: create a SectorLogistics pool request for 100k energy instead of placing feeder directive
-		if (!colony.storage) return false; // require storage for intercolony shipment destination
-		
-		// Check if a pool entry already exists for this colony
-		const pool = (SectorLogistics as any).pool;
-		const existingEntry = pool[colony.name];
-		if (existingEntry) {
-			// Already have a request; don't create another
+		if (USE_OLD_FEEDER_DIRECTIVE) {
+			// Old behavior: create DirectiveFeeder flag at receiver, owned by donor colony
+			const maxRange = feederSettings.maxRange ?? 4;
+			const donorMinRCL = feederSettings.donorMinRCL ?? 4;
+			const maxFeed = 100000; // Hardcoded feed amount threshold
+
+			// Enforce global and per-donor concurrency limits
+			this.ensureDirectivesCached();
+			const feederDirectives = this.directivesByType[DirectiveFeeder.directiveName] || [];
+			const maxConcurrent = feederSettings.maxConcurrent ?? Infinity;
+			if (isFinite(maxConcurrent) && feederDirectives.length >= maxConcurrent) return false;
+			const perDonorMax = feederSettings.perDonorMaxConcurrent ?? Infinity;
+
+			// Find donor colonies within configured range, minimum RCL, energy threshold and per-donor cap
+			const donors = _.filter(getAllColonies(), other => {
+				if (other.name == colony.name) return false;
+				if (Game.map.getRoomLinearDistance(other.room.name, colony.room.name) > maxRange) return false;
+				if (other.level < donorMinRCL) return false;
+				if (other.assets.energy < maxFeed * 2) return false;
+				if (isFinite(perDonorMax)) {
+					const donorActive = _.filter(feederDirectives, d => d.colony && d.colony.name == other.name).length;
+					if (donorActive >= perDonorMax) return false;
+				}
+				return true;
+			});
+			if (donors.length == 0) return false;
+			// Choose the closest donor by linear distance
+			const donor = minBy(donors, other =>
+				Game.map.getRoomLinearDistance(other.room.name, colony.room.name));
+			if (!donor) return false;
+			// Create a feeder directive at the receiver's hatchery, owned by the donor colony
+			DirectiveFeeder.createIfNotPresent(colony.bunker?.anchor, 'pos', {memory: {[MEM.COLONY]: donor.name}});
+			// If already present, res will be undefined; we still consider that success
 			this.fedReceiversThisTick.add(colony.name);
 			colony.state.beingFed = true;
 			return true;
+		} else {
+			// New behavior: create a SectorLogistics pool request for 100k energy instead of placing feeder directive
+			if (!colony.storage) return false; // require storage for intercolony shipment destination
+			
+			// Check if a pool entry already exists for this colony
+			const pool = (SectorLogistics as any).pool;
+			const existingEntry = pool[colony.name];
+			if (existingEntry) {
+				// Already have a request; don't create another
+				this.fedReceiversThisTick.add(colony.name);
+				colony.state.beingFed = true;
+				return true;
+			}
+			
+			const manifest: StoreDefinitionUnlimited = {} as any;
+			(manifest as any)[RESOURCE_ENERGY] = 100000;
+			// Directly enqueue into central pool (consumed by SectorTransportOverlord)
+			pool[colony.name] = {
+				colony: colony.name,
+				room: colony.room.name,
+				manifest,
+				tick: Game.time,
+			};
+			this.fedReceiversThisTick.add(colony.name);
+			colony.state.beingFed = true;
+			if (colony.memory.debug || Game.time % 50 == 0) {
+				log.info(`${colony.print} requested sector feed: 100000 energy`);
+			}
+			return true;
 		}
-		
-		const manifest: StoreDefinitionUnlimited = {} as any;
-		(manifest as any)[RESOURCE_ENERGY] = 100000;
-		// Directly enqueue into central pool (consumed by SectorTransportOverlord)
-		pool[colony.name] = {
-			colony: colony.name,
-			room: colony.room.name,
-			manifest,
-			tick: Game.time,
-		};
-		this.fedReceiversThisTick.add(colony.name);
-		colony.state.beingFed = true;
-		if (colony.memory.debug || Game.time % 50 == 0) {
-			log.info(`${colony.print} requested sector feed: 100000 energy`);
-		}
-		return true;
 	}
 	// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 	private handleBootstrapping(colony: Colony) {
