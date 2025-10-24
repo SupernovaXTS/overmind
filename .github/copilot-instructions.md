@@ -324,8 +324,7 @@ pos.isEdge // true if on room edge
 - **src/overlords/~template/templateOverlord.ts** - Overlord boilerplate
 - **src/overlords/~template/emptyOverlord.ts** - Minimal overlord example
 
-## Project-Specific Conventions
-
+## Project-
 - **No public server harassment:** Respect novice/respawn zones
 - **Zerg naming:** All creeps = Zerg, power creeps = PowerZerg
 - **HiveCluster naming:** `<type>@<colonyName>` (e.g., `hatchery@W1N1`)

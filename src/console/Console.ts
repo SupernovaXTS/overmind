@@ -978,13 +978,16 @@ export class OvermindConsole {
 	static sectorQueue(input?: string | Room): string {
 		const colony = input ? this.getColony(input) : (global.c as Colony | undefined);
 		if (!colony) return 'No colony specified or current colony (global.c) unset';
-		const ov = colony.overlords?.sector as any;
-		if (!ov) return `No SectorTransportOverlord found for ${colony.name}`;
+		// Find sector overlord for the colony's sector
+		const sectorKey = Cartographer.getSectorKey(colony.room.name);
+		const sector = (Overmind as any).sectors?.[sectorKey];
+		const ov = sector?.overlord as any;
+		if (!ov) return `No SectorLogisticsOverlord found for sector ${sectorKey}`;
 		const q = ov.memory?.queue || [];
 		const total = _.sum(q, (s: any) => s.amount || 0);
 		const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
 		const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
-		return `${colony.name} sector queue: ${q.length} shipments, total=${total}, backfill: count=${backfillCount}, amount=${backfillAmount}\n` + JSON.stringify(q, undefined, 2);
+		return `${sectorKey} sector queue: ${q.length} shipments, total=${total}, backfill: count=${backfillCount}, amount=${backfillAmount}\n` + JSON.stringify(q, undefined, 2);
 	}
 
 	static sectorSummary(): string {
@@ -993,15 +996,14 @@ export class OvermindConsole {
 		const poolCount = _.keys(pool).length;
 		let msg = `Intercolony logistics summary\n`; 
 		msg += `  Pool entries: ${poolCount}\n`;
-		for (const name in Overmind.colonies) {
-			const c = Overmind.colonies[name];
-			const ov = (c.overlords as any)?.sector;
-			if (!ov) continue;
-			const q = ov.memory?.queue || [];
+		const sectors = (Overmind as any).sectors || {};
+		for (const key in sectors) {
+			const ov = sectors[key].overlord as any;
+			const q = ov?.memory?.queue || [];
 			const total = _.sum(q, (s: any) => s.amount || 0);
 			const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
 			const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
-			msg += `  ${c.name}: queueSize=${q.length}, queueAmount=${total}, backfillCount=${backfillCount}, backfillAmount=${backfillAmount}\n`;
+			msg += `  ${key}: queueSize=${q.length}, queueAmount=${total}, backfillCount=${backfillCount}, backfillAmount=${backfillAmount}\n`;
 		}
 		return msg;
 	}

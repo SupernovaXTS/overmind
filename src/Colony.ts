@@ -552,7 +552,6 @@ export class Colony {
 			default  : new DefaultOverlord(this),
 			work     : new WorkerOverlord(this),
 			logistics: new TransportOverlord(this),
-			sector   : new SectorTransportOverlord(this),
 		};
 		if (!this.observer) {
 			this.overlords.scout = new RandomWalkerScoutOverlord(this);

@@ -285,10 +285,21 @@ export class Overseer implements IOverseer {
 
 		// New behavior: create a SectorLogistics pool request for 100k energy instead of placing feeder directive
 		if (!colony.storage) return false; // require storage for intercolony shipment destination
+		
+		// Check if a pool entry already exists for this colony
+		const pool = (SectorLogistics as any).pool;
+		const existingEntry = pool[colony.name];
+		if (existingEntry) {
+			// Already have a request; don't create another
+			this.fedReceiversThisTick.add(colony.name);
+			colony.state.beingFed = true;
+			return true;
+		}
+		
 		const manifest: StoreDefinitionUnlimited = {} as any;
 		(manifest as any)[RESOURCE_ENERGY] = 100000;
 		// Directly enqueue into central pool (consumed by SectorTransportOverlord)
-		(SectorLogistics as any).pool[colony.name] = {
+		pool[colony.name] = {
 			colony: colony.name,
 			room: colony.room.name,
 			manifest,

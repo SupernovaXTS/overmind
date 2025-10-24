@@ -15,6 +15,8 @@ import { RoomIntel } from './intel/RoomIntel';
 import { TerminalNetworkV2 } from './logistics/TerminalNetwork_v2';
 import { SectorLogistics } from './logistics/SectorLogistics';
 import { TraderJoe, TraderJoeIntershard } from './logistics/TradeNetwork';
+import { Cartographer } from './utilities/Cartographer';
+import Sector from './sector/Sector';
 import { Mem } from './memory/Memory';
 import { Overseer } from './Overseer';
 import { profile } from './profiler/decorator';
@@ -43,6 +45,7 @@ export default class _Overmind implements IOvermind {
 	overlords: { [ref: string]: Overlord };
 	spawnGroups: { [ref: string]: SpawnGroup };
 	colonyMap: { [roomName: string]: string };
+	sectors: { [sectorKey: string]: Sector };
 	terminalNetwork: TerminalNetworkV2;
 	tradeNetwork: TraderJoe;
 	tradeNetworkIntershard: TraderJoeIntershard;
@@ -67,6 +70,7 @@ export default class _Overmind implements IOvermind {
 		this.overlords = {};
 		this.spawnGroups = {};
 		this.colonyMap = {};
+		this.sectors = {} as any;
 		this.terminalNetwork = new TerminalNetworkV2();
 		this.tradeNetwork = new TraderJoe();
 		this.tradeNetworkIntershard = new TraderJoeIntershard();
@@ -98,6 +102,19 @@ export default class _Overmind implements IOvermind {
 		this.registerDirectives();
 		_.forEach(this.colonies, c => c.spawnMoarOverlords());
 		_.forEach(this.directives, d => d.spawnMoarOverlords());
+		// Build Sector objects: one per sector, aggregating all colonies in that sector
+		const grouped: { [sectorKey: string]: Colony[] } = {} as any;
+		for (const name in this.colonies) {
+			const colony = this.colonies[name];
+			const sectorKey = Cartographer.getSectorKey(colony.room.name);
+			(grouped[sectorKey] = grouped[sectorKey] || []).push(colony);
+		}
+		this.sectors = {} as any;
+		for (const sectorKey in grouped) {
+			const cols = grouped[sectorKey];
+			if (cols.length == 0) continue;
+			this.sectors[sectorKey] = new Sector(sectorKey, cols);
+		}
 		this.shouldBuild = false;
 	}
 
@@ -119,6 +136,10 @@ export default class _Overmind implements IOvermind {
 		}
 		for (const s in this.spawnGroups) {
 			this.spawnGroups[s].refresh();
+		}
+		// Refresh sectors
+		for (const k in this.sectors) {
+			this.sectors[k].refresh();
 		}
 		this.shouldBuild = false;
 	}
@@ -250,6 +271,11 @@ export default class _Overmind implements IOvermind {
 		}
 
 		this.try(() => this.expansionPlanner.init());
+
+		// Initialize sectors
+		for (const key in this.sectors) {
+			this.try(() => this.sectors[key].init(), key);
+		}
 	}
 
 	run() {
@@ -262,9 +288,9 @@ export default class _Overmind implements IOvermind {
 		for (const colonyName in this.colonies) {
 			this.try(() => this.colonies[colonyName].run(), colonyName);
 		}
-		// Publish inter-colony logistics requests to central pool
-		for (const colonyName in this.colonies) {
-			try { new SectorLogistics(this.colonies[colonyName]).publishUnfulfilledRequests(); } catch (e) { /* noop */ }
+		// Run sectors (publishes pool entries and aggregates sector logistics)
+		for (const key in this.sectors) {
+			this.try(() => this.sectors[key].run(), key);
 		}
 		// Central pool is consumed by SectorTransportOverlords; no directive-based processing needed here
 		this.try(() => this.terminalNetwork.run());

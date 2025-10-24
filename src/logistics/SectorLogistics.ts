@@ -38,15 +38,29 @@ export class SectorLogistics {
 	}
 
 	refresh(): void {
-		// TODO: Implement refresh logic
+		// Ensure root memory structures exist
+		const root = (Memory as any).Overmind || (Memory.Overmind = {} as any);
+		root.sectorLogistics = root.sectorLogistics || {};
+		root.sectorLogistics.pool = root.sectorLogistics.pool || {};
+		// If colony lost storage, clear any lingering pool entry
+		if (!this.colony.storage) {
+			delete (root.sectorLogistics.pool as any)[this.colony.name];
+		}
 	}
 
 	init(): void {
-		// TODO: Implement initialization logic
+		// Initialize logistics network if not present
+		if (!this.colony.logisticsNetwork) {
+			this.colony.logisticsNetwork = {
+				requests: [],
+			} as any;
+		}
+		// Optionally, clear previous requests or perform setup
 	}
 
 	run(): void {
-		// TODO: Implement run logic
+		// Publish current unfulfilled requests for this colony
+		this.publishUnfulfilledRequests();
 	}
 
 	// ========== Central Pool API ==========
