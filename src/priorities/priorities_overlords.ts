@@ -4,41 +4,41 @@ import {Colony} from 'Colony';
  * Default ordering for processing spawning requests and prioritizing overlords
  */
 export const OverlordPriority = {
-			emergency: {				// Colony-wide emergencies such as a catastrophic crash
-				bootstrap: 1,
-			},
+	emergency: {				// Colony-wide emergencies such as a catastrophic crash
+		bootstrap: 1,
+	},
 
-			core: {						// Functionality related to spawning more creeps
-				queen  : 100,
-				manager: 101,
-			},
+	core: {						// Functionality related to spawning more creeps
+		queen  : 100,
+		manager: 101,
+	},
 
-			powerCreeps: {
-				default: 150,
-			},
+	powerCreeps: {
+		default: 150,
+	},
 
-			defense: {					// Defense of local and remote rooms
-				meleeDefense : 200,
-				rangedDefense: 201,
-			},
+	defense: {					// Defense of local and remote rooms
+		meleeDefense : 200,
+		rangedDefense: 201,
+	},
 
-			outpostDefense: {
-				outpostDefense: 250,
-				guard         : 251,
-			},
+	outpostDefense: {
+		outpostDefense: 250,
+		guard         : 251,
+	},
 
-			warSpawnCutoff: 299,		// Everything past this is non-critical and won't be spawned in case of emergency
+	warSpawnCutoff: 299,		// Everything past this is non-critical and won't be spawned in case of emergency
 
-			offense: {					// Offensive operations like raids or sieges
-				destroy         : 300,
-				healPoint       : 301,
-				siege           : 302,
-				controllerAttack: 399,
-			},
-			scouting: {
-				stationary  : 410,
-				randomWalker: 411,
-			},
+	offense: {					// Offensive operations like raids or sieges
+		destroy         : 300,
+		healPoint       : 301,
+		siege           : 302,
+		controllerAttack: 399,
+	},
+	scouting: {
+		stationary  : 410,
+		randomWalker: 411,
+	},
 	colonization: {				// Colonizing new rooms
 		claim          : 401,
 		pioneer        : 402,
@@ -81,26 +81,25 @@ export const OverlordPriority = {
 
 	throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
 
-	
-
 	remoteSKRoom: {
 		sourceReaper : 1000,
 		mineral      : 1001,
 		mine         : 1002,
 		roomIncrement: 5,
-	},			powerMine: {
-				cool         : 1050,
-				drill        : 1051,
-				roomIncrement: 5,
-			},
+	},			
+	powerMine: {
+		cool         : 1050,
+		drill        : 1051,
+		roomIncrement: 5,
+	},
 
-			tasks: {					// Non-urgent tasks, such as collection from a deserted storage
-				haul     : 1100,
-				dismantle: 1101,
-			},
+	tasks: {					// Non-urgent tasks, such as collection from a deserted storage
+		haul     : 1100,
+		dismantle: 1101,
+	},
 
-			default: 99999,				// Default overlord priority to ensure it gets run last
-	};
+	default: 99999,				// Default overlord priority to ensure it gets run last
+};
 
 export type OverlordPriorityType = typeof OverlordPriority;
 
