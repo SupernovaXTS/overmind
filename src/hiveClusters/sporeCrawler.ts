@@ -105,6 +105,26 @@ export class SporeCrawler extends HiveCluster {
 		return ERR_NOT_FOUND;
 	}
 
+	/**
+	 * Heal all damaged creeps owned by us using available towers
+	 */
+	private healDamagedCreeps(): boolean {
+		const damagedCreeps = _.filter(this.room.creeps, creep => creep.hits < creep.hitsMax);
+		
+		if (damagedCreeps.length === 0) {
+			return false;
+		}
+
+		// Heal the most damaged creeps first
+		const sortedByDamage = _.sortBy(damagedCreeps, creep => creep.hits / creep.hitsMax);
+		
+		for (let i = 0; i < Math.min(this.towers.length, sortedByDamage.length); i++) {
+			this.towers[i].heal(sortedByDamage[i]);
+		}
+		
+		return true;
+	}
+
 	private preventStructureDecay(includeRoads=true) {
 		if (this.towers.length < 1) return;
 
@@ -183,12 +203,8 @@ export class SporeCrawler extends HiveCluster {
 			}
 		}
 
-		const closestDamagedAlly = this.pos.findClosestByRange(_.filter(this.room.friendlies,
-																		creep => creep.hits < creep.hitsMax));
-		if (closestDamagedAlly) {
-			for (const tower of this.towers) {
-				tower.heal(closestDamagedAlly);
-			}
+		// Heal damaged creeps owned by us
+		if (this.healDamagedCreeps()) {
 			return;
 		}
 
