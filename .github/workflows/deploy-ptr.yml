@@ -11,9 +11,10 @@ on:
         type: string
 
 jobs:
-  deploy-ptr:
+  ptr:
     runs-on: ubuntu-latest
-
+    environment: grunt
+    
     strategy:
       matrix:
         node-version: [20.x]
