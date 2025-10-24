@@ -181,7 +181,7 @@ export class PrioritiesOverlords {
 			},
 			sectorLogi: {
 				feeder: 580,
-				intersectorTransport: 599,
+				intersectorTransport: 505,
 			},
 			upgrading: {				// Spawning upgraders
 				upgrade: 600,
