@@ -33,6 +33,7 @@ export class QueenOverlord extends Overlord {
 		this.queens = this.zerg(Roles.queen);
 		this.settings = {
 			refillTowersBelow: 500,
+			renewQueenAt: 500,
 		};
 	}
 
@@ -105,18 +106,19 @@ export class QueenOverlord extends Overlord {
 		if (queen.isIdle) {
 			this.idleActions(queen);
 		}
-		// // If all of the above is done and hatchery is not in emergencyMode, move to the idle point and renew as needed
-		// if (!this.emergencyMode && queen.isIdle) {
-		// 	if (queen.pos.isEqualTo(this.idlePos)) {
-		// 		// If queen is at idle position, renew her as needed
-		// 		if (queen.ticksToLive < this.settings.renewQueenAt && this.availableSpawns.length > 0) {
-		// 			this.availableSpawns[0].renewCreep(queen.creep);
-		// 		}
-		// 	} else {
-		// 		// Otherwise, travel back to idle position
-		// 		queen.goTo(this.idlePos);
-		// 	}
-		// }
+		// If all of the above is done, renew queen at idle position if needed
+		if (queen.isIdle && queen.ticksToLive && queen.ticksToLive < this.settings.renewQueenAt) {
+			if (queen.pos.isEqualTo(this.hatchery.idlePos)) {
+				// If queen is at idle position, renew her as needed
+				const nearbySpawn = _.first(queen.pos.findInRange(this.hatchery.spawns, 1));
+				if (nearbySpawn && !nearbySpawn.spawning) {
+					nearbySpawn.renewCreep(queen.creep);
+				}
+			} else {
+				// Otherwise, travel back to idle position
+				queen.goTo(this.hatchery.idlePos);
+			}
+		}
 	}
 
 	run() {
