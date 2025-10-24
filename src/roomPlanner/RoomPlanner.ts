@@ -15,6 +15,7 @@ import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
 import {bunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
+import {evolutionChamberLayout} from './layouts/dynamic';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
 
@@ -102,6 +103,7 @@ export class RoomPlanner {
 		hatchery: RoomPosition | undefined;
 		commandCenter: RoomPosition | undefined;
 		bunker: RoomPosition | undefined;
+		evolutionChamber: RoomPosition | undefined;
 	};
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
 	barrierPlanner: BarrierPlanner;
@@ -126,9 +128,10 @@ export class RoomPlanner {
 	refresh(): void {
 		this.memory = Mem.wrap(this.colony.memory, 'roomPlanner', getDefaultRoomPlannerMemory);
 		this.placements = {
-			hatchery     : undefined,
-			commandCenter: undefined,
-			bunker       : undefined,
+			hatchery        : undefined,
+			commandCenter   : undefined,
+			bunker          : undefined,
+			evolutionChamber: undefined,
 		};
 		this.plan = {};
 		this.map = {};
@@ -260,7 +263,7 @@ export class RoomPlanner {
 		this.map[type].push(pos);
 	}
 
-	addComponent(componentName: 'hatchery' | 'commandCenter' | 'bunker', pos: RoomPosition, rotation = 0): void {
+	addComponent(componentName: 'hatchery' | 'commandCenter' | 'bunker' | 'evolutionChamber', pos: RoomPosition, rotation = 0): void {
 		this.placements[componentName] = pos;
 	}
 
@@ -275,6 +278,8 @@ export class RoomPlanner {
 				return commandCenterLayout;
 			case 'bunker':
 				return bunkerLayout;
+			case 'evolutionChamber':
+				return evolutionChamberLayout;
 		}
 	}
 
@@ -287,7 +292,7 @@ export class RoomPlanner {
 			const layout = this.getLayout(name);
 			if (layout) {
 				const anchor: Coord = layout.data.anchor;
-				const pos = this.placements[<'hatchery' | 'commandCenter' | 'bunker'>name];
+				const pos = this.placements[<'hatchery' | 'commandCenter' | 'bunker' | 'evolutionChamber'>name];
 				if (!pos) continue;
 				// let rotation: number = pos!.lookFor(LOOK_FLAGS)[0]!.memory.rotation || 0;
 				const componentMap = this.parseLayout(layout, level);
