@@ -47,78 +47,86 @@ export class HaulingOverlord extends Overlord {
 		this.wishlist(numHaulers, this.haulerSetup);
 	}
 
+	private handleWithdraw(hauler: Zerg): void {
+		// Travel to directive and collect resources
+		if (hauler.inSameRoomAs(this.directive)) {
+			// Pick up drops first
+			if (this.directive.hasDrops) {
+				const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
+				const drop = _.find(allDrops, drop => drop.resourceType != 'energy') || allDrops[0];
+				if (drop) {
+					hauler.task = Tasks.pickup(drop);
+					return;
+				}
+			}
+			// Withdraw from store structure
+			if (this.directive.storeStructure) {
+				const store = this.directive.store!;
+				let totalDrawn = 0; // Fill to full
+				for (const resourceType in store) {
+					if (store[resourceType] > 0) {
+						if (hauler.task) {
+							hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType).fork(hauler.task);
+						} else {
+							hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
+						}
+						totalDrawn += store[resourceType];
+						if (totalDrawn >= hauler.carryCapacity) {
+							return;
+						}
+					}
+				}
+				if (hauler.task) {
+					// If can't fill up, just go ahead and go home
+					// log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
+					return;
+				}
+			}
+			// Shouldn't reach here
+			log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
+		} else {
+			// hauler.task = Tasks.goTo(this.directive);
+			hauler.goTo(this.directive, {pathOpts: {avoidSK: true}});
+		}
+	}
+
+	private handleDeposit(hauler: Zerg): void {
+		// Travel to colony room and deposit resources
+		if (hauler.inSameRoomAs(this.colony)) {
+			// Put energy in storage and minerals in terminal if there is one
+			for (const [resourceType, amount] of hauler.carry.contents) {
+				if (amount == 0) continue;
+				if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
+					if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					}
+				} else { // prefer to put minerals in terminal
+					if (this.colony.terminal && this.colony.terminal.my
+						&& _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					}
+				}
+			}
+			// Shouldn't reach here
+			log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
+		} else {
+			hauler.task = Tasks.goToRoom(this.colony.room.name);
+		}
+	}
+
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
-			// Travel to directive and collect resources
-			if (hauler.inSameRoomAs(this.directive)) {
-				// Pick up drops first
-				if (this.directive.hasDrops) {
-					const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
-					const drop = _.find(allDrops, drop => drop.resourceType != 'energy') || allDrops[0];
-					if (drop) {
-						hauler.task = Tasks.pickup(drop);
-						return;
-					}
-				}
-				// Withdraw from store structure
-				if (this.directive.storeStructure) {
-					const store = this.directive.store!;
-					let totalDrawn = 0; // Fill to full
-					for (const resourceType in store) {
-						if (store[resourceType] > 0) {
-							if (hauler.task) {
-								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType).fork(hauler.task);
-							} else {
-								hauler.task = Tasks.withdraw(this.directive.storeStructure, <ResourceConstant>resourceType);
-							}
-							totalDrawn += store[resourceType];
-							if (totalDrawn >= hauler.carryCapacity) {
-								return;
-							}
-						}
-					}
-					if (hauler.task) {
-						// If can't fill up, just go ahead and go home
-						// log.notify(`Can't finish filling up ${totalDrawn} ${JSON.stringify(hauler.task)} ${this.room}`);
-						return;
-					}
-				}
-				// Shouldn't reach here
-				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
-			} else {
-				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive, {pathOpts: {avoidSK: true}});
-			}
+			this.handleWithdraw(hauler);
 		} else {
-			// Travel to colony room and deposit resources
-			if (hauler.inSameRoomAs(this.colony)) {
-				// Put energy in storage and minerals in terminal if there is one
-				for (const [resourceType, amount] of hauler.carry.contents) {
-					if (amount == 0) continue;
-					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
-						if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
-							return;
-						} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
-							return;
-						}
-					} else { // prefer to put minerals in terminal
-						if (this.colony.terminal && this.colony.terminal.my
-							&& _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
-							return;
-						} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
-							return;
-						}
-					}
-				}
-				// Shouldn't reach here
-				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
-			} else {
-				hauler.task = Tasks.goToRoom(this.colony.room.name);
-			}
+			this.handleDeposit(hauler);
 		}
 	}
 

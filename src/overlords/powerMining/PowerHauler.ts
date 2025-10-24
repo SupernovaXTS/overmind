@@ -18,7 +18,7 @@ export class PowerHaulingOverlord extends Overlord {
 	tickToSpawnOn: number;
 	numHaulers: number;
 	totalCollected: number;
-
+	resourceType = RESOURCE_POWER;
 	// TODO bug where haulers can come from tiny rooms not ready yet
 	requiredRCL = 6;
 	// Allow time for body to spawn
@@ -44,6 +44,80 @@ export class PowerHaulingOverlord extends Overlord {
 	init() {
 	}
 
+	private handleWithdraw(hauler: Zerg): void {
+		// Travel to directive and collect resources
+		if (hauler.inSameRoomAs(this.directive)) {
+			// Pick up drops first
+			if (this.directive.hasDrops) {
+				const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
+				const drop = allDrops[0];
+				if (drop) {
+					hauler.task = Tasks.pickup(drop);
+					return;
+				}
+			} else if (this.directive.target) {
+				if (hauler.pos.getRangeTo(this.directive.target) > 4) {
+					hauler.goTo(this.directive.target);
+				} else {
+					hauler.say('🚬', true);
+				}
+				return;
+			} else if (this.room && this.room.ruins) {
+				const target = this.room.ruins.filter(ruin => !!ruin.store[this.resourceType] && ruin.store[this.resourceType]! > 0);
+				if (target.length > 0) {
+					hauler.task = Tasks.withdraw(target[0], this.resourceType);
+				}
+			} else if (this.room && this.room.drops) {
+				const allDrops: Resource[] = _.flatten(_.values(this.room.drops));
+				const drop = allDrops[0];
+				if (drop) {
+					hauler.task = Tasks.pickup(drop);
+					return;
+				} else {
+					hauler.say('💀 RIP 💀', true);
+					log.warning(`${hauler.name} is committing suicide!`);
+					hauler.retire();
+					return;
+				}
+			}
+			// Shouldn't reach here
+			log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
+		} else {
+			hauler.goTo(this.directive);
+		}
+	}
+
+	private handleDeposit(hauler: Zerg): void {
+		// Travel to colony room and deposit resources
+		if (hauler.inSameRoomAs(this.colony)) {
+			for (const [resourceType, amount] of hauler.carry.contents) {
+				if (amount == 0) continue;
+				if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
+					if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					}
+				} else { // prefer to put minerals in terminal
+					this.directive.memory.totalCollected += hauler.carry.power || 0;
+					if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
+						return;
+					} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
+						hauler.task = Tasks.transfer(this.colony.storage, resourceType);
+						return;
+					}
+				}
+			}
+			// Shouldn't reach here
+			log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
+		} else {
+			hauler.task = Tasks.goToRoom(this.colony.room.name);
+		}
+	}
+
 	private handleHauler(hauler: Zerg) {
 		if (_.sum(hauler.carry) == 0) {
 			if (this.directive.memory.state >= 4) {
@@ -53,80 +127,14 @@ export class PowerHaulingOverlord extends Overlord {
 				this.numHaulers = 0;
 				hauler.retire();
 			}
-			// Travel to directive and collect resources
-			if (hauler.inSameRoomAs(this.directive)) {
-				// Pick up drops first
-				if (this.directive.hasDrops) {
-					const allDrops: Resource[] = _.flatten(_.values(this.directive.drops));
-					const drop = allDrops[0];
-					if (drop) {
-						hauler.task = Tasks.pickup(drop);
-						return;
-					}
-				} else if (this.directive.powerBank) {
-					if (hauler.pos.getRangeTo(this.directive.powerBank) > 4) {
-						hauler.goTo(this.directive.powerBank);
-					} else {
-						hauler.say('🚬', true);
-					}
-					return;
-				} else if (this.room && this.room.ruins) {
-					const pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
-					if (pb.length > 0) {
-						hauler.task = Tasks.withdraw(pb[0], RESOURCE_POWER);
-					}
-				} else if (this.room && this.room.drops) {
-					const allDrops: Resource[] = _.flatten(_.values(this.room.drops));
-					const drop = allDrops[0];
-					if (drop) {
-						hauler.task = Tasks.pickup(drop);
-						return;
-					} else {
-						hauler.say('💀 RIP 💀', true);
-						log.warning(`${hauler.name} is committing suicide!`);
-						hauler.retire();
-						return;
-					}
-				}
-				// Shouldn't reach here
-				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
-			} else {
-				hauler.goTo(this.directive);
-			}
+			this.handleWithdraw(hauler);
 		} else {
-			// Travel to colony room and deposit resources
-			if (hauler.inSameRoomAs(this.colony)) {
-				for (const [resourceType, amount] of hauler.carry.contents) {
-					if (amount == 0) continue;
-					if (resourceType == RESOURCE_ENERGY) { // prefer to put energy in storage
-						if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
-							return;
-						} else if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
-							return;
-						}
-					} else { // prefer to put minerals in terminal
-						this.directive.memory.totalCollected += hauler.carry.power || 0;
-						if (this.colony.terminal && _.sum(this.colony.terminal.store) < TERMINAL_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.terminal, resourceType);
-							return;
-						} else if (this.colony.storage && _.sum(this.colony.storage.store) < STORAGE_CAPACITY) {
-							hauler.task = Tasks.transfer(this.colony.storage, resourceType);
-							return;
-						}
-					}
-				}
-				// Shouldn't reach here
-				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
-			} else {
-				hauler.task = Tasks.goToRoom(this.colony.room.name);
-			}
+			this.handleDeposit(hauler);
 		}
 	}
 
 	checkIfStillCarryingPower() {
-		return _.find(this.haulers, hauler => hauler.carry.power != undefined && hauler.carry.power > 0);
+		return _.find(this.haulers, hauler => hauler.carry.resourceType != undefined && hauler.carry.resourceType > 0);
 	}
 
 	run() {
