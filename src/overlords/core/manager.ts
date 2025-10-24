@@ -463,8 +463,14 @@ export class CommandCenterOverlord extends Overlord {
 				const nearbySpawn = _.first(manager.pos.findInRange(manager.room.spawns, 1));
 				if (nearbySpawn) {
 					nearbySpawn.recycleCreep(manager.creep);
+				}
+				else if (manager.getActiveBodyparts(MOVE) > 0) {
+					const nearbySpawn = _.first(manager.pos.findInRange(manager.room.spawns, 3));
+					if (nearbySpawn) {
+						manager.task = Tasks.recycle(nearbySpawn);
+					}
 				} else {
-					manager.suicide();
+					manager.retire();
 				}
 			}
 			return true;

@@ -397,7 +397,7 @@ export class MiningOverlord extends Overlord {
 				const oldestMiner = minBy(minersNearSource, miner => miner.ticksToLive || 9999);
 				if (oldestMiner && (oldestMiner.ticksToLive || 9999) < MINER_SUICIDE_THRESHOLD) {
 					// if the oldest miner will die sufficiently soon
-					oldestMiner.suicide();
+					oldestMiner.retire();
 					return true;
 				}
 			}
@@ -671,14 +671,14 @@ export class MiningOverlord extends Overlord {
 			switch (ret) {
 				case ERR_NOT_ENOUGH_RESOURCES: // energy depleted
 					if (allowSuicide && source.ticksToRegeneration > (miner.ticksToLive || Infinity)) {
-						miner.suicide();
+						miner.retire();
 					} else {
 						miner.memory.sleepUntil = Game.time + source.ticksToRegeneration;
 					}
 					break;
 				case ERR_NO_BODYPART:
 					if (allowSuicide) {
-						miner.suicide();
+						miner.retire();
 					}
 					break;
 				case ERR_NOT_OWNER:
