@@ -1,5 +1,6 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
+import {bodyCost} from '../creepSetups/CreepSetup';
 import {DEFAULT_MAX_PATH_LENGTH} from '../directives/Directive';
 import {Hatchery, SpawnRequest} from '../hiveClusters/hatchery';
 import {Mem} from '../memory/Memory';
@@ -14,6 +15,7 @@ interface SpawnGroupMemory {
 	// paths: { [colonyName: string]: { startPos: RoomPosition, path: string[] } }
 	// tick: number;
 	expiration: number;
+	unaffordableRequestCount?: number;
 }
 
 const getDefaultSpawnGroupMemory: () => SpawnGroupMemory = () => ({
@@ -22,6 +24,7 @@ const getDefaultSpawnGroupMemory: () => SpawnGroupMemory = () => ({
 	// routes    : {},
 	// paths    : {},
 	expiration: 0,
+	unaffordableRequestCount: 0,
 });
 
 
@@ -156,10 +159,39 @@ export class SpawnGroup {
 
 		// Enqueue each requests to the hatchery with least expected wait time, which is updated after each enqueue
 		for (const request of this.requests) {
-			// const maxCost = bodyCost(request.setup.generateBody(this.energyCapacityAvailable));
-			// const okHatcheries = _.filter(hatcheries,
-			// 							  hatchery => hatchery.room.energyCapacityAvailable >= maxCost);
-			const bestHatchery = minBy(hatcheries, hatchery => hatchery.getWaitTimeForPriority(request.priority) +
+			// Check if any hatchery can actually spawn this creep by generating the body
+			// The setup.create() method handles both CreepSetup and CombatCreepSetup
+			const maxColony = _.max(colonies, colony => colony.room.energyCapacityAvailable);
+			if (!maxColony) {
+				log.error(`No colonies available in SpawnGroup ${this.ref}!`);
+				continue;
+			}
+			
+			const {body, boosts} = request.setup.create(maxColony);
+			const bodyCostValue = bodyCost(body);
+			
+			// Filter hatcheries that have enough energy capacity to spawn this creep
+			const capableHatcheries = _.filter(hatcheries, 
+				hatchery => hatchery.room.energyCapacityAvailable >= bodyCostValue);
+			
+			if (capableHatcheries.length === 0) {
+				// Increment the counter for unaffordable requests
+				if (!this.memory.unaffordableRequestCount) {
+					this.memory.unaffordableRequestCount = 0;
+				}
+				this.memory.unaffordableRequestCount++;
+				
+				// Only log if count is 5 or less, OR if divisible by 10
+				if (this.memory.unaffordableRequestCount <= 5 || this.memory.unaffordableRequestCount % 10 === 0) {
+					log.warning(`No hatcheries in SpawnGroup ${this.ref} can afford creep with role ${request.setup.role} ` +
+							  `(cost: ${bodyCostValue}, max capacity: ${this.energyCapacityAvailable}) ` +
+							  `for Overlord ${request.overlord.print}! ` +
+							  `(occurred ${this.memory.unaffordableRequestCount} times)`);
+				}
+				continue; // Skip this request
+			}
+			
+			const bestHatchery = minBy(capableHatcheries, hatchery => hatchery.getWaitTimeForPriority(request.priority) +
 															   distanceTo(hatchery));
 			if (bestHatchery) {
 				bestHatchery.enqueue(request);

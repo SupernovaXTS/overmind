@@ -222,21 +222,13 @@ export class BarrierPlanner {
 			return false;
 		}
 
-		// Check if we've hit the rampart limit for this RCL
-		const currentRamparts = this.colony.room.find(FIND_STRUCTURES, {
-			filter: (s) => s.structureType === STRUCTURE_RAMPART
-		}).length;
-		const rampartSites = this.colony.room.find(FIND_CONSTRUCTION_SITES, {
-			filter: (s) => s.structureType === STRUCTURE_RAMPART
-		}).length;
-		const totalRamparts = currentRamparts + rampartSites;
-		const maxRamparts = CONTROLLER_STRUCTURES[STRUCTURE_RAMPART][this.colony.controller.level];
-		
-		if (totalRamparts >= maxRamparts) {
+		// Ramparts cannot be placed on wall terrain
+		const terrain = pos.lookFor(LOOK_TERRAIN)[0];
+		if (terrain === 'wall') {
 			return false;
 		}
 
-		// Ramparts can be built anywhere (even on walls), so if we passed all checks, return true
+		// Ramparts have no structure limit (always 2500) and can be built anywhere except walls
 		return true;
 	}
 
