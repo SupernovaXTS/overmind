@@ -164,7 +164,7 @@ export class PrioritiesOverlords {
 
 			ownedRoom: {				// Operation of an owned room
 				firstTransport: 500,	// High priority to spawn the first transporter
-				mine          : 501,
+				mine          : 460,
 				work          : 503,
 				mineralRCL8   : 504,
 				transport     : 505,	// Spawn the rest of the transporters
@@ -172,7 +172,7 @@ export class PrioritiesOverlords {
 			},
 			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
 				reserve      : 510,
-				mine         : 502,
+				mine         : 460,
 				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
 			},
 			outpostOffense: {
