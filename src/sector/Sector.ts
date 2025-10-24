@@ -13,7 +13,7 @@ export class Sector {
   key: string;              // e.g., E1N3
   colonies: Colony[];       // member colonies
   anchor: Colony;           // chosen representative colony
-  overlord: SectorLogisticsOverlord;
+  overlord: SectorLogisticsOverlord | undefined;
 
   constructor(key: string, colonies: Colony[]) {
     this.key = key;
@@ -43,7 +43,11 @@ export class Sector {
       })[0];
     }
     
-    this.overlord = new SectorLogisticsOverlord(this.anchor, this.colonies);
+    // Don't create sector logistics overlord if anchor colony is in bootstrap mode
+    // Bootstrap colonies should focus on their own infrastructure first
+    if (!this.anchor.state.bootstrapping) {
+      this.overlord = new SectorLogisticsOverlord(this.anchor, this.colonies);
+    }
     
     // Set sector reference on each colony
     for (const colony of this.colonies) {
@@ -65,11 +69,15 @@ export class Sector {
 
   refresh(): void {
     // Overlord handles its own refresh and membership sync to live Overmind.colonies
-    this.overlord.refresh();
+    if (this.overlord) {
+      this.overlord.refresh();
+    }
   }
 
   init(): void {
-    this.overlord.init();
+    if (this.overlord) {
+      this.overlord.init();
+    }
   }
 
   run(): void {
@@ -77,7 +85,9 @@ export class Sector {
     for (const colony of this.colonies) {
       try { new SectorLogistics(colony).publishUnfulfilledRequests(); } catch (e) { /* noop */ }
     }
-    this.overlord.run();
+    if (this.overlord) {
+      this.overlord.run();
+    }
   }
 }
 

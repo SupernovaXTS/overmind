@@ -1,5 +1,6 @@
 import {DirectiveClearRoom} from './colony/clearRoom';
 import {DirectiveColonize} from './colony/colonize';
+import {DirectiveColonizeDynamic} from './colony/colonize_dynamic';
 import {DirectiveColonizeShard} from './colony/colonize_shard';
 import {DirectiveIncubate} from './colony/incubate';
 import {DirectiveOutpost} from './colony/outpost';
@@ -39,6 +40,7 @@ import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebui
 export class Directives {
 	static DirectiveClearRoom = DirectiveClearRoom;
 	static DirectiveColonize = DirectiveColonize;
+	static DirectiveColonizeDynamic = DirectiveColonizeDynamic;
 	static DirectiveColonizeShard = DirectiveColonizeShard;
 	static DirectiveIncubate = DirectiveIncubate;
 	static DirectiveOutpost = DirectiveOutpost;
@@ -78,6 +80,7 @@ export class Directives {
 	static all = Object.freeze({
 		DirectiveClearRoom: Directives.DirectiveClearRoom,
 		DirectiveColonize: Directives.DirectiveColonize,
+		DirectiveColonizeDynamic: Directives.DirectiveColonizeDynamic,
 		DirectiveColonizeShard: Directives.DirectiveColonizeShard,
 		DirectiveIncubate: Directives.DirectiveIncubate,
 		DirectiveOutpost: Directives.DirectiveOutpost,

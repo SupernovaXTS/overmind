@@ -2,6 +2,7 @@
 
 import {DirectiveClearRoom} from './colony/clearRoom';
 import {DirectiveColonize} from './colony/colonize';
+import {DirectiveColonizeDynamic} from './colony/colonize_dynamic';
 import {DirectiveColonizeShard} from './colony/colonize_shard';
 import {DirectiveIncubate} from './colony/incubate';
 import {DirectiveOutpost} from './colony/outpost';
@@ -58,6 +59,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
+				case COLOR_CYAN:
+					return new DirectiveColonizeDynamic(flag);
 				case COLOR_BLUE:
 					return new DirectiveColonizeShard(flag);
 				case COLOR_ORANGE:
