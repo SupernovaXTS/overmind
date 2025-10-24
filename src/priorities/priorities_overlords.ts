@@ -59,7 +59,7 @@ export const OverlordPriority = {
 		mineral       : 511,
 	},
 	remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 504,
+		reserve      : 510,
 		mine         : 460,
 		roomIncrement: 1,		// Remote room priorities are incremented by this for each outpost
 	},
