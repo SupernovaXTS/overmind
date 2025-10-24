@@ -19,6 +19,7 @@ import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './ins
 import {pickupTargetType, pickupTaskName, TaskPickup} from './instances/pickup';
 import {rangedAttackTargetType, rangedAttackTaskName, TaskRangedAttack} from './instances/rangedAttack';
 import {rechargeTaskName, TaskRecharge} from './instances/recharge';
+import {recycleTargetType, recycleTaskName, TaskRecycle} from './instances/recycle';
 import {repairTargetType, repairTaskName, TaskRepair} from './instances/repair';
 import {reserveTargetType, reserveTaskName, TaskReserve} from './instances/reserve';
 import {signControllerTargetType, signControllerTaskName, TaskSignController} from './instances/signController';
@@ -89,6 +90,9 @@ export function initializeTask(protoTask: ProtoTask): Task<any> {
 			break;
 		case rangedAttackTaskName:
 			task = new TaskRangedAttack(target as rangedAttackTargetType);
+			break;
+		case recycleTaskName:
+			task = new TaskRecycle(target as recycleTargetType);
 			break;
 		case rechargeTaskName:
 			task = new TaskRecharge();
