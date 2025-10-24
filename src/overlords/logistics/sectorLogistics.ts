@@ -8,6 +8,7 @@ import {Roles, Setups} from '../../creepSetups/setups';
 import {Zerg} from '../../zerg/Zerg';
 import {Tasks} from '../../tasks/Tasks';
 import {SectorLogistics as PoolAPI} from '../../logistics/SectorLogistics';
+import {SpawnGroup} from '../../logistics/SpawnGroup';
 
 export interface SectorLogisticsOverlordMemory extends OverlordMemory {
   sectorKey: string;
@@ -52,7 +53,6 @@ export class SectorLogisticsOverlord extends Overlord {
     const maxPathDistance = this.getRangeLimit() * 50; // rough path upper bound per room
     this.spawnGroup = this.spawnGroup || this.colony.spawnGroup; // prefer existing
     if (!this.spawnGroup) {
-      const {SpawnGroup} = require('../../logistics/SpawnGroup');
       this.spawnGroup = new SpawnGroup(this, { maxPathDistance, requiredRCL: 4 });
     }
   }
