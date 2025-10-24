@@ -152,8 +152,8 @@ export class PrioritiesOverlords {
 				randomWalker: 411,
 			},
 			colonization: {				// Colonizing new rooms
-				claim          : 400,
-				pioneer        : 401,
+				claim          : 401,
+				pioneer        : 402,
 				remoteUpgrading: 410,
 			},
 
@@ -163,7 +163,7 @@ export class PrioritiesOverlords {
 			},
 
 			ownedRoom: {				// Operation of an owned room
-				firstTransport: 500,	// High priority to spawn the first transporter
+				firstTransport: 400,	// High priority to spawn the first transporter
 				mine          : 460,
 				work          : 503,
 				mineralRCL8   : 504,
