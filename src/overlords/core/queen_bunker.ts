@@ -88,13 +88,13 @@ export class BunkerQueenOverlord extends Overlord {
 		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
 		this.numActiveQueens = activeQueens.length;
 		if (this.numActiveQueens > 0) {
-			// Filter quadrants to only those that have extensions
+			// Filter quadrants to only those that have supply structures
 			const quadrantAssignmentOrder = [
 				this.quadrants.lowerRight,
 				this.quadrants.upperLeft,
 				this.quadrants.lowerLeft,
 				this.quadrants.upperRight
-			].filter(quadrant => _.any(quadrant, s => s.structureType === STRUCTURE_EXTENSION));
+			].filter(quadrant => quadrant.length > 0);
 			
 			let i = 0;
 			for (const quadrant of quadrantAssignmentOrder) {
@@ -106,7 +106,7 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	/**
-	 * Returns the number of quadrants with extensions that need queens
+	 * Returns the number of quadrants with supply structures that need queens
 	 */
 	private getRequiredQueenCount(): number {
 		const quadrants = [
@@ -115,9 +115,8 @@ export class BunkerQueenOverlord extends Overlord {
 			this.quadrants.lowerLeft,
 			this.quadrants.upperRight
 		];
-		const quadrantsWithExtensions = _.filter(quadrants, 
-			quadrant => _.any(quadrant, s => s.structureType === STRUCTURE_EXTENSION));
-		return quadrantsWithExtensions.length;
+		const quadrantsWithSupplyStructures = _.filter(quadrants, quadrant => quadrant.length > 0);
+		return quadrantsWithSupplyStructures.length;
 	}
 
 	refresh() {
