@@ -503,8 +503,13 @@ export function getPosFromBunkerCoord(coord: Coord, colony: Colony): RoomPositio
 	return new RoomPosition(-1, -1, 'invalid');
 }
 
-// Spots where queens can sit to be renewed when idle
-export const bunkerChargingSpots: Coord[] = [{'x': 29, 'y': 24}, {'x': 24, 'y': 21}];
+// Spots where queens can sit to be renewed when idle - one per quadrant
+export const bunkerChargingSpots = {
+	lowerRight: {'x': 29, 'y': 24},
+	upperLeft: {'x': 24, 'y': 21},
+	lowerLeft: {'x': 21, 'y': 26},
+	upperRight: {'x': 29, 'y': 24}
+};
 
 export const reagentLabSpots: [Coord, Coord] = [{'x': 27, 'y': 22}, {'x': 28, 'y': 23}];
 

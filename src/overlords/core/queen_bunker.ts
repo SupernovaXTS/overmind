@@ -57,6 +57,7 @@ export class BunkerQueenOverlord extends Overlord {
 	quadrants: { [quadrant: string]: SupplyStructure[] };
 	private numActiveQueens: number;
 	assignments: { [queenName: string]: { [id: string]: boolean } };
+	idlePositions: { [queenName: string]: RoomPosition };
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
@@ -90,21 +91,25 @@ export class BunkerQueenOverlord extends Overlord {
 	 */
 	private computeQueenAssignments() {
 		this.assignments = _.zipObject(_.map(this.queens, queen => [queen.name, {}]));
+		this.idlePositions = {};
 		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
 		this.numActiveQueens = activeQueens.length;
 		if (this.numActiveQueens > 0) {
 			// Filter quadrants to only those that have supply structures
-			const quadrantAssignmentOrder = [
-				this.quadrants.lowerRight,
-				this.quadrants.upperLeft,
-				this.quadrants.lowerLeft,
-				this.quadrants.upperRight
-			].filter(quadrant => quadrant.length > 0);
+			const quadrantAssignmentOrder: Array<{name: string, structures: SupplyStructure[]}> = [
+				{name: 'lowerRight', structures: this.quadrants.lowerRight},
+				{name: 'upperLeft', structures: this.quadrants.upperLeft},
+				{name: 'lowerLeft', structures: this.quadrants.lowerLeft},
+				{name: 'upperRight', structures: this.quadrants.upperRight}
+			].filter(quadrant => quadrant.structures.length > 0);
 			
 			let i = 0;
 			for (const quadrant of quadrantAssignmentOrder) {
 				const queen = activeQueens[i % activeQueens.length];
-				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant, s => [s.id, true])));
+				_.extend(this.assignments[queen.name], _.zipObject(_.map(quadrant.structures, s => [s.id, true])));
+				// Assign idle position based on quadrant
+				const chargingCoord = bunkerChargingSpots[quadrant.name as keyof typeof bunkerChargingSpots];
+				this.idlePositions[queen.name] = getPosFromBunkerCoord(chargingCoord, this.colony);
 				i++;
 			}
 		}
@@ -296,13 +301,24 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	private getChargingSpot(queen: Zerg): RoomPosition {
-		const chargeSpots = _.map(bunkerChargingSpots, coord => getPosFromBunkerCoord(coord, this.colony));
-		const chargeSpot = queen.pos.findClosestByRange(chargeSpots);
-		if (chargeSpot) {
-			return chargeSpot;
+		const assignedPos = this.idlePositions[queen.name];
+		if (assignedPos) {
+			return assignedPos;
 		} else {
-			log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
-			return queen.pos;
+			// Fallback to old behavior if no assignment exists
+			const chargeSpots = _.map([
+				bunkerChargingSpots.lowerRight,
+				bunkerChargingSpots.upperLeft,
+				bunkerChargingSpots.lowerLeft,
+				bunkerChargingSpots.upperRight
+			], coord => getPosFromBunkerCoord(coord, this.colony));
+			const chargeSpot = queen.pos.findClosestByRange(chargeSpots);
+			if (chargeSpot) {
+				return chargeSpot;
+			} else {
+				log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
+				return queen.pos;
+			}
 		}
 	}
 	
