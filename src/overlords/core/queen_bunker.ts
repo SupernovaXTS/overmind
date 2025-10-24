@@ -8,7 +8,12 @@ import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {getPosFromBunkerCoord, insideBunkerBounds, quadrantFillOrder} from '../../roomPlanner/layouts/bunker';
+import {
+	bunkerChargingSpots,
+	getPosFromBunkerCoord,
+	insideBunkerBounds,
+	quadrantFillOrder
+} from '../../roomPlanner/layouts/bunker';
 import {Task} from '../../tasks/Task';
 import {Tasks} from '../../tasks/Tasks';
 import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
@@ -290,43 +295,42 @@ export class BunkerQueenOverlord extends Overlord {
 		return Tasks.chain(tasks);
 	}
 
-	// private getChargingSpot(queen: Zerg): RoomPosition {
-	// 	let chargeSpots = _.map(bunkerChargingSpots, coord => getPosFromBunkerCoord(coord, this.colony));
-	// 	let chargeSpot = (_.first(this.assignments[queen.name]) || queen).pos.findClosestByRange(chargeSpots);
-	// 	if (chargeSpot) {
-	// 		return chargeSpot;
-	// 	} else {
-	// 		log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
-	// 		return queen.pos;
-	// 	}
-	// }
-	//
-	// private idleActions(queen: Zerg): void {
-	//
-	// 	// // Refill any empty batteries
-	// 	// for (let battery of this.batteries) {
-	// 	// 	if (!battery.isFull) {
-	// 	// 		let amount = Math.min(battery.storeCapacity - _.sum(battery.store), queen.carryCapacity);
-	// 	// 		let target = this.colony.storage || this.colony.storage;
-	// 	// 		if (target) {
-	// 	// 			queen.task = Tasks.transfer(battery, RESOURCE_ENERGY, amount)
-	// 	// 							  .fork(Tasks.withdraw(target, RESOURCE_ENERGY, amount))
-	// 	// 			return;
-	// 	// 		}
-	// 	// 	}
-	// 	// }
-	//
-	// 	// Go to recharging spot and get recharged
-	// 	let chargingSpot = this.getChargingSpot(queen);
-	// 	queen.goTo(chargingSpot, {range: 0});
-	// 	// // TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
-	// 	// if (queen.pos.getRangeTo(chargingSpot) == 0) {
-	// 	// 	let chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
-	// 	// 	if (chargingSpawn && !chargingSpawn.spawning) {
-	// 	// 		chargingSpawn.renewCreep(queen.creep);
-	// 	// 	}
-	// 	// }
-	// }
+	private getChargingSpot(queen: Zerg): RoomPosition {
+		const chargeSpots = _.map(bunkerChargingSpots, coord => getPosFromBunkerCoord(coord, this.colony));
+		const chargeSpot = queen.pos.findClosestByRange(chargeSpots);
+		if (chargeSpot) {
+			return chargeSpot;
+		} else {
+			log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
+			return queen.pos;
+		}
+	}
+	
+	private idleActions(queen: Zerg): void {
+		// Refill any empty batteries
+		for (const battery of this.batteries) {
+			if (!battery.isFull) {
+				const amount = Math.min(battery.storeCapacity - _.sum(battery.store), queen.carryCapacity);
+				const target = this.colony.storage || this.colony.terminal;
+				if (target) {
+					queen.task = Tasks.transfer(battery, RESOURCE_ENERGY, amount)
+									  .fork(Tasks.withdraw(target, RESOURCE_ENERGY, amount));
+					return;
+				}
+			}
+		}
+
+		// Go to recharging spot and get recharged
+		const chargingSpot = this.getChargingSpot(queen);
+		queen.goTo(chargingSpot, {range: 0});
+		// TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
+		// if (queen.pos.getRangeTo(chargingSpot) == 0) {
+		// 	const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
+		// 	if (chargingSpawn && !chargingSpawn.spawning) {
+		// 		chargingSpawn.renewCreep(queen.creep);
+		// 	}
+		// }
+	}
 
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
@@ -356,8 +360,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 		// Otherwise do idle actions
 		if (queen.isIdle) {
-			// this.idleActions(queen);
-			delete queen.memory._go;
+			this.idleActions(queen);
 		}
 	}
 
