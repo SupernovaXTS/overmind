@@ -82,3 +82,9 @@ export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 20 : 5;
  * Master scale for the RoomVisuals GUI // TODO: not plugged in yet
  */
 export const GUI_SCALE = 1.0;
+
+/**
+ * Enable dynamic room planning which automatically places extensions, spawns, and towers around the bunker core.
+ * Disable this if you want to use only the static bunker layout without dynamic structure placement.
+ */
+export const USE_DYNAMIC_PLANNER = false;
