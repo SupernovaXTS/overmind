@@ -95,14 +95,15 @@ export class SporeCrawler extends HiveCluster {
 	// 	}
 	// }
 
-	// private healNearestAlly() {
-	// 	var closestDamagedAlly = this.pos.findClosestByRange(FIND_MY_CREEPS, {
-	// 		filter: (c: Creep) => c.hits < c.hitsMax,
-	// 	});
-	// 	if (closestDamagedAlly) {
-	// 		return this.tower.heal(closestDamagedAlly);
-	// 	}
-	// }
+	private healNearestAlly(tower: StructureTower): ScreepsReturnCode {
+		const closestDamagedAlly = this.pos.findClosestByRange(FIND_MY_CREEPS, {
+			filter: (c: Creep) => c.hits < c.hitsMax,
+		});
+		if (closestDamagedAlly) {
+			return tower.heal(closestDamagedAlly);
+		}
+		return ERR_NOT_FOUND;
+	}
 
 	private preventStructureDecay(includeRoads=true) {
 		if (this.towers.length < 1) return;
