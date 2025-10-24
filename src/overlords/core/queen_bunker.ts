@@ -324,12 +324,12 @@ export class BunkerQueenOverlord extends Overlord {
 		const chargingSpot = this.getChargingSpot(queen);
 		queen.goTo(chargingSpot, {range: 0});
 		// TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
-		// if (queen.pos.getRangeTo(chargingSpot) == 0) {
-		// 	const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
-		// 	if (chargingSpawn && !chargingSpawn.spawning) {
-		// 		chargingSpawn.renewCreep(queen.creep);
-		// 	}
-		// }
+		if (queen.pos.getRangeTo(chargingSpot) == 0) {
+			const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
+			if (chargingSpawn && !chargingSpawn.spawning) {
+				chargingSpawn.renewCreep(queen.creep);
+			}
+		}
 	}
 
 	private handleQueen(queen: Zerg): void {
