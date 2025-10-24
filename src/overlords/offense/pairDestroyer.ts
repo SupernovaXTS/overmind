@@ -19,7 +19,7 @@ export class PairDestroyerOverlord extends Overlord {
 	directive: DirectivePairDestroy;
 	attackers: CombatZerg[];
 	healers: CombatZerg[];
-
+	
 	static settings = {
 		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,

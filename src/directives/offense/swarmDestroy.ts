@@ -7,6 +7,11 @@ import {Directive} from '../Directive';
 /**
  * Spawns a 2x2 squad of coordinated creeps to destroy a room
  */
+interface DirectiveSwarmDestroyMemory extends FlagMemory {
+	persistent?: boolean;
+	amount?: number;
+}
+
 @profile
 export class DirectiveSwarmDestroy extends Directive {
 
@@ -14,7 +19,7 @@ export class DirectiveSwarmDestroy extends Directive {
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_RED;
 	static requiredRCL = 6;
-
+	memory: DirectiveSwarmDestroyMemory;
 	overlords: {
 		destroy: SwarmDestroyerOverlord;
 	};

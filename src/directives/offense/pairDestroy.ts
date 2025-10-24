@@ -9,6 +9,7 @@ import {Directive} from '../Directive';
 
 interface DirectivePairDestroyMemory extends FlagMemory {
 	persistent?: boolean;
+	amount?: number;
 }
 
 /**
@@ -16,11 +17,10 @@ interface DirectivePairDestroyMemory extends FlagMemory {
  */
 @profile
 export class DirectivePairDestroy extends Directive {
-
 	static directiveName = 'destroy';
 	static color = COLOR_RED;
 	static secondaryColor = COLOR_CYAN;
-
+	memory: DirectivePairDestroyMemory;
 	overlords: {
 		destroy: PairDestroyerOverlord;
 		distraction: DistractionOverlord;

@@ -7,6 +7,7 @@ import {NotifierPriority} from '../Notifier';
 interface DirectiveGuardMemory extends FlagMemory {
 	enhanced?: boolean;
 	invaderCore?: boolean;
+	amount?: number;
 }
 
 /**
