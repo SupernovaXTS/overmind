@@ -50,7 +50,7 @@ export class DirectiveStronghold extends Directive {
 	static directiveName = 'stronghold';
 	static color = COLOR_ORANGE;
 	static secondaryColor = COLOR_PURPLE;
-	static requiredRCL = 7;
+	static requiredRCL = 5;
 	private _core: StructureInvaderCore | undefined;
 
 	memory: DirectiveStrongholdMemory;
