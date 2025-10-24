@@ -49,12 +49,10 @@ export class SectorLogisticsOverlord extends Overlord {
     this.memory.sectorKey = this.sectorKey;
     this.memory.colonies = sectorColonies.map(c => c.name);
     this.transporters = this.zerg(Roles.sectorTransport);
-    // Create a spawn group covering colonies within configured range to help spawn sector transporters
+    // Create a spawn group covering ALL colonies in the sector
+    // This allows sector transporters to spawn from any     colony in the sector
     const maxPathDistance = this.getRangeLimit() * 50; // rough path upper bound per room
-    this.spawnGroup = this.spawnGroup || this.colony.spawnGroup; // prefer existing
-    if (!this.spawnGroup) {
-      this.spawnGroup = new SpawnGroup(this, { maxPathDistance, requiredRCL: 4 });
-    }
+    this.spawnGroup = new SpawnGroup(this, { maxPathDistance, requiredRCL: 4 });
   }
 
   refresh(): void {
