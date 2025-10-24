@@ -311,6 +311,12 @@ interface ProtoPos {
 	roomName: string;
 }
 
+interface ProtoMission {
+	name: string;
+	pos: ProtoPos;
+	waypoints: string[];
+}
+
 interface HasRef {
 	ref: string;
 }
