@@ -87,4 +87,5 @@ export const GUI_SCALE = 1.0;
  * Enable dynamic room planning which automatically places extensions, spawns, and towers around the bunker core.
  * Disable this if you want to use only the static bunker layout without dynamic structure placement.
  */
-export const USE_DYNAMIC_PLANNER = false;
+export const PTR = Game.shard.ptr;
+export const USE_DYNAMIC_PLANNER = PTR || false;
