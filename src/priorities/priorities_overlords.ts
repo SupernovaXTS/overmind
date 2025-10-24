@@ -55,13 +55,13 @@ export const OverlordPriority = {
 		mine          : 460,
 		work          : 503,
 		mineralRCL8   : 504,
-		transport     : 505,	// Spawn the rest of the transporters
-		mineral       : 506,
+		transport     : 510,	// Spawn the rest of the transporters
+		mineral       : 511,
 	},
 	remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
 		reserve      : 504,
 		mine         : 460,
-		roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
+		roomIncrement: 1,		// Remote room priorities are incremented by this for each outpost
 	},
 	outpostOffense: {
 		harass      : 560,
