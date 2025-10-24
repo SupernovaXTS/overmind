@@ -492,6 +492,9 @@ export function insideBunkerBounds(pos: RoomPosition, colony: Colony): boolean {
 	return false;
 }
 
+export function getRoomSpecificBunkerLayout(colonyName: string): StructureLayout {
+	return bunkerLayout;
+}
 
 export function getPosFromBunkerCoord(coord: Coord, colony: Colony): RoomPosition {
 	if (colony.roomPlanner.memory.bunkerData && colony.roomPlanner.memory.bunkerData.anchor) {

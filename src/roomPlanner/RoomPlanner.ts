@@ -13,9 +13,11 @@ import {hasMinerals, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
-import {bunkerLayout} from './layouts/bunker';
+import { DynamicPlanner, onRoomEdge } from './DynamicPlanner';
+import {bunkerLayout, BUNKER_RADIUS, getRoomSpecificBunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
-import {evolutionChamberLayout} from './layouts/dynamic';
+import { dynamicLayout } from './layouts/dynamic';
+import {evolutionChamberLayout} from './layouts/evolutionChamber';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
 
@@ -56,6 +58,7 @@ export interface RoomPlannerMemory {
 	recheckStructuresAt?: number;
 	bunkerData?: {
 		anchor: ProtoPos,
+		evolutionChamber?: ProtoPos,
 	};
 	lastGenerated?: number;
 	mapsByLevel?: { [rcl: number]: { [structureType: string]: ProtoPos[] } };
@@ -158,7 +161,7 @@ export class RoomPlanner {
 	 */
 	private recallMap(level = this.colony.controller.level): void {
 		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
-			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, level);
+			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, this.memory.bunkerData.evolutionChamber, level);
 		} else if (this.memory.mapsByLevel) {
 			this.map = _.mapValues(this.memory.mapsByLevel[level], posArr =>
 				_.map(posArr, protoPos => derefRoomPosition(protoPos)));
@@ -217,6 +220,17 @@ export class RoomPlanner {
 		}
 	}
 
+	get evolutionChamberPos(): RoomPosition | undefined {
+		if (this.placements.evolutionChamber) {
+			return this.placements.evolutionChamber;
+		}
+		if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
+			return new RoomPosition(this.memory.bunkerData.evolutionChamber.x, 
+									this.memory.bunkerData.evolutionChamber.y, 
+									this.colony.name);
+		}
+	}
+
 	private reactivate(): void {
 		// Reinstantiate flags
 		for (const protoFlag of this.memory.savedFlags) {
@@ -248,10 +262,15 @@ export class RoomPlanner {
 		// Reset everything
 		this.plan = {};
 		this.map = {};
-		// Generate a plan, placing components by flags
-		this.plan = this.generatePlan(level);
-		// Flatten it into a map
-		this.map = this.mapFromPlan(this.plan);
+		if(this.placements.bunker) {
+			// Not generating plan because we can generate map directly
+			this.map = this.getStructureMapForBunkerAt(this.placements.bunker, this.placements.evolutionChamber);
+		} else {
+			// Generate a plan, placing components by flags
+			this.plan = this.generatePlan(level);
+			// Flatten it into a map
+			this.map = this.mapFromPlan(this.plan);
+		}
 	}
 
 	/**
@@ -277,9 +296,7 @@ export class RoomPlanner {
 			case 'commandCenter':
 				return commandCenterLayout;
 			case 'bunker':
-				return bunkerLayout;
-			case 'evolutionChamber':
-				return evolutionChamberLayout;
+				return getRoomSpecificBunkerLayout(this.colony.name);
 		}
 	}
 
@@ -375,25 +392,39 @@ export class RoomPlanner {
 		}
 	}
 
+	static getStructureMapAt(roomName: string, layout: StructureLayout, anchor: { x: number, y: number }, level = 8) {
+		const dx = anchor.x - layout.data.anchor.x;
+		const dy = anchor.y - layout.data.anchor.y;
+		if(layout[level] == undefined) {
+			return {};
+		}
+		const structureLayout = _.mapValues(layout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
+		return _.mapValues(structureLayout, coordArr =>
+			_.map(coordArr, coord => new RoomPosition(Math.min(Math.max(coord.x + dx, 0), 49), Math.min(Math.max(coord.y + dy, 0), 49), roomName)));
+	}
+
 	/**
 	 * Get bunker building placements as a StructureMap
 	 */
-	getStructureMapForBunkerAt(anchor: { x: number, y: number }, level: number): StructureMap {
-		const dx = anchor.x - bunkerLayout.data.anchor.x;
-		const dy = anchor.y - bunkerLayout.data.anchor.y;
-		const structureLayout = _.mapValues(bunkerLayout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
-		return _.mapValues(structureLayout, coordArr =>
-			_.map(coordArr, coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name)));
+	getStructureMapForBunkerAt(anchor: { x: number, y: number }, evolutionChamber?: { x: number, y: number }, level = 8): StructureMap {
+		if(evolutionChamber) {
+			return DynamicPlanner.getStructureMapForBunkerAt(this.colony.room, anchor, evolutionChamber, level);
+		}
+		return RoomPlanner.getStructureMapAt(this.colony.name, getRoomSpecificBunkerLayout(this.colony.name), anchor, level);
 	}
 
 	/**
 	 * Get the placement for a single type of structure for bunker layout
 	 */
 	getBunkerStructurePlacement(structureType: string, anchor: { x: number, y: number },
-								level: number): RoomPosition[] {
-		const dx = anchor.x - bunkerLayout.data.anchor.x;
-		const dy = anchor.y - bunkerLayout.data.anchor.y;
-		return _.map(bunkerLayout[level]!.buildings[structureType].pos,
+								level = 8): RoomPosition[] {
+		// No callsite of this func accessed lab or observer, nuker, etc.
+		const layout = this.memory.bunkerData && this.memory.bunkerData.evolutionChamber ? 
+						dynamicLayout : 
+						getRoomSpecificBunkerLayout(this.colony.name);
+		const dx = anchor.x - layout.data.anchor.x;
+		const dy = anchor.y - layout.data.anchor.y;
+		return _.map(layout[level]!.buildings[structureType].pos,
 					 coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name));
 	}
 
@@ -408,7 +439,7 @@ export class RoomPlanner {
 		const passableStructureTypes: string[] = [STRUCTURE_ROAD, STRUCTURE_CONTAINER, STRUCTURE_RAMPART];
 		// do not use prebuilt map since the desired map could be a different level
 		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
-			const structureMap = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, level);
+			const structureMap = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, this.memory.bunkerData.evolutionChamber, level);
 			for (const structureType in structureMap) {
 				if (!passableStructureTypes.includes(structureType)) {
 					obstacles = obstacles.concat(structureMap[structureType]);
@@ -450,6 +481,7 @@ export class RoomPlanner {
 		const collision = this.findCollision(ignoreRoads);
 		if (collision) {
 			log.warning(`Invalid layout: collision detected at ${collision.print}!`);
+			log.info('Place an evolution chamber directive to switch to dynamic layout');
 			return;
 		}
 		const layoutIsValid: boolean = (!!this.placements.commandCenter && !!this.placements.hatchery)
@@ -461,6 +493,7 @@ export class RoomPlanner {
 			if (this.placements.bunker) {
 				this.memory.bunkerData = {
 					anchor: this.placements.bunker,
+					evolutionChamber: this.placements.evolutionChamber,
 				};
 			} else {
 				this.memory.mapsByLevel = {};
@@ -520,13 +553,17 @@ export class RoomPlanner {
 						  level = this.colony.controller.level): boolean {
 		if (structureType == STRUCTURE_ROAD) {
 			return this.roadShouldBeHere(pos);
-		} else if (structureType == STRUCTURE_RAMPART) {
+		} else if (structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL) {
 			return this.barrierPlanner.barrierShouldBeHere(pos);
 		} else if (structureType == STRUCTURE_EXTRACTOR) {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
 		} else {
+			if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
+				// Be tolerant in dynamic mode, because dynamic maps won't include existing structures
+				return true;
+			}
 			if (_.isEmpty(this.map)) {
-				this.recallMap();
+				this.recallMap(level);
 			}
 			const positions = this.map[structureType];
 			if (positions && _.find(positions, p => p.isEqualTo(pos))) {
@@ -956,7 +993,7 @@ export class RoomPlanner {
 		if (getAutonomyLevel() < Autonomy.Automatic) {
 			const expansionData = RoomIntel.getExpansionData(this.colony.room.name);
 			if (expansionData) {
-				Visualizer.drawLayout(bunkerLayout, expansionData.bunkerAnchor, {opacity: 0.2});
+				Visualizer.drawLayout(getRoomSpecificBunkerLayout(this.colony.name), expansionData.bunkerAnchor, {opacity: 0.2});
 			}
 		}
 		Visualizer.drawStructureMap(this.map);

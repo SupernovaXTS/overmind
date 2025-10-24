@@ -293,7 +293,9 @@ export class RoadPlanner {
 		} else { // retrieve from memory
 			if (this.roomPlanner.memory.bunkerData && this.roomPlanner.memory.bunkerData.anchor) {
 				const layout = this.roomPlanner.getStructureMapForBunkerAt(
-					this.roomPlanner.memory.bunkerData.anchor, this.colony.controller.level);
+					this.roomPlanner.memory.bunkerData.anchor, 
+					this.roomPlanner.memory.bunkerData.evolutionChamber,
+					this.colony.controller.level);
 				roomPlannerRoads = layout[STRUCTURE_ROAD];
 			} else if (this.roomPlanner.memory.mapsByLevel) {
 				roomPlannerRoads = _.map(this.roomPlanner.memory.mapsByLevel[this.colony.controller.level][STRUCTURE_ROAD],
