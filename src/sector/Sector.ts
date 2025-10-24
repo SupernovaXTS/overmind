@@ -16,8 +16,31 @@ export class Sector {
   constructor(key: string, colonies: Colony[]) {
     this.key = key;
     this.colonies = colonies.slice();
-    // Choose a stable anchor: highest RCL, break ties by name
-    this.anchor = colonies.slice().sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name))[0];
+    
+    // Parse sector key to get sector bounds (e.g., "E1N3" = E10-19, N30-39)
+    const re = /^([WE])(\d+)([NS])(\d+)$/;
+    const m = re.exec(key);
+    if (!m) {
+      // Fallback if key doesn't parse: choose by highest RCL
+      this.anchor = colonies.slice().sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name))[0];
+    } else {
+      // Calculate sector center coordinates
+      const sectorX = Number(m[2]) * 10;
+      const sectorY = Number(m[4]) * 10;
+      const centerX = sectorX + 5;
+      const centerY = sectorY + 5;
+      
+      // Choose anchor: prefer colony closest to sector center, break ties by highest RCL
+      this.anchor = colonies.slice().sort((a, b) => {
+        const aCoords = Cartographer.getRoomCoordinates(a.room.name);
+        const bCoords = Cartographer.getRoomCoordinates(b.room.name);
+        const aDist = Math.abs(aCoords.x - centerX) + Math.abs(aCoords.y - centerY);
+        const bDist = Math.abs(bCoords.x - centerX) + Math.abs(bCoords.y - centerY);
+        // Closer to center wins; if tied, higher RCL wins; if still tied, lexicographic
+        return (aDist - bDist) || (b.level - a.level) || a.name.localeCompare(b.name);
+      })[0];
+    }
+    
     this.overlord = new SectorLogisticsOverlord(this.anchor, this.colonies);
     
     // Set sector reference on each colony
