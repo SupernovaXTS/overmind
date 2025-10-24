@@ -100,6 +100,7 @@ interface IOvermind {
 	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
 	powerZerg: { [creepName: string]: any };	// is actually { [creepName: string]: PowerZerg }
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
+	sectors: { [sectorKey: string]: any }; 		// is actually { [sectorKey: string]: Sector }
 	overlords: { [ref: string]: any }; 			// is actually { [ref: string]: Overlord }
 	spawnGroups: { [ref: string]: any };		// is actually { [ref: string]: SpawnGroup }
 	colonyMap: { [roomName: string]: string };

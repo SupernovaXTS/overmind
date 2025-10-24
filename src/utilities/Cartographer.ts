@@ -1,5 +1,6 @@
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
+import {Sector} from '../sector/Sector';
 
 export const ROOMTYPE_SOURCEKEEPER = 'SK';
 export const ROOMTYPE_CORE = 'CORE';
@@ -245,6 +246,14 @@ export class Cartographer {
 	 */
 	static sameSector(a: string | Room, b: string | Room): boolean {
 		return Cartographer.getSectorKey(a) === Cartographer.getSectorKey(b);
+	}
+
+	/**
+	 * Get the Sector object for a given room
+	 */
+	static getSector(room: string | Room): Sector | undefined {
+		const sectorKey = Cartographer.getSectorKey(room);
+		return Overmind.sectors[sectorKey];
 	}
 
 	// static isNoviceRoom(roomName: string): boolean {
