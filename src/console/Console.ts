@@ -84,6 +84,7 @@ export class OvermindConsole {
 			setBuffer: this.sectorSetBuffer.bind(this),
 			setDefaultBuffer: this.sectorSetDefaultBuffer.bind(this),
 			setRangeLimit: this.sectorSetRangeLimit.bind(this),
+			createRequest: this.sectorCreateRequest.bind(this),
 		};
 	}
 
@@ -1024,6 +1025,39 @@ export class OvermindConsole {
 		this.ensureIntercolonySettings();
 		(Memory.settings as any).logistics.intercolony.rangeLimit = Math.max(1, Math.floor(Number(limit) || 1));
 		return `Set intercolony rangeLimit to ${(Memory.settings as any).logistics.intercolony.rangeLimit}`;
+	}
+
+	static sectorCreateRequest(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
+		if (!colony) return `Colony '${colonyName}' not found`;
+		if (!colony.storage) return `Colony '${colonyName}' has no storage`;
+		
+		// Validate resource type
+		if (!RESOURCES_ALL.includes(resourceType)) {
+			return `Invalid resource type '${resourceType}'`;
+		}
+		
+		// Validate amount
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return `Amount must be positive (got ${amount})`;
+		
+		// Create the pool entry directly
+		const root = (Memory as any).Overmind || (Memory.Overmind = {} as any);
+		if (!root.sectorLogistics) root.sectorLogistics = {};
+		if (!root.sectorLogistics.pool) root.sectorLogistics.pool = {};
+		
+		const manifest: StoreDefinitionUnlimited = {} as any;
+		(manifest as any)[resourceType] = amt;
+		
+		root.sectorLogistics.pool[colonyName] = {
+			colony: colonyName,
+			room: colony.room.name,
+			manifest,
+			tick: Game.time,
+			storageId: colony.storage.id,
+		};
+		
+		return `Created sector logistics request: ${colonyName} requests ${amt} ${resourceType}`;
 	}
 
 }

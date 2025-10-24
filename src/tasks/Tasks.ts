@@ -18,6 +18,7 @@ import {meleeAttackTargetType, TaskMeleeAttack} from './instances/meleeAttack';
 import {pickupTargetType, TaskPickup} from './instances/pickup';
 import {rangedAttackTargetType, TaskRangedAttack} from './instances/rangedAttack';
 import {TaskRecharge} from './instances/recharge';
+import {recycleTargetType, TaskRecycle} from './instances/recycle';
 import {repairTargetType, TaskRepair} from './instances/repair';
 import {reserveTargetType, TaskReserve} from './instances/reserve';
 import {signControllerTargetType, TaskSignController} from './instances/signController';
@@ -134,6 +135,10 @@ export class Tasks {
 
 	static recharge(minEnergy = 0, options = {} as TaskOptions): TaskRecharge {
 		return new TaskRecharge(minEnergy, options);
+	}
+
+	static recycle(target: recycleTargetType, options = {} as TaskOptions): TaskRecycle {
+		return new TaskRecycle(target, options);
 	}
 
 	static repair(target: repairTargetType, options = {} as TaskOptions): TaskRepair {

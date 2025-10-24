@@ -121,6 +121,37 @@ export class SectorLogistics {
 	static processPool(_maxPerTick = 0): void { /* intentionally empty */ }
 
 	/**
+	 * Manually create a sector logistics request for a colony
+	 */
+	static createRequest(colonyName: string, resourceType: ResourceConstant, amount: number): boolean {
+		const colony = Overmind.colonies[colonyName];
+		if (!colony || !colony.storage) {
+			log.warning(`Cannot create sector request: colony '${colonyName}' not found or has no storage`);
+			return false;
+		}
+		
+		const amt = Math.floor(amount);
+		if (amt <= 0) {
+			log.warning(`Cannot create sector request: amount must be positive (got ${amount})`);
+			return false;
+		}
+		
+		const manifest: StoreDefinitionUnlimited = {} as any;
+		(manifest as any)[resourceType] = amt;
+		
+		SectorLogistics.pool[colonyName] = {
+			colony: colonyName,
+			room: colony.room.name,
+			manifest,
+			tick: Game.time,
+			storageId: colony.storage.id,
+		};
+		
+		log.info(`Created sector request: ${colonyName} requests ${amt} ${resourceType}`);
+		return true;
+	}
+
+	/**
 	 * Gets all unfulfilled requests from the colony's logistics network and merges them
 	 * into a single request coming from the colony's storage
 	 */

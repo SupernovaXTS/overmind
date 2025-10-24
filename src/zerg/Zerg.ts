@@ -8,6 +8,7 @@ import {BOOST_PARTS} from '../resources/map_resources';
 import {initializeTask} from '../tasks/initializer';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Task} from '../tasks/Task';
+import {Tasks} from '../tasks/Tasks';
 import {stringToColorHash} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {AnyZerg} from './AnyZerg';
@@ -531,9 +532,31 @@ export class Zerg extends AnyZerg {
 	// Eg. creep get repurposed, it gets recycled, etc
 	/**
 	 * When a zerg has no more use for it's current overlord, it will be retired.
-	 * For now, that means RIP
+	 * If the creep is in or near its colony, it will recycle at a spawn. Otherwise, suicide.
 	 */
 	retire() {
+		// Check if we have a colony and room
+		if (!this.colony || !this.room) {
+			this.say('💀 RIP 💀', true);
+			return this.suicide();
+		}
+		
+		// Check if we're in our colony or within 1 room of it
+		const inColonyRoom = this.room.name === this.colony.room.name;
+		const nearColony = !inColonyRoom && Game.map.getRoomLinearDistance(this.room.name, this.colony.room.name) <= 1;
+		
+		if (inColonyRoom || nearColony) {
+			// Try to recycle at a spawn
+			const spawns = this.colony.spawns.filter(s => !s.spawning);
+			const spawn = this.pos.findClosestByRange(spawns);
+			if (spawn) {
+				this.say('♻️', true);
+				this.task = Tasks.recycle(spawn);
+				return OK;
+			}
+		}
+		
+		// Fallback to suicide if we can't recycle
 		this.say('💀 RIP 💀', true);
 		return this.suicide();
 	}
