@@ -1,6 +1,50 @@
 # Overmind Patch Notes
 Changelog format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Overmind [0.x.x] - 2025.10.24
+
+### Added
+
+- Added `TaskRecycle` task that moves creeps to nearest available spawn and recycles them for 50% energy return
+- Added tower healing functions in `SporeCrawler`:
+  - `healDamagedCreeps()` - heals owned damaged creeps prioritized by damage percentage
+  - `healDamagedAllies()` - heals friendly allied creeps prioritized by damage percentage
+- Added `healNearestAlly()` function in `SporeCrawler` with proper return type
+- Added dynamic queen spawning in `BunkerQueenOverlord` based on quadrants with supply structures
+- Added `getRequiredQueenCount()` method to calculate queens needed per quadrant
+- Added idle actions for `BunkerQueenOverlord`:
+  - Battery refilling from storage/terminal
+  - Queen positioning at designated charging spots
+- Added queen renewal system in `QueenOverlord` - queens now renew when idle and below 500 TTL
+- Added `renewQueenAt` setting (500 TTL) to queen settings
+
+### Changed
+
+- `Zerg.retire()` now uses `TaskRecycle` when creep is in colony room or within 1 room distance, falls back to suicide when far away
+- Task system now properly recognizes 'recycle' task name in `initializeTask()` serialization
+- `TaskRecycle` dynamically finds nearest available spawn across all colonies (uses `Game.spawns`)
+- Replaced `suicide()` calls with `retire()` in overlords:
+  - `manager.ts` - Enhanced death actions with recycle task
+  - `miner.ts` - 3 replacements in suicide conditions
+  - `pairDestroyer.ts` - Healer retirement logic
+- `BunkerQueenOverlord` now spawns 1 queen per quadrant with supply structures (scales 1-4 queens)
+- Improved `computeQueenAssignments()` to only assign queens to quadrants with structures
+- Tower healing now runs after combat in `SporeCrawler.run()` with priority: owned creeps → allies
+- Sector logistics console commands now available via `sector.createRequest()`
+
+### Fixed
+
+- Fixed `TaskRecycle` validation to check spawn availability and colony membership
+- Fixed `healNearestAlly()` return type to `ScreepsReturnCode` with proper `ERR_NOT_FOUND` fallback
+- Fixed `getChargingSpot()` to use `bunkerChargingSpots` import and simplified charging spot logic
+- Fixed manager overlord to use recycle task when near spawns instead of direct suicide
+
+### Refactored
+
+- Simplified `BunkerQueenOverlord` quadrant filtering using `isSupplyStructure` logic
+- Extracted battery refilling and charging spot logic in bunker queen idle actions
+- Improved code clarity with const declarations in charging and idle action methods
+
 ## Overmind [0.x.x] - 2024.xx.xx
 
 ### Added
