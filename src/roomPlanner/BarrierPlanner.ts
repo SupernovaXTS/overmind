@@ -5,7 +5,10 @@ import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {packCoord, packCoordList, unpackCoordListAsPosList} from '../utilities/packrat';
 import {minMax} from '../utilities/utils';
-import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds} from './layouts/bunker';
+import { neighbor8, onRoomEdge } from './DynamicPlanner';
+import {bunkerLayout, BUNKER_RADIUS, insideBunkerBounds, getRoomSpecificBunkerLayout} from './layouts/bunker';
+import { dynamicLayout } from './layouts/dynamic';
+import {evolutionChamberLayout} from './layouts/evolutionChamber';
 import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
 
 export interface BarrierPlannerMemory {
@@ -26,9 +29,9 @@ export class BarrierPlanner {
 	private _barrierLookup: ((pos: RoomPosition) => boolean) | undefined;
 
 	static settings = {
-		buildBarriersAtRCL: 3,
+		buildBarriersAtRCL: 1,
 		padding           : 3, // allow this much space between structures and barriers (if possible)
-		bunkerizeRCL      : 7
+		bunkerizeRCL      : 9
 	};
 
 	constructor(roomPlanner: RoomPlanner) {
@@ -43,7 +46,65 @@ export class BarrierPlanner {
 		this.barrierPositions = [];
 	}
 
+	private computeEdgeBarrierPositions(room: Room | undefined): RoomPosition[]  {
+		if (!room) {
+			log.warning('No room in room position! (Why?)');
+			return [];
+		}
+		const exitsDesc = Game.map.describeExits(room.name);
+		let neighborCount = 0;
+		for (const exitKey in exitsDesc) {
+			neighborCount++
+			// Only roll in edge barriers if it's a 'cave' room
+			// TODO: or if all other exits are my owned room
+			if(neighborCount > 1) return [];
+		}
+		const exits = room.find(FIND_EXIT);
+		const terrain = room.getTerrain();
+		function isEdge(coord: number) {
+			return coord == 0 || coord == 49;
+		}
+		function deEdge(coord: number) {
+			return coord < 25 ? coord +1 : coord -1;
+		}
+		const neighbors = 
+		_.filter(
+			_.unique(
+				_.flatten(
+					_.map(exits, exit => {
+						const ret = [];
+						if(isEdge(exit.x)) {
+							for(let i=-1; i<=1; ++i) {
+								ret.push(new RoomPosition(deEdge(exit.x), exit.y + i, exit.roomName));
+							}
+						} else {
+							for(let i=-1; i<=1; ++i) {
+								ret.push(new RoomPosition(exit.x + i, deEdge(exit.y), exit.roomName));
+							}
+						}
+						return ret;
+					})
+				)
+			), pos => terrain.get(pos.x, pos.y) != TERRAIN_MASK_WALL
+		);
+		const candidates = 
+		_.filter(
+			_.unique(
+				_.flatten(
+					_.map(neighbors, neighbor =>
+						_.map(neighbor8, dpos => new RoomPosition(neighbor.x + dpos.x, neighbor.y + dpos.y, neighbor.roomName)),
+					)
+				)
+			), pos => terrain.get(pos.x, pos.y) != TERRAIN_MASK_WALL && 
+				!onRoomEdge(pos) &&
+				neighbors.every(xpos => pos.x != xpos.x || pos.y != xpos.y)
+		);
+		return candidates;
+	}
+
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
+		const result = this.computeEdgeBarrierPositions(bunkerPos.room);
+		if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
@@ -71,6 +132,8 @@ export class BarrierPlanner {
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
 									upgradeSitePos: RoomPosition): RoomPosition[] {
+		const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
+		if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (hatcheryPos) {
@@ -168,11 +231,30 @@ export class BarrierPlanner {
 	}
 
 	private buildMissingBunkerRamparts(): void {
-		if (!this.roomPlanner.bunkerPos) return;
-		const bunkerCoords = getAllStructureCoordsFromLayout(bunkerLayout, this.colony.level);
-		bunkerCoords.push(bunkerLayout.data.anchor); // add center bunker tile
-		let bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		bunkerPositions = translatePositions(bunkerPositions, bunkerLayout.data.anchor, this.roomPlanner.bunkerPos);
+		const bunkerPos = this.roomPlanner.bunkerPos;
+		const evolutionChamberPos = this.roomPlanner.evolutionChamberPos;
+		if (!bunkerPos) return;
+		let bunkerPositions;
+		const layout = evolutionChamberPos ? dynamicLayout : getRoomSpecificBunkerLayout(this.colony.name);
+		const bunkerCoords = getAllStructureCoordsFromLayout(layout, this.colony.level);
+		bunkerCoords.push(layout.data.anchor); // add center bunker tile
+		bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		bunkerPositions = translatePositions(bunkerPositions, layout.data.anchor, bunkerPos);
+		if (evolutionChamberPos) {
+			bunkerPositions = bunkerPositions.concat(
+				translatePositions(
+					_.map(
+						getAllStructureCoordsFromLayout(
+							evolutionChamberLayout,
+							this.colony.level,
+						),
+						coord => new RoomPosition(coord.x, coord.y, this.colony.name),
+					),
+					evolutionChamberLayout.data.anchor,
+					evolutionChamberPos,
+				)
+			);
+		}
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		for (const pos of bunkerPositions) {
 			if (count > 0 && !pos.lookForStructure(STRUCTURE_RAMPART)
@@ -267,7 +349,7 @@ export class BarrierPlanner {
 		if (!this.roomPlanner.memory.relocating && this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL
 			&& this.roomPlanner.shouldRecheck(2)) {
 			this.buildMissingRamparts();
-			if (this.colony.layout == 'bunker' && this.colony.level >= 7) {
+			if (this.colony.layout == 'bunker' && this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
 				this.buildMissingBunkerRamparts();
 			}
 		}
