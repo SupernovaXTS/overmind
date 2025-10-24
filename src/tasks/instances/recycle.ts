@@ -12,26 +12,24 @@ export class TaskRecycle extends Task<recycleTargetType> {
 	}
 
 	isValidTask() {
-		// Only valid if we have a colony
-		return !!this.creep.colony;
+		// Valid as long as we have any spawns
+		return Object.keys(Game.spawns).length > 0;
 	}
 
 	isValidTarget() {
 		// We'll find our own target, so this just needs to check if any spawns exist
-		return !!(this.creep.colony && this.creep.colony.spawns.length > 0);
+		return Object.keys(Game.spawns).length > 0;
 	}
 
 	work() {
-		// Find the nearest available spawn in our colony
-		const colony = this.creep.colony;
-		if (!colony) return ERR_INVALID_TARGET;
-		
-		const availableSpawns = colony.spawns.filter(spawn => !spawn.spawning);
-		const nearestSpawn = this.creep.pos.findClosestByRange(availableSpawns);
+		// Find the nearest available spawn owned by us (any colony)
+		const allSpawns = _.values(Game.spawns) as StructureSpawn[];
+		const availableSpawns = allSpawns.filter(spawn => !spawn.spawning);
+		const nearestSpawn = this.creep.pos.findClosestByRange(availableSpawns) as StructureSpawn | null;
 		
 		if (!nearestSpawn) {
-			// If all spawns are busy, just wait or use any spawn
-			const anySpawn = colony.spawns[0];
+			// If all spawns are busy, just use any spawn
+			const anySpawn = allSpawns[0];
 			if (!anySpawn) return ERR_INVALID_TARGET;
 			return anySpawn.recycleCreep(this.creep.creep);
 		}

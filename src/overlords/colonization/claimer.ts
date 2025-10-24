@@ -74,7 +74,7 @@ export class ClaimingOverlord extends Overlord {
 		/* We can wait for the claimer to timeout, it also allows for reassignment to a reserver
 		if (this.room && this.room.controller && this.room.controller.my && this.room.controller.signedByMe) {
 			for (const claimer of this.claimers) {
-				claimer.suicide();
+				claimer.retire();
 			}
 		}
 		*/
