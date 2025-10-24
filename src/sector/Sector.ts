@@ -1,7 +1,9 @@
-import {Colony} from '../Colony';
+import {Assets, Colony} from '../Colony';
 import {Cartographer} from '../utilities/Cartographer';
 import {SectorLogisticsOverlord} from '../overlords/logistics/sectorLogistics';
 import {SectorLogistics} from '../logistics/SectorLogistics';
+import {mergeSum} from '../utilities/utils';
+import {ALL_ZERO_ASSETS} from '../resources/map_resources';
 
 /**
  * Represents a 10x10 Screeps map sector containing one or more of our colonies,
@@ -51,6 +53,14 @@ export class Sector {
 
   static keyFor(colony: Colony): string {
     return Cartographer.getSectorKey(colony.room.name);
+  }
+
+  /**
+   * Get the total assets across all colonies in the sector
+   */
+  get assets(): Assets {
+    const allColonyAssets = this.colonies.map(colony => colony.assets);
+    return mergeSum([...allColonyAssets, ALL_ZERO_ASSETS]) as Assets;
   }
 
   refresh(): void {
