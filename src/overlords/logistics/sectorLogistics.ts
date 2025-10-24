@@ -55,7 +55,14 @@ export class SectorLogisticsOverlord extends Overlord {
     const userRangeLimit = this.getRangeLimit();
     const sectorRangeLimit = Math.max(userRangeLimit, 15); // Ensure we cover full 10x10 sector
     const maxPathDistance = sectorRangeLimit * 50; // rough path upper bound per room
-    this.spawnGroup = new SpawnGroup(this, { maxPathDistance, requiredRCL: 4 });
+    
+    // Create initializer using the sector anchor colony as the reference point
+    const spawnGroupInitializer = {
+      ref: `sector_${this.sectorKey}`,
+      room: anchor.room,
+      pos: anchor.pos
+    };
+    this.spawnGroup = new SpawnGroup(spawnGroupInitializer, { maxPathDistance, requiredRCL: 4 });
   }
 
   refresh(): void {
