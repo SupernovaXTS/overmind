@@ -39,60 +39,56 @@ export const OverlordPriority = {
 				stationary  : 410,
 				randomWalker: 411,
 			},
-			colonization: {				// Colonizing new rooms
-				claim          : 400,
-				pioneer        : 401,
-				remoteUpgrading: 410,
-			},
+	colonization: {				// Colonizing new rooms
+		claim          : 401,
+		pioneer        : 402,
+		remoteUpgrading: 410,
+	},
 
-			priorityOwnedRoom: {		// Situationally prioritized in-room operations
-				priorityUpgrade  : 450,
-				priorityTransport: 451,
-			},
+	priorityOwnedRoom: {		// Situationally prioritized in-room operations
+		priorityUpgrade  : 450,
+		priorityTransport: 451,
+	},
 
-			ownedRoom: {				// Operation of an owned room
-				firstTransport: 500,	// High priority to spawn the first transporter
-				mine          : 501,
-				work          : 502,
-				mineralRCL8   : 503,
-				transport     : 504,	// Spawn the rest of the transporters
-				mineral       : 505,
-			},
+	ownedRoom: {				// Operation of an owned room
+		firstTransport: 400,	// High priority to spawn the first transporter
+		mine          : 460,
+		work          : 503,
+		mineralRCL8   : 504,
+		transport     : 505,	// Spawn the rest of the transporters
+		mineral       : 506,
+	},
+	remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
+		reserve      : 510,
+		mine         : 460,
+		roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
+	},
+	outpostOffense: {
+		harass      : 560,
+		roomPoisoner: 561,
+	},
+	sectorLogi: {
+		feeder: 580,
+		intersectorTransport: 504,
+	},
+	upgrading: {				// Spawning upgraders
+		upgrade: 600,
+	},
 
-			outpostOffense: {
-				harass      : 560,
-				roomPoisoner: 561,
-			},
+	collectionUrgent: {			// Collecting resources that are time sensitive, like decaying resources on ground
+		haul: 700,
+	},
 
-			upgrading: {				// Spawning upgraders
-				upgrade: 600,
-			},
+	throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
 
-			collectionUrgent: {			// Collecting resources that are time sensitive, like decaying resources on ground
-				haul: 700,
-			},
+	
 
-			throttleThreshold: 799,		// Everything past this may be throttled in the event of low CPU
-
-			
-
-			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
-				reserve      : 900,
-				mine         : 901,
-				roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
-			},
-			sectorLogi: {
-				feeder: 950,
-				intersectorTransport: 1105,
-			},
-			remoteSKRoom: {
-				sourceReaper : 1000,
-				mineral      : 1001,
-				mine         : 1002,
-				roomIncrement: 5,
-			},
-
-			powerMine: {
+	remoteSKRoom: {
+		sourceReaper : 1000,
+		mineral      : 1001,
+		mine         : 1002,
+		roomIncrement: 5,
+	},			powerMine: {
 				cool         : 1050,
 				drill        : 1051,
 				roomIncrement: 5,
