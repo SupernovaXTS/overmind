@@ -323,6 +323,23 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 	
 	private idleActions(queen: Zerg): void {
+		// Check if queen needs renewal
+		if (queen.ticksToLive && queen.ticksToLive < 500) {
+			const chargingSpot = this.getChargingSpot(queen);
+			if (queen.pos.getRangeTo(chargingSpot) == 0) {
+				const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
+				if (chargingSpawn && !chargingSpawn.spawning) {
+					// Use the new renew task which handles both renewal and energy transfer
+					queen.task = Tasks.renew(chargingSpawn);
+					return;
+				}
+			} else {
+				// Move to charging spot first
+				queen.goTo(chargingSpot, {range: 0});
+				return;
+			}
+		}
+
 		// Refill any empty batteries
 		for (const battery of this.batteries) {
 			if (!battery.isFull) {
@@ -336,17 +353,9 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 		}
 
-		// Go to recharging spot and get recharged
+		// Go to recharging spot and idle
 		const chargingSpot = this.getChargingSpot(queen);
 		queen.goTo(chargingSpot, {range: 0});
-		// TODO: this will cause oscillating behavior where recharge drains some energy and queen leaves to supply it
-		if (queen.pos.getRangeTo(chargingSpot) == 0) {
-			const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
-			if (chargingSpawn && !chargingSpawn.spawning) {
-				chargingSpawn.renewCreep(queen.creep);
-				queen.task = this.buildSupplyTaskManifest(queen) // Transfer our energy to the spawn while being renewed
-			}
-		}
 	}
 
 	private handleQueen(queen: Zerg): void {

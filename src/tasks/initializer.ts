@@ -10,6 +10,7 @@ import {fortifyTargetType, fortifyTaskName, TaskFortify} from './instances/forti
 import {generateSafeModeTargetType, generateSafeModeTaskName, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './instances/getRenewed';
+import {renewTargetType, renewTaskName, TaskRenew} from './instances/renew';
 import {goToTaskName} from './instances/goTo';
 import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, harvestTaskName, TaskHarvest} from './instances/harvest';
@@ -68,6 +69,9 @@ export function initializeTask(protoTask: ProtoTask): Task<any> {
 			break;
 		case getRenewedTaskName:
 			task = new TaskGetRenewed(target as getRenewedTargetType);
+			break;
+		case renewTaskName:
+			task = new TaskRenew(target as renewTargetType);
 			break;
 		case goToTaskName:
 			// task = new TaskGoTo(derefRoomPosition(ProtoTask._target._pos) as goToTargetType);

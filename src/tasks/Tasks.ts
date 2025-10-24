@@ -10,6 +10,7 @@ import {fortifyTargetType, TaskFortify} from './instances/fortify';
 import {generateSafeModeTargetType, TaskGenerateSafeMode} from './instances/generateSafeMode';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
+import {renewTargetType, TaskRenew} from './instances/renew';
 import {goToTargetType, goToTaskName, TaskGoTo} from './instances/goTo';
 import {goToRoomTargetType, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, TaskHarvest} from './instances/harvest';
@@ -94,6 +95,10 @@ export class Tasks {
 
 	static getRenewed(target: getRenewedTargetType, options = {} as TaskOptions): TaskGetRenewed {
 		return new TaskGetRenewed(target, options);
+	}
+
+	static renew(target: renewTargetType, options = {} as TaskOptions): TaskRenew {
+		return new TaskRenew(target, options);
 	}
 
 	// static goTo(target: RoomPosition | _HasRoomPosition, options = {} as TaskOptions): TaskGoToRoom {
