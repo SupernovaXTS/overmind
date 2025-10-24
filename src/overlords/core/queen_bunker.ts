@@ -328,6 +328,7 @@ export class BunkerQueenOverlord extends Overlord {
 			const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
 			if (chargingSpawn && !chargingSpawn.spawning) {
 				chargingSpawn.renewCreep(queen.creep);
+				queen.task = Tasks.transfer(chargingSpawn); // Transfer our energy to the spawn while being renewed
 			}
 		}
 	}
