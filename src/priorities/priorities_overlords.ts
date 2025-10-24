@@ -59,7 +59,7 @@ export const OverlordPriority = {
 		mineral       : 506,
 	},
 	remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 510,
+		reserve      : 601,
 		mine         : 460,
 		roomIncrement: 5,		// Remote room priorities are incremented by this for each outpost
 	},
@@ -68,8 +68,8 @@ export const OverlordPriority = {
 		roomPoisoner: 561,
 	},
 	sectorLogi: {
-		feeder: 580,
-		intersectorTransport: 504,
+		feeder: 603,
+		intersectorTransport: 602,
 	},
 	upgrading: {				// Spawning upgraders
 		upgrade: 600,
