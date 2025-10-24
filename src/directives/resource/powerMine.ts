@@ -40,17 +40,17 @@ export class DirectivePowerMine extends Directive {
 	static secondaryColor = COLOR_RED;
 	static requiredRCL = 7;
 
-	private _powerBank: StructurePowerBank | undefined;
+	private _target: StructurePowerBank | undefined;
 	private _drops: { [resourceType: string]: Resource[] };
 
 	memory: DirectivePowerMineMemory;
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= DirectivePowerMine.requiredRCL);
-		this._powerBank = this.powerBank;
+		this._target = this.target;
 		this.memory.state = this.memory.state || 0;
 		this.memory[MEM.EXPIRATION] = this.memory[MEM.EXPIRATION] ||
-			Game.time + (this.powerBank ? this.powerBank.ticksToDecay + 1000 : 5500);
+			Game.time + (this.target ? this.target.ticksToDecay + 1000 : 5500);
 		this.memory.totalCollected = this.memory.totalCollected || 0;
 	}
 
@@ -78,12 +78,12 @@ export class DirectivePowerMine extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get powerBank(): StructurePowerBank | undefined {
+	get target(): StructurePowerBank | undefined {
 		if (this.pos.isVisible) {
-			this._powerBank = this._powerBank || !!this.flag.room
+			this._target = this._target || !!this.flag.room
 							  ? this.flag.pos.lookForStructure(STRUCTURE_POWER_BANK) as StructurePowerBank
 							  : undefined;
-			return this._powerBank;
+			return this._target;
 		}
 	}
 
@@ -93,7 +93,7 @@ export class DirectivePowerMine extends Directive {
 	get totalResources() {
 		if (this.pos.isVisible) {
 			// update total amount remaining
-			this.memory.totalResources = this.powerBank ? this.powerBank.power : this.memory.totalResources;
+			this.memory.totalResources = this.target ? this.target.power : this.memory.totalResources;
 		}
 		if (this.memory.totalResources == undefined) {
 			return 5000; // pick some non-zero number so that powerMiners will spawn
@@ -104,15 +104,15 @@ export class DirectivePowerMine extends Directive {
 	calculateRemainingLifespan() {
 		if (!this.room) {
 			return undefined;
-		} else if (this.powerBank == undefined) {
+		} else if (this.target == undefined) {
 			return 0;
 		} else {
-			const tally = calculateFormationStrength(this.powerBank.pos.findInRange(FIND_MY_CREEPS, 4));
+			const tally = calculateFormationStrength(this.target.pos.findInRange(FIND_MY_CREEPS, 4));
 			const healStrength: number = tally.heal * HEAL_POWER || 0;
 			const attackStrength: number = tally.attack * ATTACK_POWER || 0;
 			// PB have 50% hitback, avg damage is attack strength if its enough healing, otherwise healing
 			const avgDamagePerTick = Math.min(attackStrength, healStrength * 2);
-			return this.powerBank.hits / avgDamagePerTick;
+			return this.target.hits / avgDamagePerTick;
 		}
 	}
 
@@ -120,31 +120,31 @@ export class DirectivePowerMine extends Directive {
 	// TODO FIXME XXX
 	manageState() {
 		const currentState = this.memory.state;
-		log.debug(`Managing state ${currentState} of directive ${this.print} with PB ${this.powerBank}`);
-		if (currentState == 0 && this.powerBank && this.powerBank.hits < this.powerBank.hitsMax) {
-			if (this.powerBank.pos.findInRange(FIND_MY_CREEPS, 3).length == 0
-				&& this.powerBank.pos.findInRange(FIND_HOSTILE_CREEPS, 3).length > 0) {
+		log.debug(`Managing state ${currentState} of directive ${this.print} with PB ${this.target}`);
+		if (currentState == 0 && this.target && this.target.hits < this.target.hitsMax) {
+			if (this.target.pos.findInRange(FIND_MY_CREEPS, 3).length == 0
+				&& this.target.pos.findInRange(FIND_HOSTILE_CREEPS, 3).length > 0) {
 				// Power bank is damage but we didn't mine it
-				log.alert(`Power bank mining ${this.print} competing with ${this.powerBank.room.hostiles[0].owner.username}.`);
+				log.alert(`Power bank mining ${this.print} competing with ${this.target.room.hostiles[0].owner.username}.`);
 				// this.remove();
 			} else {
 				// Set to mining started
 				this.memory.state = 1;
 			}
-		} else if ((currentState == 0 || currentState == 1) && this.room && (!this.powerBank
-																			 || this.powerBank.hits < 500000)) {
+		} else if ((currentState == 0 || currentState == 1) && this.room && (!this.target
+																			 || this.target.hits < 500000)) {
 			Game.notify('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			log.info('Activating spawning haulers for power mining in room ' + this.pos.roomName);
 			this.memory.state = 2;
-		} else if (currentState == 2 && this.room && !this.powerBank && (this.hasDrops || this.room.ruins.length == 0)) {
+		} else if (currentState == 2 && this.room && !this.target && (this.hasDrops || this.room.ruins.length == 0)) {
 			Game.notify(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			log.alert(`Mining is complete for ${this.print} in ${this.room.print} at time ${Game.time}`);
 			this.memory.state = 3;
 			// TODO reassign them to guard the bank
 			delete this.overlords.powerMine;
-			this._powerBank = undefined; // This might be fluff
+			this._target = undefined; // This might be fluff
 		} else if ((currentState == 0 || currentState == 1 || currentState == 2) && this.room
-				   && this.pos.isVisible && !this.powerBank) {
+				   && this.pos.isVisible && !this.target) {
 			if (!this.hasDrops && this.room.ruins.length == 0) {
 				// TODO this had an error where it triggered incorrectly
 				Game.notify(`WE FAILED. SORRY CHIEF, COULDN'T FINISH POWER MINING IN ${this.print} ` +
@@ -180,9 +180,9 @@ export class DirectivePowerMine extends Directive {
 
 	init(): void {
 		let alert;
-		if (this.pos.room && !!this.powerBank) {
+		if (this.pos.room && !!this.target) {
 			alert = `PM ${this.memory.state} ${this.totalResources} P${Math.floor(
-				100 * this.powerBank.hits / this.powerBank.hitsMax)}% @ ${this.powerBank.ticksToDecay}TTL`;
+				100 * this.target.hits / this.target.hitsMax)}% @ ${this.target.ticksToDecay}TTL`;
 
 		} else {
 			alert = `PowerMine ${this.memory.state} ${this.totalResources}`;

@@ -1,5 +1,6 @@
 import {log} from '../../console/log';
 import {StrongholdOverlord} from '../../overlords/situational/stronghold';
+// import {PowerDrillOverlord} from '../../overlords/powerMining/PowerDrill';
 import {profile} from '../../profiler/decorator';
 import {getCacheExpiration} from '../../utilities/utils';
 import {Visualizer} from '../../visuals/Visualizer';
@@ -99,9 +100,9 @@ export class DirectiveStronghold extends Directive {
 
 	manageState() {
 		const currentState = this.memory.state;
-
-		if (this.core && this.core.level == 5) {
-			// this.handleL5();
+		const handleL5 = true;
+		if (this.core && this.core.level == 5 && handleL5) {
+			this.handleL5();
 		}
 
 		// Starting

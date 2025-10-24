@@ -49,12 +49,12 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.wishlist(2, CombatSetups.coolant.small,{reassignIdle: true});
 	}
 
-	private getHostileDrill(powerBank: StructurePowerBank) {
-		return powerBank.hits < powerBank.hitsMax && powerBank.pos.findInRange(FIND_HOSTILE_CREEPS, 2)[0];
+	private getHostileDrill(target: StructurePowerBank) {
+		return target.hits < target.hitsMax && target.pos.findInRange(FIND_HOSTILE_CREEPS, 2)[0];
 	}
 
-	private handleHostileDrill(hostileDrill: Creep, powerBank: StructurePowerBank) {
-		Game.notify(`${hostileDrill.owner.username} power harvesting ${powerBank.room.name}, competing for same power bank.`);
+	private handleHostileDrill(hostileDrill: Creep, target: StructurePowerBank) {
+		Game.notify(`${hostileDrill.owner.username} power harvesting ${target.room.name}, competing for same power bank.`);
 		// this.directive.remove();
 	}
 
@@ -62,12 +62,12 @@ export class PowerDrillOverlord extends CombatOverlord {
 		if (drill.spawning) {
 			return;
 		}
-		if (!this.directive.powerBank) {
+		if (!this.directive.target) {
 			if (!this.room) {
 				// We are not there yet
 			} else {
 				// If power bank is dead
-				if (this.directive.powerBank == undefined && this.directive.memory.state < 2) {
+				if (this.directive.target == undefined && this.directive.memory.state < 2) {
 					Game.notify(`Power bank in ${this.room.print} is dead.`);
 					drill.say('💀 RIP 💀');
 					const result = drill.retire();
@@ -82,7 +82,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 		}
 
 		// Go to power room
-		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.directive.powerBank) {
+		if (!this.room || drill.room != this.room || drill.pos.isEdge || !this.directive.target) {
 			// log.debugCreep(drill, `Going to room!`);
 			// log.notify("Drill is moving to power site in " + this.pos.roomName + ".");
 			drill.goTo(this.pos);
@@ -90,15 +90,15 @@ export class PowerDrillOverlord extends CombatOverlord {
 		}
 
 		//  Handle killing bank
-		if (drill.pos.isNearTo(this.directive.powerBank)) {
+		if (drill.pos.isNearTo(this.directive.target)) {
 			if (!this.partnerMap.get(drill.name)) {
 				this.partnerMap.set(drill.name, []);
 			}
 			PowerDrillOverlord.periodicSay(drill, 'Drilling⚒️');
-			drill.attack(this.directive.powerBank);
+			drill.attack(this.directive.target);
 		} else {
 			PowerDrillOverlord.periodicSay(drill, '🚗Traveling🚗');
-			drill.goTo(this.directive.powerBank);
+			drill.goTo(this.directive.target);
 		}
 	}
 
@@ -112,15 +112,15 @@ export class PowerDrillOverlord extends CombatOverlord {
 			coolant.healSelfIfPossible();
 			coolant.goTo(this.pos);
 			return;
-		} else if (!this.directive.powerBank) {
+		} else if (!this.directive.target) {
 			// If power bank is dead
 			Game.notify('Power bank in ' + this.room + ' is dead.');
 			coolant.say('💀 RIP 💀');
 			coolant.retire();
 			return;
 		}
-		if (coolant.pos.getRangeTo(this.directive.powerBank) > 3) {
-			coolant.goTo(this.directive.powerBank);
+		if (coolant.pos.getRangeTo(this.directive.target) > 3) {
+			coolant.goTo(this.directive.target);
 		} else {
 			const activeDrills = this.pos.findInRange(FIND_MY_CREEPS, 1).filter(creep => _.contains(creep.name, 'drill'));
 			if (activeDrills.length > 0) {
@@ -209,8 +209,8 @@ export class PowerDrillOverlord extends CombatOverlord {
 	}
 
 	visuals() {
-		if (this.room && this.directive.powerBank) {
-			Visualizer.marker(this.directive.powerBank.pos);
+		if (this.room && this.directive.target) {
+			Visualizer.marker(this.directive.target.pos);
 		}
 	}
 
