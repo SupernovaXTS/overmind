@@ -201,6 +201,45 @@ export class BarrierPlanner {
 		return this._barrierLookup(pos);
 	}
 
+	/**
+	 * Check if a rampart can be placed at the given position
+	 * This performs validation before attempting to create a construction site
+	 */
+	private canPlaceRampart(pos: RoomPosition): boolean {
+		// Check if room has visibility
+		if (!pos.room) {
+			return false;
+		}
+
+		// Check if there's already a rampart structure at this position
+		if (pos.lookForStructure(STRUCTURE_RAMPART)) {
+			return false;
+		}
+
+		// Check if there's already a construction site at this position (of any type)
+		const existingSites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
+		if (existingSites.length > 0) {
+			return false;
+		}
+
+		// Check if we've hit the rampart limit for this RCL
+		const currentRamparts = this.colony.room.find(FIND_STRUCTURES, {
+			filter: (s) => s.structureType === STRUCTURE_RAMPART
+		}).length;
+		const rampartSites = this.colony.room.find(FIND_CONSTRUCTION_SITES, {
+			filter: (s) => s.structureType === STRUCTURE_RAMPART
+		}).length;
+		const totalRamparts = currentRamparts + rampartSites;
+		const maxRamparts = CONTROLLER_STRUCTURES[STRUCTURE_RAMPART][this.colony.controller.level];
+		
+		if (totalRamparts >= maxRamparts) {
+			return false;
+		}
+
+		// Ramparts can be built anywhere (even on walls), so if we passed all checks, return true
+		return true;
+	}
+
 	/* Create construction sites for any buildings that need to be built */
 	private buildMissingRamparts(): void {
 		// Max buildings that can be placed each tick
@@ -219,7 +258,7 @@ export class BarrierPlanner {
 		}
 
 		for (const pos of barrierPositions) {
-			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos) && this.barrierShouldBeHere(pos)) {
+			if (count > 0 && this.canPlaceRampart(pos) && this.barrierShouldBeHere(pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
@@ -257,8 +296,7 @@ export class BarrierPlanner {
 		}
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		for (const pos of bunkerPositions) {
-			if (count > 0 && !pos.lookForStructure(STRUCTURE_RAMPART)
-				&& pos.lookFor(LOOK_CONSTRUCTION_SITES).length == 0) {
+			if (count > 0 && this.canPlaceRampart(pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create bunker rampart at ${pos.print}. Result: ${ret}`);
