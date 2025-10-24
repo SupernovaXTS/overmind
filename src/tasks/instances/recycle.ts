@@ -12,11 +12,20 @@ export class TaskRecycle extends Task<recycleTargetType> {
 	}
 
 	isValidTask() {
-		return true; // Always valid if creep wants to recycle
+		// Only valid if we have a colony
+		return !!this.creep.colony;
 	}
 
 	isValidTarget() {
-		return !!this.target && this.target.my && !this.target.spawning;
+		// Target must be owned by us, not spawning, and in our colony
+		if (!this.target || !this.target.my || this.target.spawning) {
+			return false;
+		}
+		// Verify the spawn belongs to our colony
+		if (this.creep.colony) {
+			return this.creep.colony.spawns.includes(this.target);
+		}
+		return false;
 	}
 
 	work() {
