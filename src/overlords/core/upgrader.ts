@@ -19,7 +19,11 @@ export class UpgradingOverlord extends Overlord {
 	room: Room;	//  Operates in owned room
 
 	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
-		super(upgradeSite, 'upgrade', priority);
+		// If we don't have any upgraders, use priority upgrade to spawn them faster
+		const hasUpgraders = upgradeSite.colony.getCreepsByRole(Roles.upgrader).length > 0;
+		const effectivePriority = hasUpgraders ? priority : OverlordPriority.priorityOwnedRoom.priorityUpgrade;
+		
+		super(upgradeSite, 'upgrade', effectivePriority);
 		this.upgradeSite = upgradeSite;
 		// If new colony or boosts overflowing to storage
 		this.upgraders = this.zerg(Roles.upgrader);
