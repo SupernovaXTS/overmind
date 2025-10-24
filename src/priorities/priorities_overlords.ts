@@ -166,7 +166,7 @@ export class PrioritiesOverlords {
 				mineral       : 506,
 			},
 			remoteRoom: {				// Operation of a remote room. Allows colonies to restart one room at a time.
-				reserve      : 520,
+				reserve      : 604,
 				mine         : 502,
 				roomIncrement: 1,		// Remote room priorities are incremented by this for each outpost
 			},
