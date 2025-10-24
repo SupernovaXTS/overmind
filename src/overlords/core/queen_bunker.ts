@@ -88,10 +88,14 @@ export class BunkerQueenOverlord extends Overlord {
 		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
 		this.numActiveQueens = activeQueens.length;
 		if (this.numActiveQueens > 0) {
-			const quadrantAssignmentOrder = [this.quadrants.lowerRight,
-											 this.quadrants.upperLeft,
-											 this.quadrants.lowerLeft,
-											 this.quadrants.upperRight];
+			// Filter quadrants to only those that have extensions
+			const quadrantAssignmentOrder = [
+				this.quadrants.lowerRight,
+				this.quadrants.upperLeft,
+				this.quadrants.lowerLeft,
+				this.quadrants.upperRight
+			].filter(quadrant => _.any(quadrant, s => s.structureType === STRUCTURE_EXTENSION));
+			
 			let i = 0;
 			for (const quadrant of quadrantAssignmentOrder) {
 				const queen = activeQueens[i % activeQueens.length];
@@ -99,6 +103,21 @@ export class BunkerQueenOverlord extends Overlord {
 				i++;
 			}
 		}
+	}
+
+	/**
+	 * Returns the number of quadrants with extensions that need queens
+	 */
+	private getRequiredQueenCount(): number {
+		const quadrants = [
+			this.quadrants.lowerRight,
+			this.quadrants.upperLeft,
+			this.quadrants.lowerLeft,
+			this.quadrants.upperRight
+		];
+		const quadrantsWithExtensions = _.filter(quadrants, 
+			quadrant => _.any(quadrant, s => s.structureType === STRUCTURE_EXTENSION));
+		return quadrantsWithExtensions.length;
 	}
 
 	refresh() {
@@ -117,8 +136,8 @@ export class BunkerQueenOverlord extends Overlord {
 				this.colony.logisticsNetwork.requestOutputMinerals(battery);
 			}
 		}
-		// const amount = this.colony.spawns.length > 1 ? 2 : 1;
-		const amount = this.colony.room.energyCapacityAvailable >= 2000 ? 2 : 1;
+		// Spawn one queen per quadrant that has extensions
+		const amount = this.getRequiredQueenCount();
 		this.wishlist(amount, this.queenSetup, {reassignIdle: true});
 	}
 
