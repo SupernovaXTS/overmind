@@ -1,21 +1,24 @@
-import {Colony, getAllColonies} from '../Colony';
-import {maxMarketPrices, TraderJoe} from '../logistics/TradeNetwork';
-import {profile} from '../profiler/decorator';
-import {onPublicServer} from '../utilities/utils';
+import { LogMessage, log } from "console/log";
+import { Colony, getAllColonies } from "../Colony";
+import { maxMarketPrices, TraderJoe } from "../logistics/TradeNetwork";
+import { profile } from "../profiler/decorator";
+import { entries, onPublicServer } from "../utilities/utils";
 import {
 	_baseResourcesLookup,
 	_boostTierLookupAllTypes,
 	_boostTypesTierLookup,
-	_commoditiesLookup,
 	_mineralCompoundsAllLookup,
 	BASE_RESOURCES,
 	BOOST_PARTS,
 	BOOST_TIERS,
 	BoostTier,
+	COMMODITIES_DATA,
 	DEPOSITS_ALL,
 	INTERMEDIATE_REACTANTS,
-	REAGENTS
-} from './map_resources';
+	REAGENTS,
+	_commoditiesLookup,
+} from "./map_resources";
+// --- getNextProduction and supporting code migrated from tsrc ---
 
 export const REACTION_PRIORITIES = [
 
@@ -129,6 +132,15 @@ export const baseStockAmounts: { [key: string]: number } = {
 	[RESOURCE_HYDROGEN] : 5000
 };
 
+export interface Production {
+	/** The commodity to produce */
+	commodityType: CommodityConstant;
+	/** How many productions to make */
+	requested: number;
+	/** How much one production will output */
+	size: number;
+}
+
 export interface Reaction {
 	mineralType: string;
 	amount: number;
@@ -209,7 +221,8 @@ export class Abathur {
 	}
 
 	static isCommodity(resource: ResourceConstant): boolean {
-		return !!_commoditiesLookup[resource];
+		// Use _commoditiesLookup for commodity detection
+		return _commoditiesLookup.hasOwnProperty(resource);
 	}
 
 	static getBoostTier(boost: ResourceConstant): BoostTier | 'notaboost' {
@@ -400,6 +413,66 @@ export class Abathur {
 		if (verbose) console.log(`Final queue: ${JSON.stringify(reactionQueue)}`);
 		return reactionQueue;
 	}
+	// Move getNextProduction to Abathur class
+	/**
+	 * Compute the next commodity production for a colony's factory
+	 */
+	static getNextProduction(colony: Colony): Production | undefined {
+		if (!colony.factory) {
+			return undefined;
+		}
+		const globalAssets = Overmind.terminalNetwork.getAssets();
+		const numColonies = _.filter(getAllColonies(), (col) => !!col.terminal).length;
+		let batchAmount = Infinity;
+		let possibleProductions = entries(COMMODITIES_DATA)
+			.filter(([prod, data]) => data.lvl === undefined || data.lvl === colony.factory!.level)
+			.sort(([a], [b]) => 0); // You may want to sort by priority if needed
+		const ingredientsUnavailable: { [resource: string]: boolean } = {};
+		const nextTargetProduction = _.find(
+			possibleProductions,
+			([prodStr, data]) => {
+				const product = prodStr as CommodityConstant;
+				const productThreshold = Overmind.terminalNetwork.thresholds(colony, product);
+				if (colony.assets[product] >= productThreshold.target) {
+					return false;
+				}
+				batchAmount = Infinity;
+				// COMMODITIES_DATA[product].chain is a string (resourceType) or undefined
+				if (!data.chain) return false;
+				const resource = data.chain as ResourceConstant;
+				const amount = 1; // Default to 1 if not specified; adjust if you have a mapping for amounts
+				if (ingredientsUnavailable[resource]) {
+					return false;
+				}
+				const resourceThreshold = Overmind.terminalNetwork.thresholds(colony, resource);
+				const cutoff = resourceThreshold.target - resourceThreshold.tolerance;
+				if (colony.assets[resource] < cutoff) {
+					return false;
+				}
+				const globalShortage = globalAssets[resource] / numColonies < amount;
+				const localShortage = colony.assets[resource] - (Overmind.terminalNetwork as any).lockedAmount(colony, resource) < amount;
+				if (globalShortage || localShortage) {
+					if (!Overmind.terminalNetwork.canObtainResource(colony, resource, amount)) {
+						ingredientsUnavailable[resource] = true;
+						return false;
+					}
+				}
+				const maxBatch = Math.floor((globalAssets[resource] - cutoff) / amount);
+				batchAmount = Math.max(Math.min(maxBatch, batchAmount), 0);
+				return batchAmount > 0;
+			}
+		);
+		if (nextTargetProduction && batchAmount > 0) {
+			batchAmount = Math.min(batchAmount, 10);
+			return {
+				commodityType: nextTargetProduction[0] as CommodityConstant,
+				requested: batchAmount,
+				size: 1, // Default to 1; adjust if you have a mapping for actual production size
+			};
+		}
+		return undefined;
+	}
+
 
 	/**
 	 * Trim a reaction queue, reducing the amounts of precursor compounds which need to be produced

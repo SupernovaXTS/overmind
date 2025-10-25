@@ -1,5 +1,5 @@
 import {$} from '../caching/GlobalCache';
-import {Colony, ColonyStage} from '../Colony';
+import {Colony, ColonyStage, EnergyUse} from '../Colony';
 import {log} from '../console/log';
 import {CombatCreepSetup} from '../creepSetups/CombatCreepSetup';
 import {bodyCost, CreepSetup} from '../creepSetups/CreepSetup';
@@ -298,6 +298,10 @@ export class Hatchery extends HiveCluster {
 			});
 
 			if (result == OK) {
+                // Track energy use for spawning
+                if (this.colony) {
+                    this.colony.trackEnergyUse(EnergyUse.SPAWN, -bodyCost(protoCreep.body));
+                }
 				// Creep has been successfully spawned; add cost into profiling
 				const overlordRef = protoCreep.memory[MEM.OVERLORD];
 				const overlord = Overmind.overlords[overlordRef] as Overlord | undefined;

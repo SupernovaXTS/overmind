@@ -1,5 +1,5 @@
 import {$} from '../caching/GlobalCache';
-import {Colony} from '../Colony';
+import {Colony, EnergyUse} from '../Colony';
 import {log} from '../console/log';
 import {TraderJoe} from '../logistics/TradeNetwork';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -212,7 +212,11 @@ export class CommandCenter extends HiveCluster {
 			if (Game.time % 20 == 0) {
 				log.info(`Processing power in ${this.room.print}`);
 			}
-			this.powerSpawn.processPower();
+            const result = this.powerSpawn.processPower();
+            if (result === OK && this.colony) {
+                // Power processing always costs 50 energy per call
+                this.colony.trackEnergyUse(EnergyUse.POWER_SPAWN, -50);
+            }
 		}
 	}
 

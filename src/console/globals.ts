@@ -15,14 +15,25 @@ global.derefRoomPosition = function(protoPos: ProtoPos): RoomPosition {
 
 global.NO_ACTION = 1;
 
-global.PERMACACHE = {};
+// Remove invalid import: deref and derefRoomPosition are declared and assigned globally below
 
 // // Assign values to the memory key aliases declared in memory.d.ts
+declare function deref(ref: string): RoomObject | null;
 // global._TICK = 'T';
+global.deref = function(ref: string): RoomObject | null { // dereference any object from identifier
+	// @ts-ignore
+	return Game.getObjectById(ref) || Game.flags[ref] || Game.creeps[ref] || Game.spawns[ref] || null;
+};
 // global._EXPIRATION = 'X';
+declare function derefRoomPosition(protoPos: ProtoPos): RoomPosition;
 // global._COLONY = 'C';
+global.derefRoomPosition = function(protoPos: ProtoPos): RoomPosition {
+	return new RoomPosition(protoPos.x, protoPos.y, protoPos.roomName);
+};
 // global._OVERLORD = 'O';
+global.NO_ACTION = 1;
 // global._DISTANCE = 'D';
+global.PERMACACHE = {};
 // global._RM_AVOID = 'a';
 // global._RM_SOURCE = 's';
 // global._RM_CONTROLLER = 'c';
@@ -66,6 +77,13 @@ global.PERMACACHE = {};
 
 declare function buyPixels(amount: number): string;
 declare function getAccountResourcesSettings(): string;
+declare function buyPixels(amount: number): string;
+declare function getAccountResourcesSettings(): string;
+declare function setPixelSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
+declare function setCPUUnlockSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
+declare function setPixelGeneration(enabled: boolean): string;
+declare function setPixelTrading(enabled: boolean): string;
+declare function setCPUUnlockTrading(enabled: boolean): string;
 declare function setPixelSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
 declare function setCPUUnlockSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string;
 declare function setPixelGeneration(enabled: boolean): string;

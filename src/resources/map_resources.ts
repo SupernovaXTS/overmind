@@ -1,3 +1,15 @@
+// Lookup for commodities: returns true if resource is a commodity
+export const _commoditiesLookup: { [resource: string]: boolean } = Object.keys(COMMODITIES_DATA).reduce((acc: { [resource: string]: boolean }, key) => {
+	acc[key] = true;
+	return acc;
+}, {});
+// Import COMMODITIES_DATA and DEPOSITS_ALL from tsrc for compatibility
+import { COMMODITIES_DATA, DEPOSITS_ALL } from '../../tsrc/resources/map_resources';
+
+export { COMMODITIES_DATA, DEPOSITS_ALL };
+// Remove this line:
+// import { COMMODITIES_ALL } from './map_resources';
+
 export const RESOURCES_ALL_EXCEPT_ENERGY = _.without(RESOURCES_ALL, RESOURCE_ENERGY) as _ResourceConstantSansEnergy[];
 
 export const BOOSTS_T3 = [
@@ -298,60 +310,5 @@ export const _boostTypesTierLookup = _.mapValues(
 // { attack: { UH: T1, UH2O: T2, XUH2O: T3 }, carry: { ... } ... }
 export const _boostTierLookupAllTypes: { [resource in ResourceConstant]: BoostTier } =
 				 _.extend({}, ..._.values(_boostTypesTierLookup));
-
-export const COMMODITIES_ALL: ResourceConstant[] = [
-	// Compressed mineral compounds
-	RESOURCE_UTRIUM_BAR,
-	RESOURCE_LEMERGIUM_BAR,
-	RESOURCE_ZYNTHIUM_BAR,
-	RESOURCE_KEANIUM_BAR,
-	RESOURCE_GHODIUM_MELT,
-	RESOURCE_OXIDANT,
-	RESOURCE_REDUCTANT,
-	RESOURCE_PURIFIER,
-	RESOURCE_BATTERY,
-	// Higher commodities
-	RESOURCE_COMPOSITE,
-	RESOURCE_CRYSTAL,
-	RESOURCE_LIQUID,
-	// Basic regional commodities
-	RESOURCE_WIRE,
-	RESOURCE_CELL,
-	RESOURCE_ALLOY,
-	RESOURCE_CONDENSATE,
-	// Mechanical chain
-	RESOURCE_TUBE,
-	RESOURCE_FIXTURES,
-	RESOURCE_FRAME,
-	RESOURCE_HYDRAULICS,
-	RESOURCE_MACHINE,
-	// Biological chain
-	RESOURCE_PHLEGM,
-	RESOURCE_TISSUE,
-	RESOURCE_MUSCLE,
-	RESOURCE_ORGANOID,
-	RESOURCE_ORGANISM,
-	// Electronic chain
-	RESOURCE_SWITCH,
-	RESOURCE_TRANSISTOR,
-	RESOURCE_MICROCHIP,
-	RESOURCE_CIRCUIT,
-	RESOURCE_DEVICE,
-	// Mystical chain
-	RESOURCE_CONCENTRATE,
-	RESOURCE_EXTRACT,
-	RESOURCE_SPIRIT,
-	RESOURCE_EMANATION,
-	RESOURCE_ESSENCE
-];
-export const _commoditiesLookup: { [resource: string]: boolean | undefined } =
-				 _.zipObject(COMMODITIES_ALL, _.map(COMMODITIES_ALL, i => true));
-
-export const DEPOSITS_ALL: ResourceConstant[] = [
-	RESOURCE_SILICON,
-	RESOURCE_BIOMASS,
-	RESOURCE_METAL,
-	RESOURCE_MIST,
-];
 
 export const ALL_ZERO_ASSETS: { [resource: string]: number } = _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => 0));

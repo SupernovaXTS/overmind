@@ -3,7 +3,8 @@ screeps.json
 
 # Ignore basic folders
 
-/dist 
+/dist
+/tsrc/* 
 /node_modules
 /typings
 /.rpt2_cache

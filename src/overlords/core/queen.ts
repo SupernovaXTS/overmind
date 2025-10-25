@@ -114,7 +114,7 @@ export class QueenOverlord extends Overlord {
 				const nearbySpawn = _.first(queen.pos.findInRange(this.hatchery.spawns, 1));
 				if (nearbySpawn && !nearbySpawn.spawning) {
 					// Use the new renew task which handles both renewal and energy transfer
-					queen.task = Tasks.renew(nearbySpawn);
+					queen.task = Tasks.getRenewed(nearbySpawn);
 				}
 			} else {
 				// Otherwise, travel back to idle position

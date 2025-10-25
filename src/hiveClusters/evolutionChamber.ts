@@ -1,5 +1,5 @@
 import {$} from '../caching/GlobalCache';
-import {Colony} from '../Colony';
+import {Colony, ColonyStage, EnergyUse} from '../Colony';
 import {log} from '../console/log';
 import {TerminalNetworkV2} from '../logistics/TerminalNetwork_v2';
 import {TransportRequestGroup} from '../logistics/TransportRequestGroup';
@@ -572,6 +572,10 @@ export class EvolutionChamber extends HiveCluster {
 				if (lab.cooldown == 0 && !this.labReservations[lab.id]) {
 					const result = lab.runReaction(lab1, lab2);
 					if (result == OK) { // update total production amount in memory
+						// Track energy use for lab reaction
+						if (this.colony) {
+							this.colony.trackEnergyUse(EnergyUse.LAB, -LAB_REACTION_AMOUNT);
+						}
 						const product = this.memory.activeReaction ? this.memory.activeReaction.mineralType : 'ERROR';
 						if (!this.memory.stats.totalProduction[product]) {
 							this.memory.stats.totalProduction[product] = 0;

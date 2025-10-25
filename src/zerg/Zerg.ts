@@ -7,6 +7,8 @@ import {Movement} from '../movement/Movement';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';
 import {BOOST_PARTS} from '../resources/map_resources';
+import { EnergyUse } from '../Colony';
+import { isSource } from '../declarations/typeGuards';
 import {initializeTask} from '../tasks/initializer';
 import {MIN_LIFETIME_FOR_BOOST} from '../tasks/instances/getBoosted';
 import {Task} from '../tasks/Task';
@@ -256,6 +258,10 @@ export class Zerg extends AnyZerg {
 
 	harvest(source: Source | Mineral) {
 		const result = this.creep.harvest(source);
+		if (result == OK && isSource(source) && this.colony) {
+			// Track the amount of energy mined (use source.energy)
+			this.colony.trackEnergyUse(EnergyUse.MINED, source.energy ? source.energy : 0);
+		}
 		if (!this.actionLog.harvest) this.actionLog.harvest = (result == OK);
 		return result;
 	}
@@ -317,6 +323,9 @@ export class Zerg extends AnyZerg {
 
 	repair(target: Structure) {
 		const result = this.creep.repair(target);
+		if (result == OK && this.colony && this.creep) {
+			this.colony.trackEnergyUse(EnergyUse.REPAIR, -this.creep.getActiveBodyparts(WORK) * REPAIR_POWER);
+		}
 		if (!this.actionLog.repair) this.actionLog.repair = (result == OK);
 		return result;
 	}
@@ -350,6 +359,9 @@ export class Zerg extends AnyZerg {
 
 	upgradeController(controller: StructureController) {
 		const result = this.creep.upgradeController(controller);
+        if (result == OK && this.colony && this.creep) {
+            this.colony.trackEnergyUse(EnergyUse.UPGRADE, -this.creep.getActiveBodyparts(WORK) * UPGRADE_CONTROLLER_POWER);
+        }
 		if (!this.actionLog.upgradeController) this.actionLog.upgradeController = (result == OK);
 		// Determine amount of upgrade power
 		// let weightedUpgraderParts = _.map(this.boostCounts, )

@@ -358,3 +358,7 @@ export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): 
 export function cyclicListPermutation<T>(list: T[], offset: number): T[] {
 	return list.slice(offset).concat(list.slice(0, offset));
 }
+
+export function entries<T>(obj: {[key: string]: T}): [string, T][] {
+	return Object.entries(obj) as [string, T][];
+}

@@ -48,6 +48,16 @@ export enum DEFCON {
 	bigPlayerInvasion  = 3,
 }
 
+export enum EnergyUse {
+	MINED = "mined",
+	SPAWN = "spawn",
+	REPAIR = "repair",
+	UPGRADE = "upgrade",
+	FACTORY = "factory",
+	POWER_SPAWN = "powerspawn",
+	LAB = "lab",
+}
+
 export function getAllColonies(): Colony[] {
 	return _.values(Overmind.colonies);
 }
@@ -69,6 +79,7 @@ export interface ColonyMemory {
 	outposts: { [roomName: string]: OutpostData };
 	suspend?: boolean;
 	debug?: boolean;
+	averageEnergyUse?: Record<EnergyUse, number>;
 }
 
 // Outpost that is currently not being maintained
@@ -159,7 +170,7 @@ export class Colony {
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawler: SporeCrawler;
-	miningSites: { [flagName: string]: DirectiveHarvest };	// Component with logic for mining and hauling
+	miningSites: any[] = [];
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;
 	// Operational state
@@ -197,6 +208,26 @@ export class Colony {
 	roadLogistics: RoadLogistics;
 	// Room planner
 	roomPlanner: RoomPlanner;
+	instantEnergyUse: Record<EnergyUse, number> = Object.values(EnergyUse).reduce((acc, key) => {
+		acc[key as EnergyUse] = 0;
+		return acc;
+	}, {} as Record<EnergyUse, number>);
+
+
+	/**
+	 * Track instantaneous energy use for a given category
+	 */
+	trackEnergyUse(type: EnergyUse, amount: number) {
+		this.instantEnergyUse[type] ??= 0;
+		this.instantEnergyUse[type] += amount;
+	}
+
+	get energyMinedPerTick(): number {
+		return this.miningSites ? this.miningSites.reduce((sum, site) => {
+			const overlord = site.overlords?.mine;
+			return sum + (overlord?.avgEnergyPerTick || 0);
+		}, 0) : 0;
+	}
 
 	static settings = {
 		remoteSourcesByLevel: {
@@ -274,8 +305,8 @@ export class Colony {
 		// Register outposts
 		this.outposts = _.compact(_.map(outposts, outpost => Game.rooms[outpost]));
 		this.rooms = [this.room].concat(this.outposts);
-		this.miningSites = {}; 				// filled in by harvest directives
-		this.extractionSites = {};			// filled in by extract directives
+		this.miningSites = [];
+		this.extractionSites = {};
 		// this.praiseSite = undefined;
 		// Register creeps
 		this.creeps = Overmind.cache.creepsByColony[this.name] || [];
@@ -620,33 +651,34 @@ export class Colony {
 	 * Register colony-wide statistics
 	 */
 	stats(): void {
-		if (Game.time % LOG_STATS_INTERVAL == 0) {
-			// Log energy and rcl
-			Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
-			Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
-			Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
-			Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
-			// Log average miningSite usage and uptime and estimated colony energy income
-			const numSites = _.keys(this.miningSites).length;
-			const avgDowntime = _.sum(this.miningSites, site => site.memory[HARVEST_MEM.DOWNTIME]) / numSites;
-			const avgUsage = _.sum(this.miningSites, site => site.memory[HARVEST_MEM.USAGE]) / numSites;
-			const energyInPerTick = _.sum(this.miningSites,
-										  site => site.overlords.mine.energyPerTick * site.memory[HARVEST_MEM.USAGE]);
-			Stats.log(`colonies.${this.name}.miningSites.avgDowntime`, avgDowntime);
-			Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
-			Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
-			Stats.log(`colonies.${this.name}.assets`, this.assets);
-			// Log defensive properties
-			Stats.log(`colonies.${this.name}.defcon`, this.defcon);
-			Stats.log(`colonies.${this.name}.threatLevel`, this.room.threatLevel);
-			const avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
-			Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
+		const ENERGY_USE_EMA_WINDOW = 1500; // CREEP_LIFE_TIME
+		if (!this.memory.averageEnergyUse) this.memory.averageEnergyUse = {} as Record<EnergyUse, number>;
+		for (const key of Object.values(EnergyUse)) {
+			this.memory.averageEnergyUse[key] = (this.instantEnergyUse[key] ?? 0) * 0.1 + (this.memory.averageEnergyUse[key] ?? 0) * 0.9;
+		}
+		// Log mining site production
+		const numSites = this.miningSites?.length || 0;
+		const avgUsage = numSites ? this.miningSites.reduce((sum, site) => sum + (site.memory?.usage || 0), 0) / numSites : 0;
+		const energyInPerTick = this.energyMinedPerTick;
+		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
+		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);
+		Stats.log(`colonies.${this.name}.energyUsage`, this.memory.averageEnergyUse);
+		Stats.log(`colonies.${this.name}.assets`, this.assets);
+		// Log energy and rcl
+		Stats.log(`colonies.${this.name}.storage.energy`, this.storage ? this.storage.energy : undefined);
+		Stats.log(`colonies.${this.name}.rcl.level`, this.controller.level);
+		Stats.log(`colonies.${this.name}.rcl.progress`, this.controller.progress);
+		Stats.log(`colonies.${this.name}.rcl.progressTotal`, this.controller.progressTotal);
+		// Log defensive properties
+		Stats.log(`colonies.${this.name}.defcon`, this.defcon);
+		Stats.log(`colonies.${this.name}.threatLevel`, this.room.threatLevel);
+		const avgBarrierHits = _.sum(this.room.barriers, barrier => barrier.hits) / this.room.barriers.length;
+		Stats.log(`colonies.${this.name}.avgBarrierHits`, avgBarrierHits);
 
-			const report = Overmind.overseer.getCreepReport(this);
-			for (const [role, [current, needed]] of Object.entries(report)) {
-				Stats.log(`colonies.${this.name}.creeps.${role}.current`, current);
-				Stats.log(`colonies.${this.name}.creeps.${role}.needed`, needed);
-			}
+		const report = Overmind.overseer.getCreepReport(this);
+		for (const [role, [current, needed]] of Object.entries(report)) {
+			Stats.log(`colonies.${this.name}.creeps.${role}.current`, current);
+			Stats.log(`colonies.${this.name}.creeps.${role}.needed`, needed);
 		}
 	}
 

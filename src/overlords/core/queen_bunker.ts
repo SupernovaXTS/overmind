@@ -329,8 +329,8 @@ export class BunkerQueenOverlord extends Overlord {
 			if (queen.pos.getRangeTo(chargingSpot) == 0) {
 				const chargingSpawn = _.first(queen.pos.findInRange(this.colony.spawns, 1));
 				if (chargingSpawn && !chargingSpawn.spawning) {
-					// Use the new renew task which handles both renewal and energy transfer
-					queen.task = Tasks.renew(chargingSpawn);
+					// Use the new getRenewed task which handles both renewal and energy transfer
+					queen.task = Tasks.getRenewed(chargingSpawn);
 					return;
 				}
 			} else {
