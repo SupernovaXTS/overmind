@@ -185,7 +185,7 @@ export class Pathing {
 				const usedPortal = _.find(portals, portal => portal.pos.isEqualTo(lastPosInPath));
 				if (usedPortal) {
 					portalUsed = usedPortal;
-					const portalDest = usedPortal.destination;
+					const portalDest = usedPortal.roomDestination ?? usedPortal.pos;
 					const path2ret = PathFinder.search(portalDest, destinationGoal, {
 						maxOps      : opts.maxOps,
 						maxRooms    : opts.maxRooms,
@@ -194,7 +194,7 @@ export class Pathing {
 						roomCallback: callback,
 					});
 					ret = {
-						path      : path1ret.path.concat([usedPortal.destination]).concat(path2ret.path),
+						path      : path1ret.path.concat([portalDest]).concat(path2ret.path),
 						ops       : path1ret.ops + path2ret.ops,
 						cost      : path1ret.ops + path2ret.ops,
 						incomplete: path1ret.incomplete || path2ret.incomplete,
@@ -269,10 +269,24 @@ export class Pathing {
 				return;
 			}
 			const bestPortalDest = _(portalInfo)
-				.map(portal => portal.destination.roomName)
+				.map(portal => portal.roomDestination ? portal.roomDestination.roomName : undefined)
+				.filter((roomName): roomName is string => typeof roomName === 'string')
 				.unique()
-				.min(portalDest => Game.map.getRoomLinearDistance(portalDest, destination)) as string;
-			return bestPortalDest;
+				.value();
+			const roomNames: string[] = _
+				.map(portalInfo, portal => portal.roomDestination ? portal.roomDestination.roomName : undefined)
+				.filter((roomName): roomName is string => typeof roomName === 'string');
+			const uniqueRoomNames: string[] = _.uniq(roomNames);
+			let bestRoomName: string | undefined = undefined;
+			let minDistance = Infinity;
+			for (const roomName of uniqueRoomNames) {
+				const distance = Game.map.getRoomLinearDistance(roomName, destination);
+				if (distance < minDistance) {
+					minDistance = distance;
+					bestRoomName = roomName;
+				}
+			}
+			return bestRoomName;
 		};
 
 		// Route finder callback for portal searching

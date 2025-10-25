@@ -49,6 +49,7 @@ export interface PortalInfoInterShard {
 
 export interface PortalInfo extends RoomObjectInfo {
 	shardDestination?: { shard: string; room: string } | undefined;
+	destination: RoomPosition | string;
 	roomDestination?: RoomPosition | undefined;
 	expiration: number | undefined;
 }
