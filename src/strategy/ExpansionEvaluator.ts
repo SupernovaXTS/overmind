@@ -7,6 +7,7 @@ import {RoomIntel, SourceInfo} from '../intel/RoomIntel';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {BasePlanner} from '../roomPlanner/BasePlanner';
+import {canBuildDynamicBunker} from '../roomPlanner/DynamicPlanner';
 import {
 	Cartographer,
 	ROOMTYPE_ALLEY,
@@ -225,6 +226,18 @@ export class ExpansionEvaluator {
 			return false;
 		}
 
+		// Check if dynamic bunker planning is viable for this room
+		const evolutionChamberPos = canBuildDynamicBunker(room, bunkerLocation);
+		const supportsDynamic = evolutionChamberPos !== false;
+		
+		if (verbose) {
+			if (supportsDynamic) {
+				log.info(`Room ${room.name} supports dynamic bunker with evolution chamber at ${evolutionChamberPos.print}`);
+			} else {
+				log.info(`Room ${room.name} does not support dynamic bunker planning`);
+			}
+		}
+
 		// evaluate energy contribution and compute outpost scores
 		if (verbose) log.info(`Origin: ${bunkerLocation.print}`);
 
@@ -283,9 +296,11 @@ export class ExpansionEvaluator {
 
 		if (existingExpansionData == undefined || totalScore > existingExpansionData.score) {
 			RoomIntel.setExpansionData(room.name, {
-				score       : totalScore,
-				bunkerAnchor: bunkerLocation,
-				outposts    : outpostScores,
+				score                 : totalScore,
+				bunkerAnchor          : bunkerLocation,
+				outposts              : outpostScores,
+				supportsDynamicBunker : supportsDynamic,
+				evolutionChamberAnchor: evolutionChamberPos || undefined,
 			});
 		}
 

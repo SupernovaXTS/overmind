@@ -121,15 +121,19 @@ interface RollingStats {
 }
 
 declare const enum RMEM_EXPANSION_DATA {
-	SCORE         = 's',
-	BUNKER_ANCHOR = 'a',
-	OUTPOSTS      = 'o',
+	SCORE                  = 's',
+	BUNKER_ANCHOR          = 'a',
+	OUTPOSTS               = 'o',
+	EVOLUTION_CHAMBER      = 'e', // Evolution chamber anchor position (packed)
+	SUPPORTS_DYNAMIC       = 'd', // Boolean: can this room support dynamic bunker?
 }
 
 interface SavedExpansionData {
 	[RMEM_EXPANSION_DATA.SCORE]: number;
 	[RMEM_EXPANSION_DATA.BUNKER_ANCHOR]: string;
 	[RMEM_EXPANSION_DATA.OUTPOSTS]: { [roomName: string]: number };
+	[RMEM_EXPANSION_DATA.EVOLUTION_CHAMBER]?: string; // Optional packed coordinate
+	[RMEM_EXPANSION_DATA.SUPPORTS_DYNAMIC]?: boolean; // Optional boolean
 }
 
 interface SavedRoomObject {

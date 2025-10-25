@@ -60,6 +60,85 @@ export function onRoomEdge(pos: { x: number, y: number }, range = 0) {
 	return pos.x <= range || pos.y <= range || pos.x >= 49 - range || pos.y >= 49 - range;
 }
 
+/**
+ * Evaluate if a room can support dynamic bunker planning
+ * Returns the evolution chamber anchor position if viable, false otherwise
+ */
+export function canBuildDynamicBunker(room: Room, bunkerAnchor: RoomPosition): RoomPosition | false {
+	// Need sufficient open space around the bunker core
+	const terrain = room.getTerrain();
+	
+	// Check if bunker anchor is valid (not on wall, not near edge)
+	if (onRoomEdge(bunkerAnchor, 5)) {
+		return false;
+	}
+	
+	if (terrain.get(bunkerAnchor.x, bunkerAnchor.y) === TERRAIN_MASK_WALL) {
+		return false;
+	}
+	
+	// Try to find a suitable position for evolution chamber
+	// Evolution chamber should be:
+	// - At least 10 tiles away from bunker anchor
+	// - At least 8 tiles from controller
+	// - At least 5 tiles from sources
+	// - Not on terrain wall
+	// - Not too close to room edges (at least 5 tiles)
+	
+	const controller = room.controller;
+	const sources = room.sources;
+	
+	if (!controller) return false;
+	
+	const centerPos = new RoomPosition(25, 25, room.name);
+	let bestPos: RoomPosition | undefined;
+	let bestScore = -Infinity;
+	
+	// Search in a spiral pattern from center
+	for (let radius = 8; radius <= 18; radius++) {
+		for (let dx = -radius; dx <= radius; dx++) {
+			for (let dy = -radius; dy <= radius; dy++) {
+				// Only check positions on the current radius (spiral search)
+				if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+				
+				const x = 25 + dx;
+				const y = 25 + dy;
+				
+				// Must be away from edges
+				if (x < 5 || x > 44 || y < 5 || y > 44) continue;
+				
+				const pos = new RoomPosition(x, y, room.name);
+				
+				// Can't be on wall terrain
+				if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) continue;
+				
+				// Check distances to key locations
+				const bunkerDist = pos.getRangeTo(bunkerAnchor);
+				const controllerDist = pos.getRangeTo(controller);
+				const minSourceDist = Math.min(...sources.map(s => pos.getRangeTo(s)));
+				
+				// Distance requirements
+				if (bunkerDist < 10 || controllerDist < 8 || minSourceDist < 5) continue;
+				
+				// Score: prefer positions reasonably close to center but meeting distance requirements
+				// Slightly favor positions farther from bunker to allow more dynamic expansion space
+				const distToCenter = pos.getRangeTo(centerPos);
+				const score = -distToCenter + (bunkerDist > 15 ? 2 : 0);
+				
+				if (score > bestScore) {
+					bestScore = score;
+					bestPos = pos;
+				}
+			}
+		}
+		
+		// If we found a good position at this radius, we can use it
+		if (bestPos && bestScore > -Infinity) break;
+	}
+	
+	return bestPos || false;
+}
+
 @profile
 export class DynamicPlanner {
 

@@ -24,6 +24,8 @@ export interface ExpansionData {
 	score: number;
 	bunkerAnchor: RoomPosition;
 	outposts: { [roomName: string]: number };
+	evolutionChamberAnchor?: RoomPosition; // Position for evolution chamber if dynamic bunker is viable
+	supportsDynamicBunker?: boolean; // Whether this room can support dynamic bunker planning
 }
 
 export interface RoomObjectInfo {
@@ -139,9 +141,13 @@ export class RoomIntel {
 			return false;
 		}
 		return {
-			score       : data[RMEM_EXPANSION_DATA.SCORE],
-			bunkerAnchor: unpackCoordAsPos(data[RMEM_EXPANSION_DATA.BUNKER_ANCHOR], roomName),
-			outposts    : data[RMEM_EXPANSION_DATA.OUTPOSTS]
+			score                  : data[RMEM_EXPANSION_DATA.SCORE],
+			bunkerAnchor           : unpackCoordAsPos(data[RMEM_EXPANSION_DATA.BUNKER_ANCHOR], roomName),
+			outposts               : data[RMEM_EXPANSION_DATA.OUTPOSTS],
+			evolutionChamberAnchor : data[RMEM_EXPANSION_DATA.EVOLUTION_CHAMBER] 
+									  ? unpackCoordAsPos(data[RMEM_EXPANSION_DATA.EVOLUTION_CHAMBER], roomName)
+									  : undefined,
+			supportsDynamicBunker  : data[RMEM_EXPANSION_DATA.SUPPORTS_DYNAMIC]
 		};
 	}
 
@@ -158,6 +164,14 @@ export class RoomIntel {
 				[RMEM_EXPANSION_DATA.BUNKER_ANCHOR]: packCoord(data.bunkerAnchor),
 				[RMEM_EXPANSION_DATA.OUTPOSTS]     : data.outposts,
 			};
+			// Optionally add evolution chamber data if present
+			const savedData = Memory.rooms[roomName][RMEM.EXPANSION_DATA] as SavedExpansionData;
+			if (data.evolutionChamberAnchor) {
+				savedData[RMEM_EXPANSION_DATA.EVOLUTION_CHAMBER] = packCoord(data.evolutionChamberAnchor);
+			}
+			if (data.supportsDynamicBunker !== undefined) {
+				savedData[RMEM_EXPANSION_DATA.SUPPORTS_DYNAMIC] = data.supportsDynamicBunker;
+			}
 		}
 	}
 
