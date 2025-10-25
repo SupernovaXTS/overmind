@@ -21,7 +21,7 @@ export class UpgradingOverlord extends Overlord {
 		// If we don't have any upgraders, use priority upgrade to spawn them faster
 
 		const minUpgraders = 4;
-		const hasUpgraders = upgradeSite.colony.getCreepsByRole(Roles.upgrader).length >= minUpgraders;
+		const hasUpgraders = upgradeSite.colony.getCreepsByRole(Roles.upgrader).length >= minUpgraders+1;
 		const effectivePriority = hasUpgraders ? priority : OverlordPriority.priorityOwnedRoom.priorityUpgrade;
 		
 		super(upgradeSite, 'upgrade', effectivePriority);
