@@ -6,6 +6,7 @@ import {
 	ROOMINTEL_DEFAULT_VISUALS_RANGE,
 	RoomIntel
 } from "../intel/RoomIntel";
+import {progress as statsProgress} from '../utilities/statistics';
 import { Overlord } from "../overlords/Overlord";
 import { ExpansionEvaluator } from "../strategy/ExpansionEvaluator";
 import { Cartographer } from "../utilities/Cartographer";
@@ -305,6 +306,106 @@ export class OvermindConsole {
 			description: "reset all factories production queues",
 			command: OvermindConsole.resetFactories.bind(OvermindConsole),
 		},
+		{
+			name: 'getDirective(flagName)',
+			description: 'returns the directive associated with the specified flag name',
+			command: OvermindConsole.getDirective.bind(OvermindConsole),
+		},
+		{
+			name: 'getOverlord(directive, overlordName)',
+			description: 'returns the overlord associated with the directive and name',
+			command: OvermindConsole.getOverlord.bind(OvermindConsole),
+		},
+		{
+			name: 'getColony(roomName)',
+			description: 'returns the colony associated with the specified room name',
+			command: OvermindConsole.getColony.bind(OvermindConsole),
+		},
+		{
+			name: 'setCurrentColony(roomName)',
+			description: 'sets global.c to reference the specified colony for quick access',
+			command: OvermindConsole.setCurrentColony.bind(OvermindConsole),
+		},
+		{
+			name: 'getZerg(creepName)',
+			description: 'returns the Zerg instance associated with the specified creep name',
+			command: OvermindConsole.getZerg.bind(OvermindConsole),
+		},
+		{
+			name: 'buyPixels(amount)',
+			description: 'buys the specified number of pixels at the cheapest market price',
+			command: OvermindConsole.buyPixels.bind(OvermindConsole),
+		},
+		{
+			name: 'getAccountResourcesSettings()',
+			description: 'displays current account resources settings',
+			command: OvermindConsole.getAccountResourcesSettings.bind(OvermindConsole),
+		},
+		{
+			name: 'setPixelSettings(options)',
+			description: 'set pixel thresholds: {min, max, buyThreshold, sellThreshold}',
+			command: OvermindConsole.setPixelSettings.bind(OvermindConsole),
+		},
+		{
+			name: 'setCPUUnlockSettings(options)',
+			description: 'set CPU unlock thresholds: {min, max, buyThreshold, sellThreshold}',
+			command: OvermindConsole.setCPUUnlockSettings.bind(OvermindConsole),
+		},
+		{
+			name: 'setPixelGeneration(enabled)',
+			description: 'enable/disable automatic pixel generation (true/false)',
+			command: OvermindConsole.setPixelGeneration.bind(OvermindConsole),
+		},
+		{
+			name: 'setPixelTrading(enabled)',
+			description: 'enable/disable automatic pixel buying/selling (true/false)',
+			command: OvermindConsole.setPixelTrading.bind(OvermindConsole),
+		},
+		{
+			name: 'setCPUUnlockTrading(enabled)',
+			description: 'enable/disable automatic CPU unlock buying/selling (true/false)',
+			command: OvermindConsole.setCPUUnlockTrading.bind(OvermindConsole),
+		},
+		{
+			name: 'progress()',
+			description: 'print GCL/RCL ETA overview with progress bars',
+			command: OvermindConsole.progress.bind(OvermindConsole),
+		},
+		{
+			name: 'clearRclStats(roomName)',
+			description: 'clears the RCL statistics for the specified colony',
+			command: OvermindConsole.clearRclStats.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.pool()',
+			description: 'list intercolony pool requests (destination -> manifest)',
+			command: OvermindConsole.sectorPool.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.queue(room?)',
+			description: 'show SectorTransportOverlord shipment queue for a colony (default: current)',
+			command: OvermindConsole.sectorQueue.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.summary()',
+			description: 'show summary of pool size and queues per colony',
+			command: OvermindConsole.sectorSummary.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.setBuffer(resource, amount)',
+			description: 'set per-resource buffer for intercolony shipments',
+			command: OvermindConsole.sectorSetBuffer.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.setDefaultBuffer(amount)',
+			description: 'set default buffer for all resources (unless overridden)',
+			command: OvermindConsole.sectorSetDefaultBuffer.bind(OvermindConsole),
+		},
+		{
+			name: 'sector.setRangeLimit(limit)',
+			description: 'set max room linear distance for intercolony shipments',
+			command: OvermindConsole.sectorSetRangeLimit.bind(OvermindConsole),
+		},
 	];
 
 	static init() {
@@ -321,7 +422,42 @@ export class OvermindConsole {
 	// Help, information, and operational changes ======================================================================
 
 	static helpMsg: string;
+	
+	private static normalizeRoomName(input: string | Room): string {
+		// If input is a Room object, use its name
+		if (typeof input === 'object' && input.name) {
+			return input.name;
+		}
+		// If input is 'c', use global.c's room name
+		if (input === 'c') {
+			return global.c?.name || '';
+		}
+		// Capitalize room name (e.g., 'e1s1' -> 'E1S1')
+		return (input as string).toUpperCase();
+	}
 
+	static getColony(input: string | Room): Colony | undefined {
+		const roomName = OvermindConsole.normalizeRoomName(input);
+		return Overmind.colonies?.[roomName];
+	}
+
+	static setCurrentColony(input: string | Room): string {
+		const roomName = OvermindConsole.normalizeRoomName(input);
+		const colony = Overmind.colonies?.[roomName];
+		if (!colony) {
+			return `Colony ${roomName} not found!`;
+		}
+		global.c = colony;
+		return `Current colony set to ${colony.name}`;
+	}
+
+	static getZerg(input: string): Zerg | undefined {
+		return Overmind.zerg?.[input];
+	}
+
+	static getOverlord(input: Directive, name: string): Overlord | undefined {
+		return input.overlords?.[name];
+	}
 	static help() {
 		if (!this.helpMsg) {
 			this.generateHelp();
@@ -1383,4 +1519,317 @@ export class OvermindConsole {
 				(c.infestedFactory!.memory.suspendProductionUntil = Game.time)
 		);
 	}
+	
+	/**
+	 * Buys the specified amount of pixels at the cheapest price available on the market
+	 * @param amount - Number of pixels to buy
+	 * @returns A message indicating the result of the purchase
+	 */
+	static buyPixels(amount: number): string {
+		if (!Overmind.accountResources) {
+			return 'Error: AccountResources not initialized';
+		}
+
+		if (!amount || amount <= 0) {
+			return 'Error: Please specify a valid amount of pixels to buy (must be greater than 0)';
+		}
+
+		const currentPixels = Game.resources[PIXEL] || 0;
+		const currentCredits = Game.market.credits;
+
+		log.info(`Attempting to buy ${amount} pixels...`);
+		log.info(`Current pixels: ${currentPixels}, Current credits: ${currentCredits.toFixed(2)}`);
+
+		const result = Overmind.accountResources.buyPixelsAtCheapestPrice(amount);
+
+		if (result === OK) {
+			const newPixels = Game.resources[PIXEL] || 0;
+			const creditsSpent = currentCredits - Game.market.credits;
+			return `Successfully bought ${amount} pixels for ${creditsSpent.toFixed(2)} credits! ` +
+				   `New pixel count: ${newPixels}`;
+		} else if (result === ERR_INVALID_ARGS) {
+			return `Error: Invalid amount specified`;
+		} else if (result === ERR_NOT_FOUND) {
+			return `Error: No pixel sell orders available on the market`;
+		} else if (result === ERR_NOT_ENOUGH_RESOURCES) {
+			return `Error: Insufficient credits or pixels unavailable on market`;
+		} else if (result === ERR_FULL) {
+			const newPixels = Game.resources[PIXEL] || 0;
+			const bought = newPixels - currentPixels;
+			return `Partial success: Only bought ${bought}/${amount} pixels`;
+		} else {
+			return `Error: Failed to buy pixels (error code: ${result})`;
+		}
+	}
+
+	/**
+	 * Get current account resources settings
+	 */
+	static getAccountResourcesSettings(): string {
+		const settings = Memory.settings.accountResources || {};
+		let msg = 'Account Resources Settings:\n';
+		msg += '========================\n';
+		msg += `Pixel Generation: ${settings.pixelGenerationEnabled ? 'ENABLED' : 'DISABLED'}\n`;
+		msg += `Pixel Trading: ${settings.tradePixels ? 'ENABLED' : 'DISABLED'}\n`;
+		msg += `CPU Unlock Trading: ${settings.tradeCPUUnlocks ? 'ENABLED' : 'DISABLED'}\n\n`;
+		
+		msg += 'Pixel Settings:\n';
+		msg += `  Min: ${settings.pixel?.min ?? 'default'}\n`;
+		msg += `  Max: ${settings.pixel?.max ?? 'default'}\n`;
+		msg += `  Buy Threshold: ${settings.pixel?.buyThreshold ?? 'default'}\n`;
+		msg += `  Sell Threshold: ${settings.pixel?.sellThreshold ?? 'default'}\n\n`;
+		
+		msg += 'CPU Unlock Settings:\n';
+		msg += `  Min: ${settings.cpuUnlock?.min ?? 'default'}\n`;
+		msg += `  Max: ${settings.cpuUnlock?.max ?? 'default'}\n`;
+		msg += `  Buy Threshold: ${settings.cpuUnlock?.buyThreshold ?? 'default'}\n`;
+		msg += `  Sell Threshold: ${settings.cpuUnlock?.sellThreshold ?? 'default'}\n`;
+		
+		return msg;
+	}
+
+	// Statistics helpers ==============================================================================================
+	static progress(): string {
+		return statsProgress();
+	}
+
+	/**
+	 * Clear RCL statistics for a colony to force recalculation
+	 */
+	static clearRclStats(roomName: string): string {
+		if (!roomName) {
+			return 'Error: Please provide a room name';
+		}
+
+		if (!Memory.rooms[roomName]) {
+			return `Error: Room ${roomName} not found in memory`;
+		}
+
+		if (!Memory.rooms[roomName]._rclStats) {
+			return `Room ${roomName} has no RCL statistics to clear`;
+		}
+
+		delete Memory.rooms[roomName]._rclStats;
+		return `RCL statistics cleared for ${roomName}. Statistics will recalculate next tick.`;
+	}
+
+	/**
+	 * Set pixel threshold settings
+	 */
+	static setPixelSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		if (!Memory.settings.accountResources.pixel) {
+			Memory.settings.accountResources.pixel = {};
+		}
+
+		const pixel = Memory.settings.accountResources.pixel;
+		const changes: string[] = [];
+
+		if (options.min !== undefined) {
+			pixel.min = options.min;
+			changes.push(`min: ${options.min}`);
+		}
+		if (options.max !== undefined) {
+			pixel.max = options.max;
+			changes.push(`max: ${options.max}`);
+		}
+		if (options.buyThreshold !== undefined) {
+			pixel.buyThreshold = options.buyThreshold;
+			changes.push(`buyThreshold: ${options.buyThreshold}`);
+		}
+		if (options.sellThreshold !== undefined) {
+			pixel.sellThreshold = options.sellThreshold;
+			changes.push(`sellThreshold: ${options.sellThreshold}`);
+		}
+
+		if (changes.length === 0) {
+			return 'No settings changed. Provide at least one of: {min, max, buyThreshold, sellThreshold}';
+		}
+
+		return `Pixel settings updated: ${changes.join(', ')}`;
+	}
+
+	/**
+	 * Set CPU unlock threshold settings
+	 */
+	static setCPUUnlockSettings(options: {min?: number, max?: number, buyThreshold?: number, sellThreshold?: number}): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		if (!Memory.settings.accountResources.cpuUnlock) {
+			Memory.settings.accountResources.cpuUnlock = {};
+		}
+
+		const cpuUnlock = Memory.settings.accountResources.cpuUnlock;
+		const changes: string[] = [];
+
+		if (options.min !== undefined) {
+			cpuUnlock.min = options.min;
+			changes.push(`min: ${options.min}`);
+		}
+		if (options.max !== undefined) {
+			cpuUnlock.max = options.max;
+			changes.push(`max: ${options.max}`);
+		}
+		if (options.buyThreshold !== undefined) {
+			cpuUnlock.buyThreshold = options.buyThreshold;
+			changes.push(`buyThreshold: ${options.buyThreshold}`);
+		}
+		if (options.sellThreshold !== undefined) {
+			cpuUnlock.sellThreshold = options.sellThreshold;
+			changes.push(`sellThreshold: ${options.sellThreshold}`);
+		}
+
+		if (changes.length === 0) {
+			return 'No settings changed. Provide at least one of: {min, max, buyThreshold, sellThreshold}';
+		}
+
+		return `CPU unlock settings updated: ${changes.join(', ')}`;
+	}
+
+	/**
+	 * Enable or disable automatic pixel generation
+	 */
+	static setPixelGeneration(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.pixelGenerationEnabled = enabled;
+		return `Pixel generation ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	/**
+	 * Enable or disable automatic pixel trading
+	 */
+	static setPixelTrading(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.tradePixels = enabled;
+		return `Pixel trading ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	/**
+	 * Enable or disable automatic CPU unlock trading
+	 */
+	static setCPUUnlockTrading(enabled: boolean): string {
+		if (!Memory.settings.accountResources) {
+			Memory.settings.accountResources = {};
+		}
+		Memory.settings.accountResources.tradeCPUUnlocks = enabled;
+		return `CPU unlock trading ${enabled ? 'enabled' : 'disabled'}`;
+	}
+
+	// =========================
+	// Sector logistics helpers
+	// =========================
+
+	private static ensureIntercolonySettings() {
+		(Memory as any).settings = Memory.settings || {} as any;
+		(Memory.settings as any).logistics = (Memory.settings as any).logistics || {};
+		(Memory.settings as any).logistics.intercolony = (Memory.settings as any).logistics.intercolony || {};
+		(Memory.settings as any).logistics.intercolony.buffers = (Memory.settings as any).logistics.intercolony.buffers || {};
+	}
+
+	static sectorPool(): string {
+		const root = (Memory as any).Overmind || {};
+		const pool = (root.sectorLogistics && root.sectorLogistics.pool) || {};
+		const entries = _.values(pool) as Array<{colony: string; room: string; manifest: StoreDefinitionUnlimited; tick: number}>;
+		if (!entries.length) return 'Sector pool is empty';
+		let msg = `Sector pool (${entries.length}):\n`;
+		for (const e of entries) {
+			const total = _.sum(_.values(e.manifest as any) as number[]);
+			msg += `  -> ${e.colony} (${e.room}) total=${total} manifest=${JSON.stringify(e.manifest)}\n`;
+		}
+		return msg;
+	}
+
+	static sectorQueue(input?: string | Room): string {
+		const colony = input ? this.getColony(input) : (global.c as Colony | undefined);
+		if (!colony) return 'No colony specified or current colony (global.c) unset';
+		// Find sector overlord for the colony's sector
+		const sectorKey = Cartographer.getSectorKey(colony.room.name);
+		const sector = (Overmind as any).sectors?.[sectorKey];
+		const ov = sector?.overlord as any;
+		if (!ov) return `No SectorLogisticsOverlord found for sector ${sectorKey}`;
+		const q = ov.memory?.queue || [];
+		const total = _.sum(q, (s: any) => s.amount || 0);
+		const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
+		const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
+		return `${sectorKey} sector queue: ${q.length} shipments, total=${total}, backfill: count=${backfillCount}, amount=${backfillAmount}\n` + JSON.stringify(q, undefined, 2);
+	}
+
+	static sectorSummary(): string {
+		const root = (Memory as any).Overmind || {};
+		const pool = (root.sectorLogistics && root.sectorLogistics.pool) || {};
+		const poolCount = _.keys(pool).length;
+		let msg = `Intercolony logistics summary\n`; 
+		msg += `  Pool entries: ${poolCount}\n`;
+		const sectors = (Overmind as any).sectors || {};
+		for (const key in sectors) {
+			const ov = sectors[key].overlord as any;
+			const q = ov?.memory?.queue || [];
+			const total = _.sum(q, (s: any) => s.amount || 0);
+			const backfillCount = _.sum(q, (s: any) => s.tnBackfill ? 1 : 0);
+			const backfillAmount = _.sum(_.filter(q, (s: any) => s.tnBackfill), (s: any) => s.amount || 0);
+			msg += `  ${key}: queueSize=${q.length}, queueAmount=${total}, backfillCount=${backfillCount}, backfillAmount=${backfillAmount}\n`;
+		}
+		return msg;
+	}
+
+	static sectorSetBuffer(resource: ResourceConstant, amount: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.buffers[resource] = Math.max(0, Math.floor(Number(amount) || 0));
+		return `Set intercolony buffer for ${resource} to ${(Memory.settings as any).logistics.intercolony.buffers[resource]}`;
+	}
+
+	static sectorSetDefaultBuffer(amount: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.defaultBuffer = Math.max(0, Math.floor(Number(amount) || 0));
+		return `Set intercolony default buffer to ${(Memory.settings as any).logistics.intercolony.defaultBuffer}`;
+	}
+	static getDirective(name: string): Directive | undefined {
+		return _.find(Overmind.directives, { name });
+	}
+	static sectorSetRangeLimit(limit: number): string {
+		this.ensureIntercolonySettings();
+		(Memory.settings as any).logistics.intercolony.rangeLimit = Math.max(1, Math.floor(Number(limit) || 1));
+		return `Set intercolony rangeLimit to ${(Memory.settings as any).logistics.intercolony.rangeLimit}`;
+	}
+
+	static sectorCreateRequest(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
+		if (!colony) return `Colony '${colonyName}' not found`;
+		if (!colony.storage) return `Colony '${colonyName}' has no storage`;
+		
+		// Validate resource type
+		if (!RESOURCES_ALL.includes(resourceType)) {
+			return `Invalid resource type '${resourceType}'`;
+		}
+		
+		// Validate amount
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return `Amount must be positive (got ${amount})`;
+		
+		// Create the pool entry directly
+		const root = (Memory as any).Overmind || (Memory.Overmind = {} as any);
+		if (!root.sectorLogistics) root.sectorLogistics = {};
+		if (!root.sectorLogistics.pool) root.sectorLogistics.pool = {};
+		
+		const manifest: StoreDefinitionUnlimited = {} as any;
+		(manifest as any)[resourceType] = amt;
+		
+		root.sectorLogistics.pool[colonyName] = {
+			colony: colonyName,
+			room: colony.room.name,
+			manifest,
+			tick: Game.time,
+			storageId: colony.storage.id,
+		};
+		
+		return `Created sector logistics request: ${colonyName} requests ${amt} ${resourceType}`;
+	}
+	
 }
