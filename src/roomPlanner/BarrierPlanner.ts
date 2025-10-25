@@ -29,7 +29,7 @@ export class BarrierPlanner {
 	private _barrierLookup: ((pos: RoomPosition) => boolean) | undefined;
 
 	static settings = {
-		buildBarriersAtRCL: 1,
+		buildBarriersAtRCL: 2,  // Ramparts unlock at RCL 2
 		padding           : 3, // allow this much space between structures and barriers (if possible)
 		bunkerizeRCL      : 9
 	};
