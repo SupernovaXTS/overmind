@@ -103,8 +103,8 @@ export class BarrierPlanner {
 	}
 
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
-		const result = this.computeEdgeBarrierPositions(bunkerPos.room);
-		if(result.length > 0) return result;
+		//const result = this.computeEdgeBarrierPositions(bunkerPos.room);
+		//if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
