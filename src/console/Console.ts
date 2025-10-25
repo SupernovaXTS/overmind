@@ -1,4 +1,3 @@
-
 import { ReservingOverlord } from "overlords/colonization/reserver";
 import { Colony, ColonyMemory, getAllColonies, isColony } from "../Colony";
 import { Directive } from "../directives/Directive";
@@ -439,6 +438,16 @@ export class OvermindConsole {
 			name: 'sector.setRangeLimit(limit)',
 			description: 'set max room linear distance for intercolony shipments',
 			command: OvermindConsole.sectorSetRangeLimit.bind(OvermindConsole),
+		},
+		{
+			name: "buy(roomName, resourceType, amount)",
+			description: "Buy a resource from the market (Game.market.deal)",
+			command: OvermindConsole.buyResource.bind(OvermindConsole)
+		},
+		{
+			name: "sell(roomName, resourceType, amount)",
+			description: "Sell a resource to the market (Game.market.deal)",
+			command: OvermindConsole.sellResource.bind(OvermindConsole)
 		},
 	];
 	/**
