@@ -17,10 +17,11 @@ export class UpgradingOverlord extends Overlord {
 	upgradeSite: UpgradeSite;
 	settings: { [property: string]: number };
 	room: Room;	//  Operates in owned room
-
 	constructor(upgradeSite: UpgradeSite, priority = OverlordPriority.upgrading.upgrade) {
 		// If we don't have any upgraders, use priority upgrade to spawn them faster
-		const hasUpgraders = upgradeSite.colony.getCreepsByRole(Roles.upgrader).length > 0;
+
+		const minUpgraders = 4;
+		const hasUpgraders = upgradeSite.colony.getCreepsByRole(Roles.upgrader).length >= minUpgraders;
 		const effectivePriority = hasUpgraders ? priority : OverlordPriority.priorityOwnedRoom.priorityUpgrade;
 		
 		super(upgradeSite, 'upgrade', effectivePriority);
