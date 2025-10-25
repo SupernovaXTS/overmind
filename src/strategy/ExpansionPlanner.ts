@@ -1,6 +1,7 @@
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {DirectiveColonize} from '../directives/colony/colonize';
+import {DirectiveColonizeDynamic} from '../directives/colony/colonize_dynamic';
 import {RoomIntel} from '../intel/RoomIntel';
 import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
@@ -15,7 +16,8 @@ const CHECK_EXPANSION_FREQUENCY = 1000;
 
 const UNOWNED_MINERAL_BONUS = 100;
 const CATALYST_BONUS = 75;
-const MAX_SCORE_BONUS = _.sum([UNOWNED_MINERAL_BONUS, CATALYST_BONUS]);
+const DYNAMIC_BUNKER_BONUS = 50; // Bonus for rooms that support dynamic bunker planning
+const MAX_SCORE_BONUS = _.sum([UNOWNED_MINERAL_BONUS, CATALYST_BONUS, DYNAMIC_BUNKER_BONUS]);
 
 const TOO_CLOSE_PENALTY = 100;
 
@@ -49,15 +51,25 @@ export class ExpansionPlanner implements IExpansionPlanner {
 			}
 		}
 
-		const roomName = this.chooseNextColonyRoom();
-		if (roomName) {
-			const pos = Pathing.findPathablePosition(roomName);
-			DirectiveColonize.createIfNotPresent(pos, 'room');
-			log.notify(`Room ${roomName} selected as next colony! Creating colonization directive.`);
+		const expansionChoice = this.chooseNextColonyRoom();
+		if (expansionChoice) {
+			const pos = Pathing.findPathablePosition(expansionChoice.roomName);
+			
+			// Check if room supports dynamic bunker planning
+			const expansionData = RoomIntel.getExpansionData(expansionChoice.roomName);
+			const useDynamicPlanning = expansionData && expansionData.supportsDynamicBunker;
+			
+			if (useDynamicPlanning) {
+				DirectiveColonizeDynamic.createIfNotPresent(pos, 'room');
+				log.notify(`Room ${expansionChoice.roomName} (score: ${expansionChoice.score}) selected as next colony with DYNAMIC planning!`);
+			} else {
+				DirectiveColonize.createIfNotPresent(pos, 'room');
+				log.notify(`Room ${expansionChoice.roomName} (score: ${expansionChoice.score}) selected as next colony with standard planning.`);
+			}
 		}
 	}
 
-	private chooseNextColonyRoom(): string | undefined {
+	private chooseNextColonyRoom(): { roomName: string, score: number } | undefined {
 		// Generate a list of possible colonies to expand from based on level and whether they are already expanding
 		// let possibleIncubators: Colony[] = []; // TODO: support incubation
 		const possibleColonizers: Colony[] = [];
@@ -72,7 +84,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 		const bestExpansion = maxBy(possibleBestExpansions, choice => choice!.score);
 		if (bestExpansion) {
 			log.alert(`Next expansion chosen: ${bestExpansion.roomName} with score ${bestExpansion.score}`);
-			return bestExpansion.roomName;
+			return bestExpansion;
 		} else {
 			log.alert(`No viable expansion rooms found!`);
 		}
@@ -114,6 +126,11 @@ export class ExpansionPlanner implements IExpansionPlanner {
 					if (mineralType == RESOURCE_CATALYST) {
 						score += CATALYST_BONUS;
 					}
+				}
+				// Reward rooms that support dynamic bunker planning
+				const expansionData = RoomIntel.getExpansionData(roomName);
+				if (expansionData && expansionData.supportsDynamicBunker) {
+					score += DYNAMIC_BUNKER_BONUS;
 				}
 				// Update best choices
 				if (score > bestScore && RoomIntel.isRoomAccessible(roomName)) {
