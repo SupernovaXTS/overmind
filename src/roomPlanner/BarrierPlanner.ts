@@ -128,8 +128,8 @@ export class BarrierPlanner {
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
 									upgradeSitePos: RoomPosition): RoomPosition[] {
-		const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
-		if(result.length > 0) return result;
+		//const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
+		//if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (hatcheryPos) {
