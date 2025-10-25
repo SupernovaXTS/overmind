@@ -117,6 +117,17 @@ export default class _Overmind implements IOvermind {
 		for (const sectorKey in grouped) {
 			const cols = grouped[sectorKey];
 			if (cols.length == 0) continue;
+			
+			// Determine anchor colony (highest RCL, ties broken by name)
+			const anchor = cols.slice().sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name))[0];
+			
+			// Don't create sector if:
+			// 1. Only one colony exists (no inter-colony logistics needed)
+			// 2. Anchor colony is below RCL 4 (needs storage for sector logistics)
+			if (cols.length <= 1 || anchor.level < 4) {
+				continue;
+			}
+			
 			this.sectors[sectorKey] = new Sector(sectorKey, cols);
 		}
 		this.shouldBuild = false;
