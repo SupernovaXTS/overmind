@@ -103,8 +103,7 @@ export class BarrierPlanner {
 	}
 
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
-		//const result = this.computeEdgeBarrierPositions(bunkerPos.room);
-		//if(result.length > 0) return result;
+		const result = this.computeEdgeBarrierPositions(bunkerPos.room);
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
@@ -122,14 +121,13 @@ export class BarrierPlanner {
 	// Get Min cut
 	const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
 	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-	positions = positions.concat(upgradeSitePos.availableNeighbors(true));
+	positions = positions.concat(result);
 		return positions;
 	}
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
 									upgradeSitePos: RoomPosition): RoomPosition[] {
-		//const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
-		//if(result.length > 0) return result;
+		const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (hatcheryPos) {
@@ -153,6 +151,7 @@ export class BarrierPlanner {
 	// Get Min cut
 	const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
 	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		positions = positions.concat(result);
 		return positions;
 	}
 
