@@ -172,7 +172,7 @@ export class CommandCenterOverlord extends Overlord {
 				const terminal = this.commandCenter.terminal;
 				let withdrawFrom: StructureStorage | StructureTerminal | undefined;
 				let withdrawAmount = amount;
-				if (storage.store[resource] > 0) {
+				if (storage && storage.store[resource] > 0) {
 					withdrawFrom = storage;
 					withdrawAmount = Math.min(amount, storage.store[resource]);
 				} else if (terminal && terminal.store[resource] > 0) {
@@ -184,7 +184,7 @@ export class CommandCenterOverlord extends Overlord {
 												Tasks.transfer(request.target, resource, withdrawAmount)]);
 					return true;
 				} else {
-					log.warning(`${manager.print}: could not fulfilll supply request for ${resource}!`);
+					log.warning(`${manager.print}: could not fulfill supply request for ${resource}!`);
 					return false;
 				}
 			}
@@ -262,7 +262,7 @@ export class CommandCenterOverlord extends Overlord {
 			}
 
 			// Move stuff into terminal from storage
-			if (terminal.store[resource] < target - tolerance && storage.store[resource] > 0) {
+			if (terminal.store[resource] < target - tolerance && storage && storage.store[resource] > 0) {
 				manager.debug(`Moving ${resource} from storage into terminal`);
 				if (this.unloadCarry(manager)) {
 					return true;
@@ -332,7 +332,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (!storage || !terminal) {
 			return false;
 		}
-		if (storage.energy < Energetics.settings.storage.energy.destroyTerminalThreshold) {
+		if (storage.store[RESOURCE_ENERGY] < Energetics.settings.storage.energy.destroyTerminalThreshold) {
 			if (this.unloadCarry(manager)) {
 				return true;
 			}
@@ -554,8 +554,8 @@ export class CommandCenterOverlord extends Overlord {
 			} else {
 				const storage = this.commandCenter.storage;
 				const terminal = this.commandCenter.terminal;
-				const energyTarget = storage.store[RESOURCE_ENERGY] > 0 ? storage : terminal;
-				if (energyTarget) {
+				const energyTarget = (storage && storage.store[RESOURCE_ENERGY] > 0) ? storage : terminal;
+				if (energyTarget && energyTarget.store[RESOURCE_ENERGY] > 0) {
 					manager.withdraw(energyTarget);
 				}
 			}
