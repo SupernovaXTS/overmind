@@ -226,15 +226,28 @@ export class ExpansionEvaluator {
 			return false;
 		}
 
-		// Check if dynamic bunker planning is viable for this room
-		const evolutionChamberPos = canBuildDynamicBunker(room, bunkerLocation);
-		const supportsDynamic = evolutionChamberPos !== false;
+		// Check if a normal (non-dynamic) bunker can fit at this location
+		const canFitNormalBunker = BasePlanner.canFitNormalBunker(room, bunkerLocation);
 		
-		if (verbose) {
-			if (supportsDynamic) {
-				log.info(`Room ${room.name} supports dynamic bunker with evolution chamber at ${evolutionChamberPos.print}`);
-			} else {
-				log.info(`Room ${room.name} does not support dynamic bunker planning`);
+		// Only check for dynamic bunker planning if normal bunker doesn't fit
+		let evolutionChamberPos: RoomPosition | false = false;
+		let supportsDynamic = false;
+		
+		if (!canFitNormalBunker) {
+			// Normal bunker doesn't fit, check if dynamic bunker planning is viable
+			evolutionChamberPos = canBuildDynamicBunker(room, bunkerLocation);
+			supportsDynamic = evolutionChamberPos !== false;
+			
+			if (verbose) {
+				if (supportsDynamic && evolutionChamberPos) {
+					log.info(`Room ${room.name} requires dynamic bunker (normal bunker doesn't fit) with evolution chamber at ${evolutionChamberPos.print}`);
+				} else {
+					log.warning(`Room ${room.name} cannot fit normal bunker and dynamic bunker planning also failed!`);
+				}
+			}
+		} else {
+			if (verbose) {
+				log.info(`Room ${room.name} can fit a normal bunker - dynamic planning not needed`);
 			}
 		}
 

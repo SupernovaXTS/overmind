@@ -12,6 +12,7 @@ import {bullet} from '../utilities/stringConstants';
 import {hasMinerals, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
+import {BasePlanner} from './BasePlanner';
 import {BarrierPlanner} from './BarrierPlanner';
 import { DynamicPlanner, onRoomEdge } from './DynamicPlanner';
 import {bunkerLayout, BUNKER_RADIUS, getRoomSpecificBunkerLayout} from './layouts/bunker';
@@ -936,9 +937,17 @@ export class RoomPlanner {
 				const expansionData = RoomIntel.getExpansionData(this.colony.room.name);
 				if (expansionData) {
 					bunkerAnchor = expansionData.bunkerAnchor;
-					// Use evolution chamber position from expansion data if available
+					// Only use evolution chamber if dynamic bunker is needed and supported
+					// Prefer normal bunkers when they fit
 					if (expansionData.supportsDynamicBunker && expansionData.evolutionChamberAnchor) {
-						evolutionChamberAnchor = expansionData.evolutionChamberAnchor;
+						// Double-check that normal bunker doesn't fit
+						const canFitNormal = BasePlanner.canFitNormalBunker(this.colony.room, bunkerAnchor);
+						if (!canFitNormal) {
+							evolutionChamberAnchor = expansionData.evolutionChamberAnchor;
+							log.info(`${this.colony.print}: Using dynamic bunker layout (normal bunker doesn't fit)`);
+						} else {
+							log.info(`${this.colony.print}: Using normal bunker layout (fits perfectly)`);
+						}
 					}
 				} else {
 					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor for ` +
@@ -948,10 +957,10 @@ export class RoomPlanner {
 			}
 			this.addComponent('bunker', bunkerAnchor);
 			
-			// Add evolution chamber component if we have the position
+			// Add evolution chamber component if we need dynamic layout
 			if (evolutionChamberAnchor) {
 				this.placements.evolutionChamber = evolutionChamberAnchor;
-				log.info(`${this.colony.print}: Automatically configured dynamic bunker with evolution chamber at ${evolutionChamberAnchor.print}`);
+				log.info(`${this.colony.print}: Configured dynamic bunker with evolution chamber at ${evolutionChamberAnchor.print}`);
 			}
 		}
 		this.barrierPlanner.init();

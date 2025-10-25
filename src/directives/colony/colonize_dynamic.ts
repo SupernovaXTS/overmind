@@ -84,6 +84,7 @@ export class DirectiveColonizeDynamic extends Directive {
 
 	/**
 	 * Automatically place dynamic bunker core and evolution chamber flags in optimal positions
+	 * Only uses dynamic layout if a normal bunker cannot fit - prefers normal bunkers
 	 * Uses BasePlanner to find the best bunker location and DynamicPlanner to validate evolution chamber placement
 	 * Only places flags when we own the room (controller is ours)
 	 */
@@ -115,10 +116,19 @@ export class DirectiveColonizeDynamic extends Directive {
 			return;
 		}
 		
-		// Use DynamicPlanner to find evolution chamber position
+		// Check if a normal (non-dynamic) bunker can fit
+		const canFitNormalBunker = BasePlanner.canFitNormalBunker(this.room, bunkerLocation);
+		
+		if (canFitNormalBunker) {
+			// Normal bunker fits perfectly - use standard bunker planning instead
+			log.info(`${this.pos.roomName} can fit a normal bunker - dynamic planning not needed. Use standard colonize directive instead.`);
+			return;
+		}
+		
+		// Normal bunker doesn't fit - check if dynamic bunker is viable
 		const evolutionChamberPos = canBuildDynamicBunker(this.room, bunkerLocation);
 		if (!evolutionChamberPos) {
-			log.warning(`Could not find suitable evolution chamber position in ${this.pos.roomName}`);
+			log.warning(`Could not find suitable evolution chamber position in ${this.pos.roomName} - room may not be suitable for dynamic bunker`);
 			return;
 		}
 		
@@ -127,7 +137,7 @@ export class DirectiveColonizeDynamic extends Directive {
 		const bunkerResult = bunkerLocation.createFlag(bunkerFlagName, DirectiveRPDynamicBunker.color, DirectiveRPDynamicBunker.secondaryColor);
 		
 		if (typeof bunkerResult === 'string') {
-			log.info(`Created dynamic bunker core flag at ${bunkerLocation.print} for dynamic colony ${this.pos.roomName}`);
+			log.info(`Created dynamic bunker core flag at ${bunkerLocation.print} for dynamic colony ${this.pos.roomName} (normal bunker doesn't fit)`);
 			
 			// Save evolution chamber position to colony memory if colony exists
 			if (this.toColonize && this.toColonize.roomPlanner) {

@@ -112,4 +112,47 @@ export class BasePlanner {
 		return false;
 	}
 
+	/**
+	 * Check if a normal (non-dynamic) bunker can fit in the room at the given location
+	 * Returns true if the bunker fits completely without needing dynamic planning
+	 */
+	static canFitNormalBunker(room: Room, bunkerLocation: RoomPosition): boolean {
+		const terrain = room.getTerrain();
+		const dx = bunkerLocation.x - bunkerLayout.data.anchor.x;
+		const dy = bunkerLocation.y - bunkerLayout.data.anchor.y;
+		
+		// Check all bunker coordinates to see if they're on valid terrain
+		for (const coord of allBunkerCoords[8]) {
+			const checkX = coord.x + dx;
+			const checkY = coord.y + dy;
+			
+			// Check bounds
+			if (checkX < 2 || checkX > 47 || checkY < 2 || checkY > 47) {
+				return false;
+			}
+			
+			// Check terrain - bunker positions can't be on walls
+			if (terrain.get(checkX, checkY) === TERRAIN_MASK_WALL) {
+				return false;
+			}
+		}
+		
+		// Check that bunker doesn't intersect with sources, mineral, or controller
+		if (this.bunkerIntersectsWith(bunkerLocation, room.controller!.pos, 3)) {
+			return false;
+		}
+		
+		const sitesAndMineral: (Source | Mineral)[] = [...room.sources];
+		if (room.mineral) {
+			sitesAndMineral.push(room.mineral);
+		}
+		for (const obj of sitesAndMineral) {
+			if (this.bunkerIntersectsWith(bunkerLocation, obj.pos, 1)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
 }
