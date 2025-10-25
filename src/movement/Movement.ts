@@ -12,6 +12,7 @@ import {Swarm} from '../zerg/Swarm';
 import {Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {Pathing, PathOptions} from './Pathing';
+import trafficManager from './screeps-traffic-manager';
 
 
 export const CROSSING_PORTAL = 21;
@@ -137,11 +138,7 @@ export class Movement {
 	 */
 	static goTo(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
 		// Integrate traffic manager: register intended move
-		// Only register if path is found and next position is determined
-		// Import trafficManager
-		// @ts-ignore
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const trafficManager = require('./screeps-traffic-manager').default;
+	// Only register if path is found and next position is determined
 
 		if (creep.blockMovement && !opts.force) {
 			return ERR_BUSY;
