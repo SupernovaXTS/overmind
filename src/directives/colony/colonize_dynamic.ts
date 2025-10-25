@@ -188,7 +188,8 @@ export class DirectiveColonizeDynamic extends Directive {
 			this.placeEvolutionChamberFlag();
 		}
 		
-		if (this.toColonize && this.toColonize.spawns.length > 0) {
+		// Only remove directive if we actually have a colony with a spawn built in this specific room
+		if (this.toColonize && this.toColonize.room.name === this.pos.roomName && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
 			
@@ -210,6 +211,7 @@ export class DirectiveColonizeDynamic extends Directive {
 				}
 			}
 			// Remove the directive
+			log.info(`Removing DirectiveColonizeDynamic in ${this.pos.roomName}: spawn construction complete`);
 			this.remove();
 		}
 		if (Game.time % 10 == 2 && (this.room && !!this.room.owner && this.room.owner != MY_USERNAME)) {
