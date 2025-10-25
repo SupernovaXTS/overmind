@@ -1,12 +1,10 @@
 // Lookup for commodities: returns true if resource is a commodity
-export const _commoditiesLookup: { [resource: string]: boolean } = Object.keys(COMMODITIES_DATA).reduce((acc: { [resource: string]: boolean }, key) => {
+export const _commoditiesLookup: { [resource: string]: boolean } = Object.keys(COMMODITIES).reduce((acc: { [resource: string]: boolean }, key) => {
 	acc[key] = true;
 	return acc;
 }, {});
-// Import COMMODITIES_DATA and DEPOSITS_ALL from tsrc for compatibility
-import { COMMODITIES_DATA, DEPOSITS_ALL } from '../../tsrc/resources/map_resources';
-
-export { COMMODITIES_DATA, DEPOSITS_ALL };
+// TODO: Define or import COMMODITIES_DATA and DEPOSITS_ALL from a valid location
+// export { COMMODITIES_DATA, DEPOSITS_ALL };
 // Remove this line:
 // import { COMMODITIES_ALL } from './map_resources';
 

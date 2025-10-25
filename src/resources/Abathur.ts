@@ -1,3 +1,4 @@
+declare const DEPOSITS_ALL: string[];
 import { LogMessage, log } from "console/log";
 import { Colony, getAllColonies } from "../Colony";
 import { maxMarketPrices, TraderJoe } from "../logistics/TradeNetwork";
@@ -12,12 +13,13 @@ import {
 	BOOST_PARTS,
 	BOOST_TIERS,
 	BoostTier,
-	COMMODITIES_DATA,
-	DEPOSITS_ALL,
 	INTERMEDIATE_REACTANTS,
 	REAGENTS,
 	_commoditiesLookup,
 } from "./map_resources";
+
+// Use Screeps global constants
+const COMMODITIES_DATA = COMMODITIES;
 // --- getNextProduction and supporting code migrated from tsrc ---
 
 export const REACTION_PRIORITIES = [
@@ -217,7 +219,7 @@ export class Abathur {
 	}
 
 	static isDepositResource(resource: ResourceConstant): boolean {
-		return DEPOSITS_ALL.includes(resource);
+	return DEPOSITS_ALL.includes(resource);
 	}
 
 	static isCommodity(resource: ResourceConstant): boolean {
@@ -424,8 +426,8 @@ export class Abathur {
 		const globalAssets = Overmind.terminalNetwork.getAssets();
 		const numColonies = _.filter(getAllColonies(), (col) => !!col.terminal).length;
 		let batchAmount = Infinity;
-		let possibleProductions = entries(COMMODITIES_DATA)
-			.filter(([prod, data]) => data.lvl === undefined || data.lvl === colony.factory!.level)
+		let possibleProductions = entries(COMMODITIES)
+			.filter(([prod, data]) => data.level === undefined || data.level === colony.factory!.level)
 			.sort(([a], [b]) => 0); // You may want to sort by priority if needed
 		const ingredientsUnavailable: { [resource: string]: boolean } = {};
 		const nextTargetProduction = _.find(
@@ -437,28 +439,31 @@ export class Abathur {
 					return false;
 				}
 				batchAmount = Infinity;
-				// COMMODITIES_DATA[product].chain is a string (resourceType) or undefined
-				if (!data.chain) return false;
-				const resource = data.chain as ResourceConstant;
-				const amount = 1; // Default to 1 if not specified; adjust if you have a mapping for amounts
-				if (ingredientsUnavailable[resource]) {
-					return false;
-				}
-				const resourceThreshold = Overmind.terminalNetwork.thresholds(colony, resource);
-				const cutoff = resourceThreshold.target - resourceThreshold.tolerance;
-				if (colony.assets[resource] < cutoff) {
-					return false;
-				}
-				const globalShortage = globalAssets[resource] / numColonies < amount;
-				const localShortage = colony.assets[resource] - (Overmind.terminalNetwork as any).lockedAmount(colony, resource) < amount;
-				if (globalShortage || localShortage) {
-					if (!Overmind.terminalNetwork.canObtainResource(colony, resource, amount)) {
-						ingredientsUnavailable[resource] = true;
+				// Check all required components except energy and G (catalyst)
+				const requiredComponents = Object.keys(data.components).filter(
+					(key) => key !== 'energy' && key !== 'G'
+				);
+				for (const resource of requiredComponents) {
+					const amount = data.components[resource as CommodityConstant] || 1;
+					if (ingredientsUnavailable[resource]) {
 						return false;
 					}
+					const resourceThreshold = Overmind.terminalNetwork.thresholds(colony, resource as ResourceConstant);
+					const cutoff = resourceThreshold.target - resourceThreshold.tolerance;
+					if (colony.assets[resource] < cutoff) {
+						return false;
+					}
+					const globalShortage = globalAssets[resource] / numColonies < amount;
+					const localShortage = colony.assets[resource] - (Overmind.terminalNetwork as any).lockedAmount(colony, resource) < amount;
+					if (globalShortage || localShortage) {
+						if (!Overmind.terminalNetwork.canObtainResource(colony, resource as ResourceConstant, amount)) {
+							ingredientsUnavailable[resource] = true;
+							return false;
+						}
+					}
+					const maxBatch = Math.floor((globalAssets[resource] - cutoff) / amount);
+					batchAmount = Math.max(Math.min(maxBatch, batchAmount), 0);
 				}
-				const maxBatch = Math.floor((globalAssets[resource] - cutoff) / amount);
-				batchAmount = Math.max(Math.min(maxBatch, batchAmount), 0);
 				return batchAmount > 0;
 			}
 		);

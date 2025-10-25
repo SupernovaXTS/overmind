@@ -47,7 +47,7 @@ export class DirectiveHarvest extends Directive {
 	constructor(flag: Flag) {
 		super(flag);
 		if (this.colony) {
-			this.colony.miningSites[this.name] = this;
+			this.colony.miningSites[this.name as string] = this;
 		}
 		_.defaultsDeep(this.memory, defaultDirectiveHarvestMemory);
 	}
@@ -62,7 +62,7 @@ export class DirectiveHarvest extends Directive {
 				[MEM.EXPIRATION]: expiration
 			};
 		}
-		return this.memory[HARVEST_MEM.PATHING]![MEM.DISTANCE];
+	return this.memory[HARVEST_MEM.PATHING]![MEM.DISTANCE];
 	}
 
 	spawnMoarOverlords() {

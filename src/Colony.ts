@@ -170,7 +170,7 @@ export class Colony {
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawler: SporeCrawler;
-	miningSites: any[] = [];
+	miningSites: { [name: string]: any } = {};
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;
 	// Operational state
@@ -223,7 +223,7 @@ export class Colony {
 	}
 
 	get energyMinedPerTick(): number {
-		return this.miningSites ? this.miningSites.reduce((sum, site) => {
+		return this.miningSites ? Object.values(this.miningSites).reduce((sum, site: any) => {
 			const overlord = site.overlords?.mine;
 			return sum + (overlord?.avgEnergyPerTick || 0);
 		}, 0) : 0;
@@ -657,8 +657,8 @@ export class Colony {
 			this.memory.averageEnergyUse[key] = (this.instantEnergyUse[key] ?? 0) * 0.1 + (this.memory.averageEnergyUse[key] ?? 0) * 0.9;
 		}
 		// Log mining site production
-		const numSites = this.miningSites?.length || 0;
-		const avgUsage = numSites ? this.miningSites.reduce((sum, site) => sum + (site.memory?.usage || 0), 0) / numSites : 0;
+	const numSites = Object.values(this.miningSites)?.length || 0;
+	const avgUsage = numSites ? Object.values(this.miningSites).reduce((sum: number, site: any) => sum + (site.memory?.usage || 0), 0) / numSites : 0;
 		const energyInPerTick = this.energyMinedPerTick;
 		Stats.log(`colonies.${this.name}.miningSites.avgUsage`, avgUsage);
 		Stats.log(`colonies.${this.name}.miningSites.energyInPerTick`, energyInPerTick);

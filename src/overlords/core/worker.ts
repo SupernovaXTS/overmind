@@ -169,9 +169,9 @@ export class WorkerOverlord extends Overlord {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 30; // Maximum number of workers to spawn
-				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site) {
+				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site: any) {
 					const overlord = site.overlords.mine;
-					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));
+					const miningPowerAssigned = _.sum(overlord.miners, (miner: any) => miner.getActiveBodyparts(WORK));
 					const saturation = Math.min(miningPowerAssigned / overlord.miningPowerNeeded, 1);
 					return overlord.energyPerTick * saturation;
 				}));
