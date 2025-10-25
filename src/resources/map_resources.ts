@@ -3,8 +3,9 @@ export const _commoditiesLookup: { [resource: string]: boolean } = Object.keys(C
 	acc[key] = true;
 	return acc;
 }, {});
-// TODO: Define or import COMMODITIES_DATA and DEPOSITS_ALL from a valid location
-// export { COMMODITIES_DATA, DEPOSITS_ALL };
+// DEPOSITS_ALL: array of all deposit resource constants
+// @ts-ignore: Screeps runtime always provides DEPOSITS global, but fallback for undefined
+export const DEPOSITS_ALL: string[] = typeof DEPOSITS !== 'undefined' ? Object.keys(DEPOSITS) : [];
 // Remove this line:
 // import { COMMODITIES_ALL } from './map_resources';
 
