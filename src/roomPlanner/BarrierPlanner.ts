@@ -158,6 +158,19 @@ export class BarrierPlanner {
 			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
+		// Add mining sites (sources and mineral)
+		for (const source of this.colony.room.sources) {
+			const {x, y} = source.pos;
+			const [x1, y1] = [Math.max(x - 1, 0), Math.max(y - 1, 0)];
+			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
+			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
+		}
+		if (this.colony.room.mineral) {
+			const {x, y} = this.colony.room.mineral.pos;
+			const [x1, y1] = [Math.max(x - 1, 0), Math.max(y - 1, 0)];
+			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
+			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
+		}
 	// Get tunnel positions from road planner
 	let tunnelPositions: {x: number, y: number}[] = [];
 	if (this.roomPlanner.roadPlanner && typeof this.roomPlanner.roadPlanner.getRoadPositions === 'function') {
