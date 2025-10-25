@@ -9,7 +9,9 @@ structureController.updateRclAvg = function (): void {
     const stats = roomMem._rclStats as { lastProgress?: number; avgTick?: number };
     if (typeof stats.lastProgress === 'number' && this.level <= (this.room.controller?.level || 0)) {
         const diff: number = this.progress - stats.lastProgress;
-        stats.avgTick = MM_AVG(diff, stats.avgTick, 1000);
+        // If energy per tick is negative (spending faster than generating), reset to zero
+        const energyPerTick = Math.max(0, diff);
+        stats.avgTick = MM_AVG(energyPerTick, stats.avgTick, 1000);
     }
     stats.lastProgress = this.progress;
 };
