@@ -647,6 +647,28 @@ export class TraderJoe implements ITradeNetwork {
 		}
 		// Create a new order
 		else {
+			// Check if there are sell orders available before creating a buy order
+			if (type == ORDER_BUY) {
+				const sellOrders = Game.market.getAllOrders({
+					type: ORDER_SELL,
+					resourceType: resource
+				});
+				const availableSellOrders = _.filter(sellOrders, order => 
+					order.amount >= TraderJoe.settings.market.orders.minBuyDirectAmount
+				);
+				
+				if (availableSellOrders.length > 0) {
+					const cheapestSeller = minBy(availableSellOrders, order => order.price);
+					if (cheapestSeller) {
+						this.notify(
+							`${terminal.room.print}: not creating buy order for ${resource} - ` +
+							`sell orders available at ${cheapestSeller.price.toFixed(4)} credits/unit`
+						);
+						return NO_ACTION; // Don't create buy order if sellers exist
+					}
+				}
+			}
+			
 			// Put a cap on the number of orders you can create per tick
 			if (
 				this.ordersPlacedThisTick >
