@@ -1,4 +1,3 @@
-declare const DEPOSITS_ALL: string[];
 import { LogMessage, log } from "console/log";
 import { Colony, getAllColonies } from "../Colony";
 import { maxMarketPrices, TraderJoe } from "../logistics/TradeNetwork";
@@ -16,6 +15,7 @@ import {
 	INTERMEDIATE_REACTANTS,
 	REAGENTS,
 	_commoditiesLookup,
+	DEPOSITS_ALL,
 } from "./map_resources";
 
 // Use Screeps global constants

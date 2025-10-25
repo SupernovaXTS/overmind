@@ -8,7 +8,7 @@ import { TransportRequestGroup } from "logistics/TransportRequestGroup";
 import { log } from "console/log";
 import { Priority } from "priorities/priorities";
 import { Production } from "resources/Abathur";
-import { Abathur as TsAbathur } from "../compat/tsrc_exports";
+import { Abathur } from "resources/Abathur";
 import {
 	ema,
 	entries,
@@ -387,7 +387,7 @@ export class InfestedFactory extends HiveCluster {
 
 		let product = this.memory.activeProduction;
 		if (!product && !this.memory.suspendProductionUntil) {
-			const nextProduction = TsAbathur.getNextProduction(this.colony);
+			const nextProduction = Abathur.getNextProduction(this.colony);
 			// const nextProduction = ((): Production | undefined => undefined)();
 			this.debug(
 				() => `next production: ${JSON.stringify(nextProduction)}`

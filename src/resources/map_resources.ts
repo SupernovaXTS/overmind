@@ -5,9 +5,9 @@ export const _commoditiesLookup: { [resource: string]: boolean } = Object.keys(C
 }, {});
 // DEPOSITS_ALL: array of all deposit resource constants
 // @ts-ignore: Screeps runtime always provides DEPOSITS global, but fallback for undefined
-export const DEPOSITS_ALL: string[] = typeof DEPOSITS !== 'undefined' ? Object.keys(DEPOSITS) : [];
+//export const DEPOSITS_ALL: string[] = typeof DEPOSITS !== 'undefined' ? Object.keys(DEPOSITS) : [];
 // Remove this line:
-// import { COMMODITIES_ALL } from './map_resources';
+//import { COMMODITIES_ALL } from './map_resources';
 
 export const RESOURCES_ALL_EXCEPT_ENERGY = _.without(RESOURCES_ALL, RESOURCE_ENERGY) as _ResourceConstantSansEnergy[];
 
@@ -311,3 +311,10 @@ export const _boostTierLookupAllTypes: { [resource in ResourceConstant]: BoostTi
 				 _.extend({}, ..._.values(_boostTypesTierLookup));
 
 export const ALL_ZERO_ASSETS: { [resource: string]: number } = _.zipObject(RESOURCES_ALL, _.map(RESOURCES_ALL, i => 0));
+
+export const DEPOSITS_ALL: ResourceConstant[] = [
+	RESOURCE_SILICON,
+	RESOURCE_BIOMASS,
+	RESOURCE_METAL,
+	RESOURCE_MIST,
+];
