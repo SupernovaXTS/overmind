@@ -585,8 +585,9 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 	 * Performs a dry run of the request handling logic and returns true if the transfer would have been made.
 	 */
 	canObtainResource(requestor: Colony, resource: ResourceConstant, totalAmount: number): boolean {
-		if (PHASE != 'run') { // need to have all the information from init() about colony states first
-			log.error(`TerminalNetwork.canObtainResource() must be called in the run() phase!`);
+		if (PHASE != 'run') {
+			const caller = (new Error()).stack?.split('\n')[2]?.trim() || 'unknown';
+			log.error(`TerminalNetwork.canObtainResource() must be called in the run() phase! Called from: ${caller}`);
 			return false;
 		}
 
