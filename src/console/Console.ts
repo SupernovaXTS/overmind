@@ -1,11 +1,49 @@
+	/**
+	 * Buy a resource using TraderJoe
+	 */
+	static buyResource(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
+		if (!colony) return `Colony ${colonyName} not found!`;
+		if (!colony.terminal) return `Colony ${colonyName} has no terminal!`;
+		if (!RESOURCES_ALL.includes(resourceType)) return `Invalid resource type: ${resourceType}`;
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return `Amount must be greater than 0.`;
+		const result = TraderJoe.buy(colony.terminal, resourceType, amt);
+		if (result === OK) {
+			return `Successfully bought ${amt} ${resourceType} for colony ${colonyName}.`;
+		} else {
+			return `Failed to buy ${resourceType}: error code ${result}`;
+		}
+	}
+
+	/**
+	 * Sell a resource using TraderJoe
+	 */
+	static sellResource(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
+		if (!colony) return `Colony ${colonyName} not found!`;
+		if (!colony.terminal) return `Colony ${colonyName} has no terminal!`;
+		if (!RESOURCES_ALL.includes(resourceType)) return `Invalid resource type: ${resourceType}`;
+		const amt = Math.floor(Number(amount) || 0);
+		if (amt <= 0) return `Amount must be greater than 0.`;
+		const result = TraderJoe.sell(colony.terminal, resourceType, amt);
+		if (result === OK) {
+			return `Successfully sold ${amt} ${resourceType} for colony ${colonyName}.`;
+		} else {
+			return `Failed to sell ${resourceType}: error code ${result}`;
+		}
+	}
 import { ReservingOverlord } from "overlords/colonization/reserver";
 import { Colony, ColonyMemory, getAllColonies, isColony } from "../Colony";
 import { Directive } from "../directives/Directive";
 import {
 	PortalInfo,
 	ROOMINTEL_DEFAULT_VISUALS_RANGE,
-	RoomIntel
-} from "../intel/RoomIntel";
+	} from "../intel/RoomIntel";
+
+	// ...existing code...
+
+	// ...existing code...
 import {progress as statsProgress} from '../utilities/statistics';
 import { Overlord } from "../overlords/Overlord";
 import { ExpansionEvaluator } from "../strategy/ExpansionEvaluator";
