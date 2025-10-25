@@ -415,6 +415,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 24
 				}, {'x': 30, 'y': 23}, {'x': 20, 'y': 27}, {'x': 27, 'y': 30}, {'x': 23, 'y': 20}]
 			},
+			'factory'   : {'pos': [{'x': 24, 'y': 24}]},
 			'observer'  : {'pos': [{'x': 21, 'y': 25}]},
 			'lab'       : {
 				'pos': [{'x': 26, 'y': 22}, {'x': 27, 'y': 23}, {'x': 28, 'y': 24}, {
