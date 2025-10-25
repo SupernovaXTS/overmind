@@ -22,6 +22,7 @@ import { Zerg } from "zerg/Zerg";
 import { RESOURCE_IMPORTANCE } from "resources/map_resources";
 import { config } from "../config";
 import { DEFAULT_OVERMIND_SIGNATURE } from "~settings";
+import { TerminalNetworkV2 } from "logistics/TerminalNetwork_v2";
 type RecursiveObject = { [key: string]: number | RecursiveObject };
 
 interface MemoryDebug {
@@ -1236,6 +1237,124 @@ export class OvermindConsole {
 		return `Memory has been cleaned.`;
 	}
 
+	static showAssets(...args: (string | Colony)[]) {
+		const colonyFilter = new Set();
+		const resourceFilter = new Set();
+		for (const arg of args) {
+			if (typeof arg === "string" && RESOURCES_ALL.includes(arg as ResourceConstant)) {
+				resourceFilter.add(arg);
+			} else if (typeof arg === "string" && Overmind.colonies[arg]) {
+				colonyFilter.add(arg);
+			} else if (isColony(arg)) {
+				colonyFilter.add(arg.name);
+			}
+		}
+
+		let data: ResourceTally[] = [];
+		const columnifyOpts: any = {
+			config: { resource: { align: "right" }, total: { align: "right" } },
+			headingTransform(header: string) {
+				if (header.startsWith("S-")) {
+					return "";
+				} else if (header.startsWith("T-")) {
+					return header.substring(2);
+				} else {
+					return header.toUpperCase();
+				}
+			},
+		};
+		for (const resourceType of RESOURCES_ALL) {
+			if (resourceFilter.size > 0 && !resourceFilter.has(resourceType)) {
+				continue;
+			}
+			let total = 0;
+			const resourceTally: ResourceTally = {
+				resource: resourceType,
+				total: 0,
+			};
+			for (const colony of Object.values(Overmind.colonies)) {
+				let count = 0;
+
+				count += colony.storage?.store[resourceType] ?? 0;
+				count += colony.terminal?.store[resourceType] ?? 0;
+				count += colony.factory?.store[resourceType] ?? 0;
+				total += count;
+
+				const threshold = Overmind.terminalNetwork.thresholds(
+					colony,
+					resourceType
+				);
+				const min = threshold.target - threshold.tolerance;
+				const max = threshold.target + threshold.tolerance;
+				let status: ResourceTallyState = "~";
+				if (count > 0 && count >= (threshold.surplus ?? Infinity)) {
+					status = "!";
+				} else if (count < min) {
+					status = "-";
+				} else if (count > max) {
+					status = "+";
+				}
+
+				columnifyOpts.config![`T-${colony.name}`] ??= {};
+				columnifyOpts.config![`T-${colony.name}`].align = "right";
+				resourceTally[`S-${colony.name}`] = status;
+				resourceTally[`T-${colony.name}`] = count;
+			}
+			resourceTally.total = total;
+			// We only display the row if there's any stored amount, unless we're filtering
+			if (
+				total > 0 ||
+				resourceFilter.has(resourceType) ||
+				colonyFilter.size
+			) {
+				data.push(resourceTally);
+			}
+		}
+
+		data = data.sort((a, b) => {
+			const a_prio = RESOURCE_IMPORTANCE.includes(a.resource as any)
+				? RESOURCE_IMPORTANCE.indexOf(a.resource as any)
+				: Number.MAX_SAFE_INTEGER;
+			const b_prio = RESOURCE_IMPORTANCE.includes(b.resource as any)
+				? RESOURCE_IMPORTANCE.indexOf(b.resource as any)
+				: Number.MAX_SAFE_INTEGER;
+			if (a_prio === b_prio) {
+				return b.total - a.total;
+			}
+			return a_prio - b_prio;
+		});
+
+		if (colonyFilter.size > 0) {
+			data = data.map((tally) => {
+				const filteredTally: ResourceTally = {
+					resource: tally.resource,
+					total: tally.total,
+				};
+				colonyFilter.forEach((name) => {
+					filteredTally[`S-${name}`] = tally[`S-${name}`];
+					filteredTally[`T-${name}`] = tally[`T-${name}`];
+				});
+				return filteredTally;
+			});
+		}
+
+		let type = "all";
+		if (colonyFilter.size || resourceFilter.size) {
+			const filters = [
+				...colonyFilter.values(),
+				...resourceFilter.values(),
+			];
+			type = `filtered on ${filters.join(", ")}`;
+		}
+		const msg =
+			`Reporting ${type} assets:\n` +
+			`\tThresholds markers: <b>!</b> - surplus, <b>+</b> - above, <b>~</b> - between, <b>-</b> - under\n` +
+			columnify(data, columnifyOpts);
+		console.log(msg);
+		return data;
+	}
+
+
 	private static recursiveMemoryProfile(
 		prefix: string,
 		memoryObject: any,
@@ -1460,123 +1579,6 @@ export class OvermindConsole {
 		console.log(
 			`Intel visuals enabled in range ${Memory.settings.intelVisuals.range} for the next ${ticks} ticks (until ${Memory.settings.intelVisuals.until}).`
 		);
-	}
-
-	static showAssets(...args: (string | Colony)[]) {
-		const colonyFilter = new Set();
-		const resourceFilter = new Set();
-		for (const arg of args) {
-			if (typeof arg === "string" && RESOURCES_ALL.includes(arg as ResourceConstant)) {
-				resourceFilter.add(arg);
-			} else if (typeof arg === "string" && Overmind.colonies[arg]) {
-				colonyFilter.add(arg);
-			} else if (isColony(arg)) {
-				colonyFilter.add(arg.name);
-			}
-		}
-
-		let data: ResourceTally[] = [];
-		const columnifyOpts: any = {
-			config: { resource: { align: "right" }, total: { align: "right" } },
-			headingTransform(header: string) {
-				if (header.startsWith("S-")) {
-					return "";
-				} else if (header.startsWith("T-")) {
-					return header.substring(2);
-				} else {
-					return header.toUpperCase();
-				}
-			},
-		};
-		for (const resourceType of RESOURCES_ALL) {
-			if (resourceFilter.size > 0 && !resourceFilter.has(resourceType)) {
-				continue;
-			}
-			let total = 0;
-			const resourceTally: ResourceTally = {
-				resource: resourceType,
-				total: 0,
-			};
-			for (const colony of Object.values(Overmind.colonies)) {
-				let count = 0;
-
-				count += colony.storage?.store[resourceType] ?? 0;
-				count += colony.terminal?.store[resourceType] ?? 0;
-				count += colony.factory?.store[resourceType] ?? 0;
-				total += count;
-
-				const threshold = Overmind.terminalNetwork.thresholds(
-					colony,
-					resourceType
-				);
-				const min = threshold.target - threshold.tolerance;
-				const max = threshold.target + threshold.tolerance;
-				let status: ResourceTallyState = "~";
-				if (count > 0 && count >= (threshold.surplus ?? Infinity)) {
-					status = "!";
-				} else if (count < min) {
-					status = "-";
-				} else if (count > max) {
-					status = "+";
-				}
-
-				columnifyOpts.config![`T-${colony.name}`] ??= {};
-				columnifyOpts.config![`T-${colony.name}`].align = "right";
-				resourceTally[`S-${colony.name}`] = status;
-				resourceTally[`T-${colony.name}`] = count;
-			}
-			resourceTally.total = total;
-			// We only display the row if there's any stored amount, unless we're filtering
-			if (
-				total > 0 ||
-				resourceFilter.has(resourceType) ||
-				colonyFilter.size
-			) {
-				data.push(resourceTally);
-			}
-		}
-
-		data = data.sort((a, b) => {
-			const a_prio = RESOURCE_IMPORTANCE.includes(a.resource as any)
-				? RESOURCE_IMPORTANCE.indexOf(a.resource as any)
-				: Number.MAX_SAFE_INTEGER;
-			const b_prio = RESOURCE_IMPORTANCE.includes(b.resource as any)
-				? RESOURCE_IMPORTANCE.indexOf(b.resource as any)
-				: Number.MAX_SAFE_INTEGER;
-			if (a_prio === b_prio) {
-				return b.total - a.total;
-			}
-			return a_prio - b_prio;
-		});
-
-		if (colonyFilter.size > 0) {
-			data = data.map((tally) => {
-				const filteredTally: ResourceTally = {
-					resource: tally.resource,
-					total: tally.total,
-				};
-				colonyFilter.forEach((name) => {
-					filteredTally[`S-${name}`] = tally[`S-${name}`];
-					filteredTally[`T-${name}`] = tally[`T-${name}`];
-				});
-				return filteredTally;
-			});
-		}
-
-		let type = "all";
-		if (colonyFilter.size || resourceFilter.size) {
-			const filters = [
-				...colonyFilter.values(),
-				...resourceFilter.values(),
-			];
-			type = `filtered on ${filters.join(", ")}`;
-		}
-		const msg =
-			`Reporting ${type} assets:\n` +
-			`\tThresholds markers: <b>!</b> - surplus, <b>+</b> - above, <b>~</b> - between, <b>-</b> - under\n` +
-			columnify(data, columnifyOpts);
-		console.log(msg);
-		return data;
 	}
 
 	static toggleRoomActive(roomName: string, state?: boolean) {

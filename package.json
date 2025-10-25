@@ -33,6 +33,7 @@
     "@types/lodash": "3.10.2",
     "@types/node": "^20.16.3",
     "@types/screeps": "^3.3.8",
+    "columnify": "^1.6.0",
     "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-copy": "^1.0.0",
@@ -51,8 +52,10 @@
     "typescript": "5.3.3"
   },
   "dependencies": {
-    "columnify": "1.5.4",
-    "source-map": "0.7.3"
+    "source-map": "0.7.3",
+    "@tensorflow/tfjs": "^1.2.11",
+    "columnify": "^1.6.0",
+    "onnxjs": "^0.1.6"
   },
   "packageManager": "pnpm@9.6.0+sha1.65cd48c20dd329b7f455088b6dd17d4d5b6d02e3"
 }
