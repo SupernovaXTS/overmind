@@ -46,6 +46,22 @@ type ResourceTally = {
  * OvermindConsole registers a number of global methods for direct use in the Screeps console
  */
 export class OvermindConsole {
+	static refresh(): void {
+		// Auto-update global.c to the room the player is currently viewing (if it's a colony)
+		if (Game.rooms) {
+			// Get the first owned room visible (player is likely looking at it)
+			const visibleColonies = _.filter(_.values(Game.rooms),
+				(room: Room) => room.my && Overmind.colonies[room.name]);
+			if (visibleColonies.length > 0) {
+				// If we don't have a current colony set, or if player switched rooms, update it
+				const firstColony = Overmind.colonies[(visibleColonies[0] as Room).name];
+				if (!global.c || (global.c.name !== firstColony.name)) {
+					global.c = firstColony;
+				}
+			}
+		}
+	}
+
 	static commands: ConsoleCommand[] = [
 		{
 			name: "help",
