@@ -332,29 +332,42 @@ export class SectorLogistics {
         this.activeProviders[resource].push(provider);
     }
 
-    // Partner selection (simple heuristic: closest colony with enough resource)
+    // Partner selection: prefer closest colony with a terminal and enough resource
     getBestProvider(resource: ResourceConstant, amount: number, requestor: Colony): Colony | undefined {
-        const partners = this.activeProviders[resource] || [];
+        const partners = (this.activeProviders[resource] || []).filter(col => col.terminal);
         if (partners.length === 0) return undefined;
-        // Example: sort by linear room distance
+        // Sort by linear room distance
         return minBy(partners, partner => Game.map.getRoomLinearDistance(partner.room.name, requestor.room.name));
     }
 
-    // Divvying requests among multiple providers
+    // Divvying requests among multiple providers, prefer those with terminals and closest
     fulfillRequest(resource: ResourceConstant, amount: number, requestor: Colony): Colony[] {
-        const partners = this.activeProviders[resource] || [];
+        let partners = (this.activeProviders[resource] || []).filter(col => col.terminal);
+        // Sort partners by distance
+        partners = partners.sort((a, b) => Game.map.getRoomLinearDistance(a.room.name, requestor.room.name) - Game.map.getRoomLinearDistance(b.room.name, requestor.room.name));
         let remaining = amount;
         const selected: Colony[] = [];
         for (const partner of partners) {
             const available = partner.assets[resource] || 0;
             if (available > 0) {
                 const take = Math.min(available, remaining);
-                // Simulate transfer logic here
                 selected.push(partner);
                 remaining -= take;
                 if (remaining <= 0) break;
+            } else {
+                // If partner has a terminal but not enough resource, make a request on the terminal network
+                if (partner.terminal && Overmind.terminalNetwork) {
+                    Overmind.terminalNetwork.requestResource(partner, resource, amount);
+                }
             }
         }
         return selected;
+    }
+
+    /**
+     * Returns true if the colony has access to sector logistics (has storage and is in sector pool)
+     */
+    static colonyHasAccess(colony: Colony): boolean {
+        return !!(colony.storage && SectorLogistics.pool[colony.name]);
     }
 }

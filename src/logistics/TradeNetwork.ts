@@ -123,7 +123,8 @@ export class TraderJoe implements ITradeNetwork {
 		},
 		market: {
 			resources: {
-				allowBuyT1T2boosts: false, // the market for T1/T2 boosts is unstable; disallow buying this by default
+				allowBuyT1T2boosts: true, // the market for T1/T2 boosts is unstable; disallow buying this by default
+				allowBuyIntermediateReactants: true, // disallow buying reaction intermediates by default
 			},
 			credits: {
 				mustSellDirectBelow: 5000,
