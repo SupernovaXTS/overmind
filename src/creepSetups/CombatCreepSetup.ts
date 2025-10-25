@@ -48,6 +48,7 @@ export interface SimpleBodyOpts {
 export interface BodyGeneratorReturn {
 	body: BodyPartConstant[];
 	boosts: ResourceConstant[];
+	requestedBoosts?: BoostType[];
 }
 
 interface AvailableBoosts {

@@ -83,14 +83,20 @@ export class SectorLogistics {
 			// If this colony has a terminal, first check if the terminal network can obtain this amount.
 			// Only include in the sector manifest if the network cannot fulfill it.
 			if (this.colony.terminal && Overmind.terminalNetwork) {
-				try {
-					const totalDesired = (this.colony.assets[resource] || 0) + amt;
-					const tnCan = Overmind.terminalNetwork.canObtainResource(this.colony, resource, totalDesired);
-					if (!tnCan) {
-						(manifest as any)[resource] = Math.ceil(amt);
+				// Only check terminal network in run phase
+				if (typeof PHASE !== 'undefined' && PHASE === 'run') {
+					try {
+						const totalDesired = (this.colony.assets[resource] || 0) + amt;
+						const tnCan = Overmind.terminalNetwork.canObtainResource(this.colony, resource, totalDesired);
+						if (!tnCan) {
+							(manifest as any)[resource] = Math.ceil(amt);
+						}
+					} catch (e) {
+						// If any error occurs, fall back to not publishing for terminals this tick
 					}
-				} catch (e) {
-					// If any error occurs (phase, etc.), fall back to not publishing for terminals this tick
+				} else {
+					// Not in run phase, always include
+					(manifest as any)[resource] = Math.ceil(amt);
 				}
 			} else {
 				// No terminal; always include

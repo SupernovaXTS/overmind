@@ -70,21 +70,13 @@ export class CreepSetup {
 		const body = this.generateBody(colony.room.energyCapacityAvailable);
 		const bodyCounts = _.countBy(body);
 
-		const boosts: ResourceConstant[] = [];
-
-		if (this.boosts.length > 0 && colony.evolutionChamber) {
-			for (const boostType of this.boosts) {
-				const numParts = bodyCounts[BoostTypeBodyparts[boostType]];
-				const bestBoost = colony.evolutionChamber.bestBoostAvailable(boostType, numParts * LAB_BOOST_MINERAL);
-				if (bestBoost) {
-					boosts.push(bestBoost);
-				}
-			}
-		}
+		// Only record requested boost types; actual boost selection happens in run phase
+		const requestedBoosts: BoostType[] = this.boosts.length > 0 ? this.boosts.slice() : [];
 
 		const result = {
 			body  : body,
-			boosts: boosts,
+			boosts: [], // actual boosts will be resolved in run phase
+			requestedBoosts: requestedBoosts,
 		};
 		this.cache[colony.name] = {
 			result    : result,
