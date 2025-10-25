@@ -119,14 +119,10 @@ export class BarrierPlanner {
 			y2 = minMax(y2, 3, 50 - 3);
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
-		// Get tunnel positions for minCut
-		const tunnelPositions = _.map(this.getTunnelPositions(), pos => ({x: pos.x, y: pos.y}));
-		// Get Min cut
-		const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false, undefined, tunnelPositions);
-		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		positions = positions.concat(upgradeSitePos.availableNeighbors(true));
-		// Add tunnel positions (roads through walls)
-		positions = positions.concat(this.getTunnelPositions());
+	// Get Min cut
+	const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
+	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+	positions = positions.concat(upgradeSitePos.availableNeighbors(true));
 		return positions;
 	}
 
@@ -154,13 +150,9 @@ export class BarrierPlanner {
 			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
-		// Get tunnel positions for minCut
-		const tunnelPositions = _.map(this.getTunnelPositions(), pos => ({x: pos.x, y: pos.y}));
-		// Get Min cut
-		const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false, undefined, tunnelPositions);
-		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		// Add tunnel positions (roads through walls)
-		positions = positions.concat(this.getTunnelPositions());
+	// Get Min cut
+	const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
+	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
 		return positions;
 	}
 
@@ -183,8 +175,7 @@ export class BarrierPlanner {
 				return;
 			}
 		}
-		// Include any tunnel tiles before saving so they're persisted
-		this.protectTunnels();
+	// Tunnel logic removed
 		this.memory.barrierCoordsPacked = packCoordList(this.barrierPositions);
 	}
 	/* Quick lookup for if a barrier should be in this position. Barriers returning false won't be maintained. */
@@ -298,52 +289,7 @@ export class BarrierPlanner {
 			}
 		}
 	}
-	private getTunnelPositions(): RoomPosition[] {
-		// Get adjacent open spaces around tunnels (roads through walls) to protect them with ramparts
-		const barrierPositions: RoomPosition[] = [];
-		const roadPlanner = this.roomPlanner.roadPlanner;
-		if (!roadPlanner) return barrierPositions;
-		const roomName = this.colony.room.name;
-		const packed = (roadPlanner as any).memory.roadCoordsPacked;
-		if (!packed || !packed[roomName]) return barrierPositions;
-		const terrain = Game.map.getRoomTerrain(roomName);
-		const positions = roadPlanner.getRoadPositions(roomName);
-		
-		for (const pos of positions) {
-			// A tunnel is represented by a road coordinate on wall terrain
-			if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
-				// Add all adjacent non-wall positions around this tunnel
-				for (let dx = -1; dx <= 1; dx++) {
-					for (let dy = -1; dy <= 1; dy++) {
-						if (dx === 0 && dy === 0) continue; // Skip the tunnel itself
-						const x = pos.x + dx;
-						const y = pos.y + dy;
-						if (x < 0 || x > 49 || y < 0 || y > 49) continue; // Skip out of bounds
-						
-						// Only add positions that are not walls
-						if (terrain.get(x, y) !== TERRAIN_MASK_WALL) {
-							const adjacentPos = new RoomPosition(x, y, roomName);
-							// Avoid duplicates
-							if (!barrierPositions.some(p => p.isEqualTo(adjacentPos))) {
-								barrierPositions.push(adjacentPos);
-							}
-						}
-					}
-				}
-			}
-		}
-		return barrierPositions;
-	}
-
-	private protectTunnels(): void {
-		// Add tunnel positions to the current barrier positions array
-		const tunnels = this.getTunnelPositions();
-		for (const pos of tunnels) {
-			if (!this.barrierPositions.some(p => p.isEqualTo(pos))) {
-				this.barrierPositions.push(pos);
-			}
-		}
-	}
+	// Tunnel logic removed
 	private recomputeBarrierPositions(): void {
 		this.barrierPositions = [];
 		if (this.roomPlanner.bunkerPos) {
@@ -360,7 +306,7 @@ export class BarrierPlanner {
 		}
 
 		// Include any tunnel tiles from the road planner into barriers for protection
-		this.protectTunnels();
+	// Tunnel logic removed
 
 		this.memory.barrierCoordsPacked = packCoordList(this.barrierPositions);
 	}

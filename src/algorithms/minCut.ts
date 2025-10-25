@@ -193,7 +193,7 @@ export class Graph {
  * An Array with Terrain information: -1 not usable, 2 Sink (Leads to Exit)
  * @param room - the room to generate the terrain map from
  */
-export function get2DArray(roomName: string, bounds: Rectangle = {x1: 0, y1: 0, x2: 49, y2: 49}, tunnelPositions: Coord[] = []) {
+export function get2DArray(roomName: string, bounds: Rectangle = {x1: 0, y1: 0, x2: 49, y2: 49}) {
 	const room2D = Array(50).fill(NORMAL).map((d) => Array(50).fill(NORMAL)); // Array for room tiles
 	let x: number;
 	let y: number;
@@ -210,10 +210,7 @@ export function get2DArray(roomName: string, bounds: Rectangle = {x1: 0, y1: 0, 
 		}
 	}
 
-	// Mark tunnel positions as NORMAL (walkable, not requiring ramparts)
-	for (const tunnel of tunnelPositions) {
-		room2D[tunnel.x][tunnel.y] = NORMAL;
-	}
+	// Tunnel logic removed
 
 	// Marks tiles as unbuildable if they are proximate to exits
 	for (y = bounds.y1 + 1; y <= bounds.y2 - 1; y++) {
@@ -262,10 +259,9 @@ export function createGraph(roomName: string, toProtect: Rectangle[],
 							preferCloserBarriers     = true,
 							preferCloserBarrierLimit = Infinity, // ignore the toProtect[n] for n > this value
 							visualize                = true,
-							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49},
-							tunnelPositions: Coord[] = []) {
+							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49}) {
 	const visual = new RoomVisual(roomName);
-	const roomArray = get2DArray(roomName, bounds, tunnelPositions);
+	const roomArray = get2DArray(roomName, bounds);
 	// For all Rectangles, set edges as source (to protect area) and area as unused
 	let r: Rectangle;
 	let x: number;
@@ -397,9 +393,8 @@ export function getCutTiles(roomName: string, toProtect: Rectangle[],
 							preferCloserBarriers     = true,
 							preferCloserBarrierLimit = Infinity,
 							visualize                = true,
-							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49},
-							tunnelPositions: Coord[] = []): Coord[] {
-	const graph = createGraph(roomName, toProtect, preferCloserBarriers, preferCloserBarrierLimit, visualize, bounds, tunnelPositions);
+							bounds: Rectangle        = {x1: 0, y1: 0, x2: 49, y2: 49}): Coord[] {
+	const graph = createGraph(roomName, toProtect, preferCloserBarriers, preferCloserBarrierLimit, visualize, bounds);
 	if (!graph) {
 		return [];
 	}
