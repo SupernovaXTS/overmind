@@ -199,7 +199,7 @@ export class CommandCenter extends HiveCluster {
 	}
 
 	private runPowerSpawn() {
-		if (this.powerSpawn && this.storage && this.colony.assets.energy > Memory.settings.powerCollection.minEnergy &&
+		if (this.powerSpawn && this.storage && this.colony.assets.energy > Memory.settings.powerCollection.minPower &&
 			this.powerSpawn.store.energy >= 50 && this.powerSpawn.store.power > 0) {
 			// NOTE: i want to keep processing power now.
 			// if (Game.market.credits < TraderJoe.settings.market.credits.canBuyAbove) {

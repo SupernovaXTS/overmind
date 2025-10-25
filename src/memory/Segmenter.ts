@@ -54,9 +54,7 @@ export class Segmenter {
 	}
 
 	static debug(...args: LogMessage[]) {
-		if (false) {
-			log.alert("Segmenter", ...args);
-		}
+		// Debug logging disabled; enable by setting condition to true if needed
 	}
 
 	static requestSegments(...ids: number[]) {
