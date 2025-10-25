@@ -453,7 +453,8 @@ export class OvermindConsole {
 	/**
 	 * Buy a resource using TraderJoe
 	 */
-	static buyResource(colony: Colony, resourceType: ResourceConstant, amount: number): string {
+	static buyResource(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
 		if (!colony || !resourceType || typeof amount !== 'number' || amount <= 0) {
 			return 'Usage: buyResource(colony, resourceType, amount)';
 		}
@@ -488,7 +489,8 @@ export class OvermindConsole {
 	/**
 	 * Sell a resource using TraderJoe
 	 */
-	static sellResource(colony: Colony, resourceType: ResourceConstant, amount: number): string {
+	static sellResource(colonyName: string, resourceType: ResourceConstant, amount: number): string {
+		const colony = Overmind.colonies[colonyName];
 		if (!colony || !resourceType || typeof amount !== 'number' || amount <= 0) {
 			return 'Usage: sellResource(colony, resourceType, amount)';
 		}
