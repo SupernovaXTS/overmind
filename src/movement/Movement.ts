@@ -136,6 +136,12 @@ export class Movement {
 	 * Move a creep to a destination
 	 */
 	static goTo(creep: AnyZerg, destination: _HasRoomPosition | RoomPosition, opts: MoveOptions = {}): number {
+		// Integrate traffic manager: register intended move
+		// Only register if path is found and next position is determined
+		// Import trafficManager
+		// @ts-ignore
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const trafficManager = require('./screeps-traffic-manager').default;
 
 		if (creep.blockMovement && !opts.force) {
 			return ERR_BUSY;
@@ -192,29 +198,19 @@ export class Movement {
 		// manage case where creep is nearby destination
 		const rangeToDestination = creep.pos.getRangeTo(destination);
 		if (opts.range != undefined && rangeToDestination <= opts.range) {
-			// if (destination.isEqualTo(finalDestination)) {
-			if (creep.pos.isEdge) { // move the creep off the edge tiles to prevent it bouncing
+			if (creep.pos.isEdge) {
 				return creep.moveOffExit(destination);
 			} else {
 				delete creep.memory._go;
 				return NO_ACTION;
 			}
-			// } else {
-			// 	// debug
-			// 	console.log(`Destination ${destination} not equal to final destination ${finalDestination}!`);
-			// 	if (!moveData.waypointsVisited) {
-			// 		moveData.waypointsVisited = [];
-			// 	}
-			// 	moveData.waypointsVisited.push(destination.name);
-			//
-			// 	// call goTo again to path to the final destination
-			// 	return this.goTo(creep, finalDestination, opts);
-			// }
 		} else if (rangeToDestination <= 1) {
 			// move onto destination
 			if (rangeToDestination == 1 && !opts.range) {
 				const direction = creep.pos.getDirectionTo(destination);
 				if (destination.isWalkable(opts.ignoreCreepsOnDestination)) {
+					// Register intended move with traffic manager
+					trafficManager.registerMove(creep.creep, direction);
 					return creep.move(direction, !!opts.force);
 				}
 			} else { // at destination
@@ -299,9 +295,9 @@ export class Movement {
 		// TODO: repath if you are not on expected next position
 
 
-		// pathfinding
-		let newPath = false;
-		if (!moveData.path || moveData.path.length == 0) {
+	// pathfinding
+	let newPath = false;
+	if (!moveData.path || moveData.path.length == 0) {
 			newPath = true;
 			if (isStandardZerg(creep) && creep.spawning) {
 				return ERR_BUSY;
@@ -358,6 +354,11 @@ export class Movement {
 		if (!moveData.path || moveData.path.length == 0) {
 			this.serializeState(creep, destination, state, moveData);
 			return ERR_NO_PATH;
+		}
+		// Register intended move with traffic manager if next position exists
+		const nextStepPos = Pathing.nextPositionInPath(creep);
+		if (nextStepPos) {
+			trafficManager.registerMove(creep.creep, nextStepPos);
 		}
 
 		// push creeps out of the way if needed

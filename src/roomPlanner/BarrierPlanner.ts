@@ -119,14 +119,14 @@ export class BarrierPlanner {
 			y2 = minMax(y2, 3, 50 - 3);
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
+		// Get tunnel positions for minCut
+		const tunnelPositions = _.map(this.getTunnelPositions(), pos => ({x: pos.x, y: pos.y}));
 		// Get Min cut
-		const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
+		const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false, undefined, tunnelPositions);
 		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
 		positions = positions.concat(upgradeSitePos.availableNeighbors(true));
-		
 		// Add tunnel positions (roads through walls)
 		positions = positions.concat(this.getTunnelPositions());
-
 		return positions;
 	}
 
@@ -154,13 +154,13 @@ export class BarrierPlanner {
 			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
+		// Get tunnel positions for minCut
+		const tunnelPositions = _.map(this.getTunnelPositions(), pos => ({x: pos.x, y: pos.y}));
 		// Get Min cut
-		const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
+		const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false, undefined, tunnelPositions);
 		let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		
 		// Add tunnel positions (roads through walls)
 		positions = positions.concat(this.getTunnelPositions());
-		
 		return positions;
 	}
 
