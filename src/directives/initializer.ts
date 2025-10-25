@@ -24,7 +24,7 @@ import {DirectiveHaul} from './resource/haul';
 import {DirectivePowerMine} from './resource/powerMine';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
-import {DirectiveRPEvolutionChamber} from './roomPlanner/roomPlanner_evolutionChamber';
+import {DirectiveRPDynamicBunker} from './roomPlanner/roomPlanner_dynamicBunker';
 import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
 import { DirectiveFeeder } from './situational/feeder';
@@ -166,7 +166,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_BLUE:
 					return new DirectiveRPCommandCenter(flag);
 				case COLOR_CYAN:
-					return new DirectiveRPEvolutionChamber(flag);
+					return new DirectiveRPDynamicBunker(flag);
 				case COLOR_RED:
 					return new DirectiveRPBunker(flag);
 			}

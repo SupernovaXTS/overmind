@@ -926,6 +926,8 @@ export class RoomPlanner {
 		}
 		if (this.active && getAutonomyLevel() == Autonomy.Automatic && !this.memory.bunkerData) {
 			let bunkerAnchor: RoomPosition;
+			let evolutionChamberAnchor: RoomPosition | undefined;
+			
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
 				const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
 				const spawnPos = lowerRightSpawn.pos;
@@ -934,6 +936,10 @@ export class RoomPlanner {
 				const expansionData = RoomIntel.getExpansionData(this.colony.room.name);
 				if (expansionData) {
 					bunkerAnchor = expansionData.bunkerAnchor;
+					// Use evolution chamber position from expansion data if available
+					if (expansionData.supportsDynamicBunker && expansionData.evolutionChamberAnchor) {
+						evolutionChamberAnchor = expansionData.evolutionChamberAnchor;
+					}
 				} else {
 					log.error(`Cannot determine anchor! No spawns or expansionData.bunkerAnchor for ` +
 							  `${this.colony.print}!`);
@@ -941,6 +947,12 @@ export class RoomPlanner {
 				}
 			}
 			this.addComponent('bunker', bunkerAnchor);
+			
+			// Add evolution chamber component if we have the position
+			if (evolutionChamberAnchor) {
+				this.placements.evolutionChamber = evolutionChamberAnchor;
+				log.info(`${this.colony.print}: Automatically configured dynamic bunker with evolution chamber at ${evolutionChamberAnchor.print}`);
+			}
 		}
 		this.barrierPlanner.init();
 		this.roadPlanner.init();

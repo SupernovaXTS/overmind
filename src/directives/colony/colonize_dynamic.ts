@@ -12,11 +12,14 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
-import {DirectiveRPEvolutionChamber} from '../roomPlanner/roomPlanner_evolutionChamber';
+import {DirectiveRPDynamicBunker} from '../roomPlanner/roomPlanner_dynamicBunker';
+import {BasePlanner} from '../../roomPlanner/BasePlanner';
+import {DynamicPlanner, canBuildDynamicBunker} from '../../roomPlanner/DynamicPlanner';
 
 /**
  * Claims a new room with dynamic room planning enabled. 
- * Automatically places an evolution chamber flag to trigger DynamicPlanner usage.
+ * Automatically places a dynamic bunker core flag at the bunker anchor position.
+ * The evolution chamber must be placed separately away from the bunker.
  * Builds a spawn but does not incubate. Removes when spawn is constructed.
  */
 @profile
@@ -80,96 +83,63 @@ export class DirectiveColonizeDynamic extends Directive {
 	}
 
 	/**
-	 * Automatically place an evolution chamber flag in the room to enable dynamic planning
-	 * Only places the flag when we own the room (controller is ours)
+	 * Automatically place dynamic bunker core and evolution chamber flags in optimal positions
+	 * Uses BasePlanner to find the best bunker location and DynamicPlanner to validate evolution chamber placement
+	 * Only places flags when we own the room (controller is ours)
 	 */
-	private placeEvolutionChamberFlag(): void {
+	private placeDynamicBunkerFlags(): void {
 		if (!this.room) return;
 		
-		// Only place evolution chamber if we own the room
+		// Only place dynamic bunker if we own the room
 		if (!this.room.controller || !this.room.controller.my) {
 			return;
 		}
 		
-		// Check if evolution chamber flag already exists in this room
-		const existingEvoChamberFlags = _.filter(
+		// Check if dynamic bunker flag already exists in this room
+		const existingBunkerFlags = _.filter(
 			Game.flags,
 			flag => flag.pos.roomName === this.pos.roomName &&
-					flag.color === DirectiveRPEvolutionChamber.color &&
-					flag.secondaryColor === DirectiveRPEvolutionChamber.secondaryColor
+					flag.color === DirectiveRPDynamicBunker.color &&
+					flag.secondaryColor === DirectiveRPDynamicBunker.secondaryColor
 		);
 		
-		if (existingEvoChamberFlags.length > 0) {
-			// Evolution chamber flag already exists, no need to create another
+		if (existingBunkerFlags.length > 0) {
+			// Dynamic bunker flag already exists, no need to create another
 			return;
 		}
 		
-		// Find a suitable position for the evolution chamber
-		// Ideally near the center but away from controller/sources
-		const controller = this.room.controller;
-		const sources = this.room.sources;
-		
-		if (!controller) return;
-		
-		// Try to find a position that's:
-		// - Not too close to sources (>= 5 tiles)
-		// - Not too close to controller (>= 8 tiles)
-		// - Not on terrain walls
-		// - Reasonably central
-		const centerPos = new RoomPosition(25, 25, this.room.name);
-		let bestPos: RoomPosition | undefined;
-		let bestScore = -Infinity;
-		
-		// Search in a spiral pattern from center
-		for (let radius = 5; radius <= 15; radius++) {
-			for (let dx = -radius; dx <= radius; dx++) {
-				for (let dy = -radius; dy <= radius; dy++) {
-					// Only check positions on the current radius
-					if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
-					
-					const x = 25 + dx;
-					const y = 25 + dy;
-					
-					if (x < 5 || x > 45 || y < 5 || y > 45) continue;
-					
-					const pos = new RoomPosition(x, y, this.room.name);
-					const terrain = pos.lookFor(LOOK_TERRAIN)[0];
-					
-					if (terrain === 'wall') continue;
-					
-					// Check distances
-					const controllerDist = pos.getRangeTo(controller);
-					const minSourceDist = Math.min(...sources.map(s => pos.getRangeTo(s)));
-					
-					if (controllerDist < 8 || minSourceDist < 5) continue;
-					
-					// Score: prefer positions closer to center, but not too close to edges
-					const distToCenter = pos.getRangeTo(centerPos);
-					const score = -distToCenter;
-					
-					if (score > bestScore) {
-						bestScore = score;
-						bestPos = pos;
-					}
-				}
-			}
-			
-			// If we found a good position, stop searching
-			if (bestPos) break;
+		// Use BasePlanner to find optimal bunker location
+		const bunkerLocation = BasePlanner.getBunkerLocation(this.room, false);
+		if (!bunkerLocation) {
+			log.warning(`Could not find suitable bunker location in ${this.pos.roomName}`);
+			return;
 		}
 		
-		// Create the evolution chamber flag
-		if (bestPos) {
-			const flagName = `evolutionChamber_${this.pos.roomName}_${Game.time}`;
-			const result = bestPos.createFlag(flagName, DirectiveRPEvolutionChamber.color, DirectiveRPEvolutionChamber.secondaryColor);
+		// Use DynamicPlanner to find evolution chamber position
+		const evolutionChamberPos = canBuildDynamicBunker(this.room, bunkerLocation);
+		if (!evolutionChamberPos) {
+			log.warning(`Could not find suitable evolution chamber position in ${this.pos.roomName}`);
+			return;
+		}
+		
+		// Create the dynamic bunker core flag
+		const bunkerFlagName = `dynamicBunker_${this.pos.roomName}_${Game.time}`;
+		const bunkerResult = bunkerLocation.createFlag(bunkerFlagName, DirectiveRPDynamicBunker.color, DirectiveRPDynamicBunker.secondaryColor);
+		
+		if (typeof bunkerResult === 'string') {
+			log.info(`Created dynamic bunker core flag at ${bunkerLocation.print} for dynamic colony ${this.pos.roomName}`);
 			
-			if (typeof result === 'string') {
-				log.info(`Created evolution chamber flag at ${bestPos.print} for dynamic colony ${this.pos.roomName}`);
-			} else {
-				log.warning(`Failed to create evolution chamber flag: ${result}`);
+			// Save evolution chamber position to colony memory if colony exists
+			if (this.toColonize && this.toColonize.roomPlanner) {
+				this.toColonize.roomPlanner.memory.bunkerData = {
+					anchor: bunkerLocation,
+					evolutionChamber: evolutionChamberPos,
+				};
+				log.info(`Saved evolution chamber position ${evolutionChamberPos.print} to colony memory for ${this.pos.roomName}`);
 			}
 		} else {
-			log.warning(`Could not find suitable position for evolution chamber in ${this.pos.roomName}`);
+			log.warning(`Failed to create dynamic bunker core flag: ${bunkerResult}`);
+			return;
 		}
 	}
 
@@ -183,9 +153,9 @@ export class DirectiveColonizeDynamic extends Directive {
 	}
 
 	run(verbose = false) {
-		// Periodically check if we own the room and place evolution chamber flag
+		// Periodically check if we own the room and place dynamic bunker flags
 		if (Game.time % 10 == 0) {
-			this.placeEvolutionChamberFlag();
+			this.placeDynamicBunkerFlags();
 		}
 		
 		// Only remove directive if we actually have a colony with a spawn built in this specific room
