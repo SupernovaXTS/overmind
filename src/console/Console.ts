@@ -1505,7 +1505,7 @@ export class OvermindConsole {
 				count += colony.factory?.store[resourceType] ?? 0;
 				total += count;
 
-				const threshold = (global.terminalnetwork).thresholds(
+				const threshold = Overmind.terminalNetwork.thresholds(
 					colony,
 					resourceType
 				);
