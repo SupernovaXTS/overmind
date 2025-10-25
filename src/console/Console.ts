@@ -76,6 +76,7 @@ export class OvermindConsole {
 		global.setPixelTrading = this.setPixelTrading;
 		global.setCPUUnlockTrading = this.setCPUUnlockTrading;
 		global.progress = this.progress;
+		global.clearRclStats = this.clearRclStats;
 		// Sector logistics console helpers grouped under global.sector
 		(global as any).sector = {
 			pool: this.sectorPool.bind(this),
@@ -177,6 +178,7 @@ export class OvermindConsole {
 		descr['setPixelTrading(enabled)'] = 'enable/disable automatic pixel buying/selling (true/false)';
 		descr['setCPUUnlockTrading(enabled)'] = 'enable/disable automatic CPU unlock buying/selling (true/false)';
 		descr['progress()'] = 'print GCL/RCL ETA overview with progress bars';
+		descr['clearRclStats(roomName)'] = 'clears the RCL statistics for the specified colony';
 		descr['sector.pool()'] = 'list intercolony pool requests (destination -> manifest)';
 		descr['sector.queue(room?)'] = 'show SectorTransportOverlord shipment queue for a colony (default: current)';
 		descr['sector.summary()'] = 'show summary of pool size and queues per colony';
@@ -841,6 +843,26 @@ export class OvermindConsole {
 	// Statistics helpers ==============================================================================================
 	static progress(): string {
 		return statsProgress();
+	}
+
+	/**
+	 * Clear RCL statistics for a colony to force recalculation
+	 */
+	static clearRclStats(roomName: string): string {
+		if (!roomName) {
+			return 'Error: Please provide a room name';
+		}
+
+		if (!Memory.rooms[roomName]) {
+			return `Error: Room ${roomName} not found in memory`;
+		}
+
+		if (!Memory.rooms[roomName]._rclStats) {
+			return `Room ${roomName} has no RCL statistics to clear`;
+		}
+
+		delete Memory.rooms[roomName]._rclStats;
+		return `RCL statistics cleared for ${roomName}. Statistics will recalculate next tick.`;
 	}
 
 	/**
