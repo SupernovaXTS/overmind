@@ -163,52 +163,42 @@ export class SpawnGroup {
 		
 		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
 
-		// Enqueue each requests to the hatchery with least expected wait time, which is updated after each enqueue
-		for (const request of this.requests) {
-			// Defer body generation if maxColony or its clusters are not ready
-			const maxColony = _.max(colonies, colony => colony.room.energyCapacityAvailable);
-			if (!maxColony || !maxColony.evolutionChamber) {
-				log.warning(`SpawnGroup.init: Skipping request for ${request.setup.role} because maxColony or its clusters are not initialized.`);
-				continue;
-			}
-			// Safe to generate body and boosts
-			const {body, boosts} = request.setup.create(maxColony);
-			const bodyCostValue = bodyCost(body);
-
-			// Filter hatcheries that have enough energy capacity to spawn this creep
-			const capableHatcheries = _.filter(hatcheries, 
-				hatchery => hatchery.room.energyCapacityAvailable >= bodyCostValue);
-
-			if (capableHatcheries.length === 0) {
-				// Increment the counter for unaffordable requests
-				if (!this.memory.unaffordableRequestCount) {
-					this.memory.unaffordableRequestCount = 0;
-				}
-				this.memory.unaffordableRequestCount++;
-
-				// Only log if count is 5 or less, OR if divisible by 10
-				if (this.memory.unaffordableRequestCount <= 5 || this.memory.unaffordableRequestCount % 10 === 0) {
-					log.warning(`No hatcheries in SpawnGroup ${this.ref} can afford creep with role ${request.setup.role} ` +
-							  `(cost: ${bodyCostValue}, max capacity: ${this.energyCapacityAvailable}) ` +
-							  `for Overlord ${request.overlord.print}! ` +
-							  `(occurred ${this.memory.unaffordableRequestCount} times)`);
-				}
-				continue; // Skip this request
-			}
-
-			const bestHatchery = minBy(capableHatcheries, hatchery => hatchery.getWaitTimeForPriority(request.priority) +
-															   distanceTo(hatchery));
-			if (bestHatchery) {
-				bestHatchery.enqueue(request);
-			} else {
-				log.error(`Could not enqueue creep with role ${request.setup.role} in ${this.roomName} ` +
-						  `for Overlord ${request.overlord.print}!`);
-			}
-		}
+		// ...existing code...
 	}
 
 	run(): void {
-		// Nothing goes here
+		const colonies = _.compact(_.map(this.colonyNames, name => Overmind.colonies[name])) as Colony[];
+		const hatcheries = _.compact(_.map(colonies, colony => colony.hatchery)) as Hatchery[];
+		if (colonies.length === 0) return;
+		const distanceTo = (hatchery: Hatchery) => this.memory.distances[hatchery.pos.roomName] + 25;
+
+		for (const request of this.requests) {
+			const maxColony = _.max(colonies, colony => colony.room.energyCapacityAvailable);
+			if (!maxColony || !maxColony.evolutionChamber) {
+				log.warning(`SpawnGroup.run: Skipping request for ${request.setup.role} because maxColony or its clusters are not initialized.`);
+				continue;
+			}
+			const {body, boosts} = request.setup.create(maxColony);
+			const bodyCostValue = bodyCost(body);
+			const capableHatcheries = _.filter(hatcheries, hatchery => hatchery.room.energyCapacityAvailable >= bodyCostValue);
+			if (capableHatcheries.length === 0) {
+				if (!this.memory.unaffordableRequestCount) this.memory.unaffordableRequestCount = 0;
+				this.memory.unaffordableRequestCount++;
+				if (this.memory.unaffordableRequestCount <= 5 || this.memory.unaffordableRequestCount % 10 === 0) {
+					log.warning(`No hatcheries in SpawnGroup ${this.ref} can afford creep with role ${request.setup.role} ` +
+						`(cost: ${bodyCostValue}, max capacity: ${this.energyCapacityAvailable}) ` +
+						`for Overlord ${request.overlord.print}! ` +
+						`(occurred ${this.memory.unaffordableRequestCount} times)`);
+				}
+				continue;
+			}
+			const bestHatchery = minBy(capableHatcheries, hatchery => hatchery.getWaitTimeForPriority(request.priority) + distanceTo(hatchery));
+			if (bestHatchery) {
+				bestHatchery.enqueue(request);
+			} else {
+				log.error(`Could not enqueue creep with role ${request.setup.role} in ${this.roomName} for Overlord ${request.overlord.print}!`);
+			}
+		}
 	}
 
 }
