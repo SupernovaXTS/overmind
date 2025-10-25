@@ -126,47 +126,49 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 	 */
 	private static getBestBoostsAvailable(colony: Colony, opts: Full<BodyOpts>): AvailableBoosts {
 		const availableBoosts: AvailableBoosts = {};
-		if (colony.evolutionChamber) {
-			if (opts.bodyRatio.tough && opts.boosts.includes('tough')) {
-				const toughBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.tough || 0);
-				availableBoosts.tough = colony.evolutionChamber.bestBoostAvailable('tough', toughBoostNeeded);
-			}
-			if (opts.bodyRatio.heal && opts.boosts.includes('heal')) {
-				const healBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.heal || 0);
-				availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('heal', healBoostNeeded);
-			}
-			if (opts.bodyRatio.ranged && opts.boosts.includes('ranged')) {
-				const rangedBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.ranged || 0);
-				availableBoosts.ranged = colony.evolutionChamber.bestBoostAvailable('ranged', rangedBoostNeeded);
-			}
-			if (opts.bodyRatio.attack && opts.boosts.includes('attack')) {
-				const attackBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.attack || 0);
-				availableBoosts.attack = colony.evolutionChamber.bestBoostAvailable('attack', attackBoostNeeded);
-			}
-			if (opts.bodyRatio.carry && opts.boosts.includes('carry')) {
-				const carryBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.carry || 0);
-				availableBoosts.carry = colony.evolutionChamber.bestBoostAvailable('carry', carryBoostNeeded);
-			}
-			if (opts.bodyRatio.work && opts.boosts.includes('dismantle')) {
-				const dismantleBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.dismantle = colony.evolutionChamber.bestBoostAvailable('dismantle', dismantleBoostNeeded);
-			}
-			if (opts.bodyRatio.work && opts.boosts.includes('upgrade')) {
-				const upgradeBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.upgrade = colony.evolutionChamber.bestBoostAvailable('upgrade', upgradeBoostNeeded);
-			}
-			if (opts.bodyRatio.work && opts.boosts.includes('construct')) {
-				const constructBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.construct = colony.evolutionChamber.bestBoostAvailable('construct', constructBoostNeeded);
-			}
-			if (opts.bodyRatio.work && opts.boosts.includes('harvest')) {
-				const harvestBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
-				availableBoosts.harvest = colony.evolutionChamber.bestBoostAvailable('harvest', harvestBoostNeeded);
-			}
-			if (opts.boosts.includes('move')) {
-				const moveBoostNeeded = LAB_BOOST_MINERAL * 50 / 3; // T1 most boost lets you do move ratio of 2 : 1
-				availableBoosts.move = colony.evolutionChamber.bestBoostAvailable('move', moveBoostNeeded);
-			}
+		if (!colony || !colony.evolutionChamber) {
+			log.error(`getBestBoostsAvailable called outside run phase or without valid colony context! Caller: ${Error().stack}`);
+			return availableBoosts;
+		}
+		if (opts.bodyRatio.tough && opts.boosts.includes('tough')) {
+			const toughBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.tough || 0);
+			availableBoosts.tough = colony.evolutionChamber.bestBoostAvailable('tough', toughBoostNeeded);
+		}
+		if (opts.bodyRatio.heal && opts.boosts.includes('heal')) {
+			const healBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.heal || 0);
+			availableBoosts.heal = colony.evolutionChamber.bestBoostAvailable('heal', healBoostNeeded);
+		}
+		if (opts.bodyRatio.ranged && opts.boosts.includes('ranged')) {
+			const rangedBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.ranged || 0);
+			availableBoosts.ranged = colony.evolutionChamber.bestBoostAvailable('ranged', rangedBoostNeeded);
+		}
+		if (opts.bodyRatio.attack && opts.boosts.includes('attack')) {
+			const attackBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.attack || 0);
+			availableBoosts.attack = colony.evolutionChamber.bestBoostAvailable('attack', attackBoostNeeded);
+		}
+		if (opts.bodyRatio.carry && opts.boosts.includes('carry')) {
+			const carryBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.carry || 0);
+			availableBoosts.carry = colony.evolutionChamber.bestBoostAvailable('carry', carryBoostNeeded);
+		}
+		if (opts.bodyRatio.work && opts.boosts.includes('dismantle')) {
+			const dismantleBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+			availableBoosts.dismantle = colony.evolutionChamber.bestBoostAvailable('dismantle', dismantleBoostNeeded);
+		}
+		if (opts.bodyRatio.work && opts.boosts.includes('upgrade')) {
+			const upgradeBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+			availableBoosts.upgrade = colony.evolutionChamber.bestBoostAvailable('upgrade', upgradeBoostNeeded);
+		}
+		if (opts.bodyRatio.work && opts.boosts.includes('construct')) {
+			const constructBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+			availableBoosts.construct = colony.evolutionChamber.bestBoostAvailable('construct', constructBoostNeeded);
+		}
+		if (opts.bodyRatio.work && opts.boosts.includes('harvest')) {
+			const harvestBoostNeeded = LAB_BOOST_MINERAL * (opts.maxParts.work || 0);
+			availableBoosts.harvest = colony.evolutionChamber.bestBoostAvailable('harvest', harvestBoostNeeded);
+		}
+		if (opts.boosts.includes('move')) {
+			const moveBoostNeeded = LAB_BOOST_MINERAL * 50 / 3; // T1 most boost lets you do move ratio of 2 : 1
+			availableBoosts.move = colony.evolutionChamber.bestBoostAvailable('move', moveBoostNeeded);
 		}
 		if (_.sum(opts.boosts, b => ['dismantle', 'upgrade', 'construct', 'harvest'].includes(b) ? 1 : 0) > 1) {
 			log.warning(`Multiple boost types requested for work part! opts.boosts: ${print(opts.boosts)}`);
