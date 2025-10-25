@@ -318,17 +318,14 @@ export class EvolutionChamber extends HiveCluster {
 			return;
 		}
 
-		// Separate product labs into actively boosting or ready for reaction
+		// Partition product labs into boosting and reaction labs
 		const [boostingProductLabs, reactionProductLabs] = _.partition(this.productLabs,
-																	   lab => this.labReservations[lab.id]);
+			lab => this.labReservations[lab.id]);
 
-		// Handle energy requests for labs with different priorities
-		const boostingRefillLabs = _.filter(boostingProductLabs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(boostingRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.High));
-		const reactionRefillLabs = _.filter(reactionProductLabs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(reactionRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
-		const reagentRefillLabs = _.filter(this.reagentLabs, lab => lab.energy < lab.energyCapacity);
-		_.forEach(reagentRefillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
+		// Ensure all labs are registered for supply
+		const allLabs = _.uniq([...this.labs, ...this.reagentLabs, ...this.productLabs, ...this.boostingLabs]);
+		const refillLabs = _.filter(allLabs, lab => lab.energy < lab.energyCapacity);
+		_.forEach(refillLabs, lab => this.transportRequests.requestInput(lab, Priority.NormalLow));
 
 		// Request resources delivered to / withdrawn from each type of lab
 		this.registerReagentLabRequests(this.reagentLabs as [StructureLab, StructureLab]);
