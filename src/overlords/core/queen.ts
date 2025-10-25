@@ -6,6 +6,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {DEFAULT_PRESPAWN, Overlord} from '../Overlord';
+import {log} from '../../console/log';
 
 type rechargeObjectType = StructureStorage
 	| StructureTerminal
@@ -123,6 +124,22 @@ export class QueenOverlord extends Overlord {
 	}
 
 	run() {
+		// Retire excess queens if we have more than needed (should only have 1)
+		const requiredQueenCount = 1;
+		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
+		
+		if (activeQueens.length > requiredQueenCount) {
+			// Find the queen with the least TTL to retire
+			const queensByTTL = _.sortBy(activeQueens, queen => queen.ticksToLive || 0);
+			const queenToRetire = queensByTTL[0];
+			
+			if (queenToRetire) {
+				log.info(`${this.colony.print}: Retiring excess queen ${queenToRetire.name} with ${queenToRetire.ticksToLive} TTL (${activeQueens.length} queens, only ${requiredQueenCount} needed)`);
+				queenToRetire.suicide();
+				return;
+			}
+		}
+		
 		for (const queen of this.queens) {
 			// Get a task
 			this.handleQueen(queen);

@@ -391,6 +391,22 @@ export class BunkerQueenOverlord extends Overlord {
 	}
 
 	run() {
+		// Retire excess queens if we have more queens than active quadrants
+		const requiredQueenCount = this.getRequiredQueenCount();
+		const activeQueens = _.filter(this.queens, queen => !queen.spawning);
+		
+		if (activeQueens.length > requiredQueenCount) {
+			// Find the queen with the least TTL to retire
+			const queensByTTL = _.sortBy(activeQueens, queen => queen.ticksToLive || 0);
+			const queenToRetire = queensByTTL[0];
+			
+			if (queenToRetire) {
+				log.info(`${this.colony.print}: Retiring excess queen ${queenToRetire.name} with ${queenToRetire.ticksToLive} TTL (${activeQueens.length} queens, only ${requiredQueenCount} needed)`);
+				queenToRetire.suicide();
+				return;
+			}
+		}
+		
 		this.autoRun(this.queens, queen => this.handleQueen(queen));
 	}
 }
