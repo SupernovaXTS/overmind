@@ -111,7 +111,6 @@ const defaultTradeOpts: TradeOpts = {
 	dryRun: false,
 };
 
-// TODO: Seperate intershard trader joe into its own class for easier extensiability
 /**
  * The trade network controls resource acquisition and disposal on the player market.
  */

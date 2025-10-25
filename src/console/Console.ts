@@ -66,24 +66,12 @@ export class OvermindConsole {
 		{
 			name: "help",
 			description: "show this message",
-			command: () => OvermindConsole.help(),
+			command: () => OvermindConsole.help()
 		},
 		{
 			name: "info()",
 			description: "display version and operation information",
-			command: () => OvermindConsole.info(),
-		},
-		{
-			name: "notifications()",
-			description:
-				"print a list of notifications with hyperlinks to the console",
-			command: () => OvermindConsole.notifications(),
-		},
-		{
-			name: "setMode(mode)",
-			description:
-				'set the operational mode to "manual", "semiautomatic", or "automatic"',
-			command: OvermindConsole.setMode.bind(OvermindConsole),
+			command: () => OvermindConsole.info()
 		},
 		{
 			name: "setSignature(newSignature)",
@@ -129,34 +117,63 @@ export class OvermindConsole {
 		},
 		{
 			name: "suspendColony(roomName)",
-			description: "suspend operations within a colony",
-			command: OvermindConsole.suspendColony.bind(OvermindConsole),
-		},
-		{
-			name: "unsuspendColony(roomName)",
-			description: "resume operations within a suspended colony",
-			command: OvermindConsole.unsuspendColony.bind(OvermindConsole),
-		},
-		{
-			name: "listSuspendedColonies()",
 			description: "Prints all suspended colonies",
-			command:
-				OvermindConsole.listSuspendedColonies.bind(OvermindConsole),
+			command: OvermindConsole.listSuspendedColonies.bind(OvermindConsole)
 		},
 		{
-			name: "openRoomPlanner(roomName)",
-			description: "open the room planner for a room",
-			command: OvermindConsole.openRoomPlanner.bind(OvermindConsole),
+			name: "setSignature",
+			description: "Set the controller signature for all colonies.",
+			command: (signature: string | undefined) => OvermindConsole.setSignature(signature),
 		},
 		{
-			name: "closeRoomPlanner(roomName)",
-			description: "close the room planner and save changes",
-			command: OvermindConsole.closeRoomPlanner.bind(OvermindConsole),
+			name: "print",
+			description: "Print a message to the console.",
+			command: (...args: any[]) => OvermindConsole.print(...args),
 		},
 		{
-			name: "cancelRoomPlanner(roomName)",
-			description: "close the room planner and discard changes",
-			command: OvermindConsole.cancelRoomPlanner.bind(OvermindConsole),
+			name: "debug",
+			description: "Enable debug mode for a colony or overlord.",
+			command: (...args: any[]) => OvermindConsole.debug(...args),
+		},
+		{
+			name: "debugOverlord",
+			description: "Enable debug mode for an overlord.",
+			command: (...args: any[]) => OvermindConsole.debug(...args),
+		},
+		{
+			name: "timeit",
+			description: "Time a function execution.",
+			command: (callback: () => any, repeat = 1) => OvermindConsole.timeit(callback, repeat),
+		},
+		{
+			name: "profileOverlord",
+			description: "Profile an overlord for a number of ticks.",
+			command: (overlord: Overlord | string, ticks?: number) => OvermindConsole.profileOverlord(overlord, ticks),
+		},
+		{
+			name: "finishProfilingOverlord",
+			description: "Finish profiling an overlord.",
+			command: (overlord: Overlord | string) => OvermindConsole.finishProfilingOverlord(overlord),
+		},
+		{
+			name: "listSuspendedColonies",
+			description: "List all suspended colonies.",
+			command: () => OvermindConsole.listSuspendedColonies(),
+		},
+		{
+			name: "openRoomPlanner",
+			description: "Open the room planner for a room.",
+			command: (roomName: string) => OvermindConsole.openRoomPlanner(roomName),
+		},
+		{
+			name: "closeRoomPlanner",
+			description: "Close the room planner for a room.",
+			command: (roomName: string) => OvermindConsole.closeRoomPlanner(roomName),
+		},
+		{
+			name: "cancelRoomPlanner",
+			description: "Cancel the room planner for a room.",
+			command: (roomName: string) => OvermindConsole.cancelRoomPlanner(roomName),
 		},
 		{
 			name: "listActiveRoomPlanners()",
@@ -205,10 +222,9 @@ export class OvermindConsole {
 			command: OvermindConsole.listDirectives.bind(OvermindConsole),
 		},
 		{
-			name: "listPersistentDirectives()",
-			description: "print type, name, pos of every persistent directive",
-			command:
-				OvermindConsole.listPersistentDirectives.bind(OvermindConsole),
+			name: "listPersistentDirectives",
+			description: "List all persistent directives.",
+			command: () => OvermindConsole.listPersistentDirectives(),
 		},
 		{
 			name: "removeFlagsByColor(color, secondaryColor)",
@@ -423,7 +439,74 @@ export class OvermindConsole {
 			command: OvermindConsole.sectorSetRangeLimit.bind(OvermindConsole),
 		},
 	];
+	/**
+	 * Buy a resource using TraderJoe
+	 */
+	static buyResource(colony: Colony, resourceType: ResourceConstant, amount: number): string {
+		if (!colony || !resourceType || typeof amount !== 'number' || amount <= 0) {
+			return 'Usage: buyResource(colony, resourceType, amount)';
+		}
+		if (!colony.terminal || !colony.terminal.isReady) {
+			return `Colony ${colony.name} does not have a ready terminal.`;
+		}
+		// Find the best terminal for trading (most energy, not on cooldown)
+		const result = Overmind.tradeNetwork.buy(colony.terminal, resourceType, amount, {preferDirect: true});
+		let message: string;
+		switch (result) {
+			case OK:
+				return `Successfully bought ${amount} ${resourceType} for colony ${colony.name}.`;
+			case ERR_NOT_ENOUGH_RESOURCES:
+				return `Error: Not enough credits to buy ${amount} ${resourceType}.`;
+			case ERR_INVALID_ARGS:
+				return `Error: Invalid arguments provided for buy operation.`;
+			case ERR_NOT_FOUND:
+				return `Error: No suitable market orders found for ${resourceType}.`;
+			case ERR_FULL:
+				return `Error: Terminal cannot hold more of ${resourceType}.`;
+			case ERR_NOT_OWNER:
+				return `Error: You do not own the terminal in colony ${colony.name}.`;
+			case ERR_INVALID_TARGET:
+				return `Error: Invalid terminal target for trade.`;
+			case ERR_TIRED:
+				return `Error: Terminal is on cooldown.`;
+			default:
+				return `TraderJoe.buy result: ${result}`;
+		}
+	}
 
+	/**
+	 * Sell a resource using TraderJoe
+	 */
+	static sellResource(colony: Colony, resourceType: ResourceConstant, amount: number): string {
+		if (!colony || !resourceType || typeof amount !== 'number' || amount <= 0) {
+			return 'Usage: sellResource(colony, resourceType, amount)';
+		}
+		const terminal = colony.terminal;
+		if (!terminal || !terminal.isReady || terminal.store[resourceType] < amount) {
+			return `Colony ${colony.name} does not have a ready terminal with enough ${resourceType}.`;
+		}
+		const result = Overmind.tradeNetwork.sell(terminal, resourceType, amount, {preferDirect: true});
+		switch (result) {
+			case OK:
+				return `Successfully sold ${amount} ${resourceType} from colony ${colony.name}.`;
+			case ERR_NOT_ENOUGH_RESOURCES:
+				return `Error: Not enough ${resourceType} in terminal to sell.`;
+			case ERR_INVALID_ARGS:
+				return `Error: Invalid arguments provided for sell operation.`;
+			case ERR_NOT_FOUND:
+				return `Error: No suitable market orders found for ${resourceType}.`;
+			case ERR_FULL:
+				return `Error: Terminal cannot send more of ${resourceType}.`;
+			case ERR_NOT_OWNER:
+				return `Error: You do not own the terminal in colony ${colony.name}.`;
+			case ERR_INVALID_TARGET:
+				return `Error: Invalid terminal target for trade.`;
+			case ERR_TIRED:
+				return `Error: Terminal is on cooldown.`;
+			default:
+				return `TraderJoe.sell result: ${result}`;
+		}
+	}
 	static init() {
 		for (const cmd of this.commands) {
 			const para = cmd.name.indexOf("(");
