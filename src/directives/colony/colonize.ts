@@ -93,19 +93,23 @@ export class DirectiveColonize extends Directive {
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
-			for (const pioneer of this.overlords.pioneer.pioneers) {
-				const miningOverlord = miningOverlords.shift();
-				if (miningOverlord) {
-					if (verbose) {
-						log.debug(`Reassigning: ${pioneer.print} to mine: ${miningOverlord.print}`);
+			
+			// Check if pioneer overlord exists before accessing pioneers
+			if (this.overlords.pioneer) {
+				for (const pioneer of this.overlords.pioneer.pioneers) {
+					const miningOverlord = miningOverlords.shift();
+					if (miningOverlord) {
+						if (verbose) {
+							log.debug(`Reassigning: ${pioneer.print} to mine: ${miningOverlord.print}`);
+						}
+						pioneer.reassign(miningOverlord, Roles.drone);
+					} else {
+						if (verbose) {
+							log.debug(`Reassigning: ${pioneer.print} to work: ${this.toColonize.overlords.work.print}`);
+						}
+						pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
+					
 					}
-					pioneer.reassign(miningOverlord, Roles.drone);
-				} else {
-					if (verbose) {
-						log.debug(`Reassigning: ${pioneer.print} to work: ${this.toColonize.overlords.work.print}`);
-					}
-					pioneer.reassign(this.toColonize.overlords.work, Roles.worker);
-				
 				}
 			}
 			// Remove the directive
