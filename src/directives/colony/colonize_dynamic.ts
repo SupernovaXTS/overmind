@@ -77,17 +77,19 @@ export class DirectiveColonizeDynamic extends Directive {
 			this.remove(true);
 			return;
 		}
-		
-		// Automatically place evolution chamber flag if not already present
-		this.placeEvolutionChamberFlag();
-
 	}
 
 	/**
 	 * Automatically place an evolution chamber flag in the room to enable dynamic planning
+	 * Only places the flag when we own the room (controller is ours)
 	 */
 	private placeEvolutionChamberFlag(): void {
 		if (!this.room) return;
+		
+		// Only place evolution chamber if we own the room
+		if (!this.room.controller || !this.room.controller.my) {
+			return;
+		}
 		
 		// Check if evolution chamber flag already exists in this room
 		const existingEvoChamberFlags = _.filter(
@@ -181,6 +183,11 @@ export class DirectiveColonizeDynamic extends Directive {
 	}
 
 	run(verbose = false) {
+		// Periodically check if we own the room and place evolution chamber flag
+		if (Game.time % 10 == 0) {
+			this.placeEvolutionChamberFlag();
+		}
+		
 		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
