@@ -22,7 +22,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm' # Enable caching for npm dependencies
 
+    - name: Install Dependencies
+      run: npm ci
     - name: Build
       env:
         SCREEPS_EMAIL: ${{ vars.EMAIL }}
@@ -30,5 +33,4 @@ jobs:
         SCREEPS_BRANCH: ${{ vars.BRANCH || 'default' }}
         SCREEPS_PTR: ${{ vars.PTR || 'false' }}
       run: |
-        npm install
         grunt --email="$SCREEPS_EMAIL" --token="$SCREEPS_TOKEN" --branch="$SCREEPS_BRANCH" --ptr="$SCREEPS_PTR"
