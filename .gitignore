@@ -20,7 +20,7 @@ screeps.json
 /webpack.config.js
 
 # npm lock file (v5.0.0+)
-/package-lock.json
+# /package-lock.json
 
 # Screeps config file
 /config.json
