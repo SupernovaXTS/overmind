@@ -1,6 +1,8 @@
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {LogisticsRequest} from './LogisticsNetwork';
+import {minBy} from '../utilities/utils';
+import {Cartographer} from '../utilities/Cartographer';
 
 interface MergedRequest {
 	colony: Colony;
@@ -9,10 +11,40 @@ interface MergedRequest {
 	totalRequests: number;
 }
 
+// SectorLogistics colony state system inspired by TerminalNetwork
+export enum SL_STATE {
+    activeProvider   = 5,
+    passiveProvider  = 4,
+    equilibrium      = 3,
+    passiveRequestor = 2,
+    activeRequestor  = 1,
+    error            = 0,
+}
+
+interface SLThresholds {
+    target: number;
+    surplus?: number;
+    tolerance: number;
+}
+
+const DEFAULT_SL_THRESHOLDS: SLThresholds = {
+    target: 10000,
+    surplus: 50000,
+    tolerance: 2000,
+};
+
 export class SectorLogistics {
 
 	colony: Colony;
-    
+	// New properties for sector logistics state system
+	colonyStates: { [colName: string]: { [resourceType: string]: SL_STATE } };
+	colonyThresholds: { [colName: string]: { [resourceType: string]: SLThresholds } };
+	activeProviders: { [resourceType: string]: Colony[] };
+	passiveProviders: { [resourceType: string]: Colony[] };
+	equilibriumNodes: { [resourceType: string]: Colony[] };
+	passiveRequestors: { [resourceType: string]: Colony[] };
+	activeRequestors: { [resourceType: string]: Colony[] };
+
 	// Central pool memory (lazy accessors)
 	private static get pool(): { [colony: string]: {
 		colony: string;
@@ -35,6 +67,14 @@ export class SectorLogistics {
 
 	constructor(colony: Colony) {
 		this.colony = colony;
+		// Initialize new properties
+		this.colonyStates = {};
+		this.colonyThresholds = {};
+		this.activeProviders = {};
+		this.passiveProviders = {};
+		this.equilibriumNodes = {};
+		this.passiveRequestors = {};
+		this.activeRequestors = {};
 	}
 
 	refresh(): void {
@@ -46,6 +86,13 @@ export class SectorLogistics {
 		if (!this.colony.storage) {
 			delete (root.sectorLogistics.pool as any)[this.colony.name];
 		}
+		this.colonyStates = {};
+		this.colonyThresholds = {};
+		this.activeProviders = {};
+		this.passiveProviders = {};
+		this.equilibriumNodes = {};
+		this.passiveRequestors = {};
+		this.activeRequestors = {};
 	}
 
 	init(): void {
@@ -225,4 +272,89 @@ export class SectorLogistics {
 		return effectiveAmount;
 	}
 
+	assignColonyStates(): void {
+        // For each colony in sector, for each resource, assign state
+        // Use Cartographer.getSectorKey(colony.room.name) for sector membership
+        const sectorKey = Cartographer.getSectorKey(this.colony.room.name);
+        const colonies = Object.values(Overmind.colonies).filter(c => Cartographer.getSectorKey(c.room.name) === sectorKey);
+        for (const colony of colonies) {
+            if (!this.colonyStates[colony.name]) this.colonyStates[colony.name] = {};
+            if (!this.colonyThresholds[colony.name]) this.colonyThresholds[colony.name] = {};
+            for (const resource of Object.keys(colony.assets) as ResourceConstant[]) {
+                // Use custom logic or defaults for thresholds
+                const thresholds = DEFAULT_SL_THRESHOLDS;
+                this.colonyThresholds[colony.name][resource] = thresholds;
+                const amount = colony.assets[resource] || 0;
+                // State assignment logic
+                if ((thresholds.surplus !== undefined && amount > thresholds.surplus)
+                    || (amount > thresholds.target + thresholds.tolerance)) {
+                    this.colonyStates[colony.name][resource] = SL_STATE.activeProvider;
+                    if (!this.activeProviders[resource]) this.activeProviders[resource] = [];
+                    this.activeProviders[resource].push(colony);
+                } else if ((thresholds.surplus !== undefined ? thresholds.surplus : Infinity) >= amount && amount > thresholds.target + thresholds.tolerance) {
+                    this.colonyStates[colony.name][resource] = SL_STATE.passiveProvider;
+                    if (!this.passiveProviders[resource]) this.passiveProviders[resource] = [];
+                    this.passiveProviders[resource].push(colony);
+                } else if (thresholds.target + thresholds.tolerance >= amount && amount >= Math.max(thresholds.target - thresholds.tolerance, 0)) {
+                    this.colonyStates[colony.name][resource] = SL_STATE.equilibrium;
+                    if (!this.equilibriumNodes[resource]) this.equilibriumNodes[resource] = [];
+                    this.equilibriumNodes[resource].push(colony);
+                } else if (amount < Math.max(thresholds.target - thresholds.tolerance, 0)) {
+                    this.colonyStates[colony.name][resource] = SL_STATE.passiveRequestor;
+                    if (!this.passiveRequestors[resource]) this.passiveRequestors[resource] = [];
+                    this.passiveRequestors[resource].push(colony);
+                } else {
+                    this.colonyStates[colony.name][resource] = SL_STATE.error;
+                }
+            }
+        }
+    }
+
+    requestResource(requestor: Colony, resource: ResourceConstant, totalAmount: number, tolerance = 0): void {
+        if (!this.colonyThresholds[requestor.name]) this.colonyThresholds[requestor.name] = {};
+        this.colonyThresholds[requestor.name][resource] = {
+            target: totalAmount,
+            surplus: undefined,
+            tolerance,
+        };
+        if (!this.colonyStates[requestor.name]) this.colonyStates[requestor.name] = {};
+        this.colonyStates[requestor.name][resource] = SL_STATE.activeRequestor;
+        if (!this.activeRequestors[resource]) this.activeRequestors[resource] = [];
+        this.activeRequestors[resource].push(requestor);
+    }
+
+    provideResource(provider: Colony, resource: ResourceConstant, thresholds: SLThresholds = DEFAULT_SL_THRESHOLDS): void {
+        if (!this.colonyThresholds[provider.name]) this.colonyThresholds[provider.name] = {};
+        this.colonyThresholds[provider.name][resource] = thresholds;
+        if (!this.colonyStates[provider.name]) this.colonyStates[provider.name] = {};
+        this.colonyStates[provider.name][resource] = SL_STATE.activeProvider;
+        if (!this.activeProviders[resource]) this.activeProviders[resource] = [];
+        this.activeProviders[resource].push(provider);
+    }
+
+    // Partner selection (simple heuristic: closest colony with enough resource)
+    getBestProvider(resource: ResourceConstant, amount: number, requestor: Colony): Colony | undefined {
+        const partners = this.activeProviders[resource] || [];
+        if (partners.length === 0) return undefined;
+        // Example: sort by linear room distance
+        return minBy(partners, partner => Game.map.getRoomLinearDistance(partner.room.name, requestor.room.name));
+    }
+
+    // Divvying requests among multiple providers
+    fulfillRequest(resource: ResourceConstant, amount: number, requestor: Colony): Colony[] {
+        const partners = this.activeProviders[resource] || [];
+        let remaining = amount;
+        const selected: Colony[] = [];
+        for (const partner of partners) {
+            const available = partner.assets[resource] || 0;
+            if (available > 0) {
+                const take = Math.min(available, remaining);
+                // Simulate transfer logic here
+                selected.push(partner);
+                remaining -= take;
+                if (remaining <= 0) break;
+            }
+        }
+        return selected;
+    }
 }
