@@ -537,8 +537,12 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 	 */
 	static generateCarrierBody(colony: Colony, opts: Full<BodyOpts>): BodyGeneratorReturn {
 
+		if (!colony || !colony.name) {
+			log.error(`generateCarrierBody called without valid colony context! Caller: ${Error().stack}`);
+			return {body: [], boosts: []};
+		}
 		if (!opts.bodyRatio.carry) {
-			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No carry!`);
+			log.error(`Bad opts.bodyRatio: ${opts.bodyRatio}; No carry! Caller: ${Error().stack}`);
 			return {body: [], boosts: []};
 		}
 
