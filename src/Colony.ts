@@ -34,11 +34,17 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
+import { InfestedFactory } from "hiveClusters/infestedFactory";
+
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
 	Pupa  = 1,		// Has storage but RCL < 8
 	Adult = 2,		// RCL 8 room
 }
+export function isColony(thing: unknown): thing is Colony {
+	return thing instanceof Colony;
+}
+
 
 export enum DEFCON {
 	safe               = 0,
@@ -79,7 +85,16 @@ export interface ColonyMemory {
 	outposts: { [roomName: string]: OutpostData };
 	suspend?: boolean;
 	debug?: boolean;
+	infestedFactory?: import("hiveClusters/infestedFactory").InfestedFactoryMemory;
 	averageEnergyUse?: Record<EnergyUse, number>;
+	persistent?: boolean;
+	evolutionChamber?: {
+		activeReaction: never;
+		reactionQueue: never;
+		status: never;
+		statusTick: never;
+	};
+
 }
 
 // Outpost that is currently not being maintained
@@ -170,6 +185,7 @@ export class Colony {
 	evolutionChamber: EvolutionChamber | undefined; 	// Component for mineral processing
 	upgradeSite: UpgradeSite;							// Component to provide upgraders with uninterrupted energy
 	sporeCrawler: SporeCrawler;
+	infestedFactory: InfestedFactory | undefined;
 	miningSites: { [name: string]: any } = {};
 	extractionSites: { [flagName: string]: DirectiveExtract };
 	// praiseSite: PraiseSite | undefined;

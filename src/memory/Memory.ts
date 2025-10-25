@@ -171,6 +171,7 @@ export class Mem {
 		return {
 			tick              : Game.time,
 			build             : 0,
+			segmenter		: {},
 			Overmind          : {},
 			combatPlanner     : {},
 			profiler          : {},
@@ -195,6 +196,20 @@ export class Mem {
 				enableVisuals         : true,
 				resourceCollectionMode: 0,
 				allies                : ALLIES,
+				intelVisuals		  : {},
+				pixelGeneration      : {
+					enabled      : false,
+				},
+				roomPlanner		  : {
+					allowDestroy: false,
+				},
+				colonization         : {
+					maxRooms : undefined,
+					safeZone : 3,
+				},
+				attitude             : {
+					brazenness: 0.5,
+				},
 				feeder                : {
 					enabled     : true,
 					maxRange    : 4,    // Linear room distance to search for donor colonies
@@ -208,14 +223,14 @@ export class Mem {
 				powerCollection       : {
 					enabled : true,
 					maxRange: 5,
-					minPower: 5000,
-					minEnergy: 100000,
+					minPower: 5000
 				},
 				autoPoison            : {
 					enabled      : false,
 					maxRange     : 4,
 					maxConcurrent: 1,
 				},
+				
 			},
 		};
 	}

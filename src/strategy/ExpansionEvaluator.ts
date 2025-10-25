@@ -1,5 +1,5 @@
 import set = Reflect.set;
-import { SHARD3_MAX_OWNED_ROOMS } from '~settings';
+import { MAX_SHARD_OWNED_ROOMS } from '~settings';
 import {log} from '../console/log';
 import {bodyCost} from '../creepSetups/CreepSetup';
 import {CombatSetups, Setups} from '../creepSetups/setups';
@@ -188,7 +188,7 @@ export class ExpansionEvaluator {
 	// NOTE: if already at max colonies -> skip evaluating to safe CPU (important for shard3)
 	// TODO: use the same logic for all shards
 	static computeExpansionData(room: Room, verbose = false): boolean {
-		if (Game.shard.name == 'shard3' && _.keys(Overmind.colonies).length >= SHARD3_MAX_OWNED_ROOMS) {
+		if (Game.shard.name == 'shard3' && _.keys(Overmind.colonies).length >= MAX_SHARD_OWNED_ROOMS.shard3) {
 			log.debug('Already on max rooms, no need to evaluate new expansions');
 			return false;
 		}

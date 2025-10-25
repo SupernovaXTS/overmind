@@ -7,6 +7,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {MY_USERNAME} from '../../~settings';
 import {Overlord} from '../Overlord';
+import { SuspensionReason } from 'utilities/suspension';
 
 /**
  * Spawns reservers to reserve an outpost room
@@ -16,6 +17,10 @@ export class ReservingOverlord extends Overlord {
 
 	reservers: Zerg[];
 	reserveBuffer: number;
+	settings = {
+		resetSignature: false,
+	};
+	reservation: { username?: string; ticksToEnd?: number };
 
 	constructor(directive: DirectiveOutpost, priority = OverlordPriority.remoteRoom.reserve) {
 		super(directive, 'reserve', priority);
@@ -23,6 +28,14 @@ export class ReservingOverlord extends Overlord {
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
 		this.reserveBuffer = 2000;
 		this.reservers = this.zerg(Roles.claim);
+	}
+	get deactivationReasons() {
+		return new Set([
+			SuspensionReason.cpu,
+			SuspensionReason.upkeep,
+			SuspensionReason.harassment,
+			SuspensionReason.reserved,
+		]);
 	}
 
 	init() {

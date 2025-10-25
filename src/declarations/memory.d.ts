@@ -12,6 +12,85 @@ type resourceCollectionMode = number;
 interface RawMemory {
 	_parsed: any;
 }
+interface MemorySettings {
+	signature: string;
+	operationMode: operationMode;
+	log: import("console/log").LogSettings;
+	enableVisuals: boolean;
+	intelVisuals: {
+		/**
+		 * Tick until which the intel room visuals are shown
+		 */
+		until?: number;
+		range?: number;
+	};
+	allies: string[];
+	resourceCollectionMode: resourceCollectionMode;
+	powerCollection: {
+		enabled: boolean;
+		maxRange: number;
+		minPower: number;
+	};
+	autoPoison: {
+		enabled: boolean;
+		maxRange: number;
+		maxConcurrent: number;
+	};
+	pixelGeneration: {
+		enabled: boolean;
+	};
+	roomPlanner: {
+		/** Whether the roomplanner can destroy structures that aren't in its plan */
+		allowDestroy: boolean;
+	};
+	colonization: {
+		/** The max number of rooms to colonize. Set to `undefined` to use GCL */
+		maxRooms: number | undefined;
+		/** How close of another player a room we could expand into can be */
+		safeZone: number;
+	};
+	feeder: {
+			enabled?: boolean;
+			maxRange?: number;        // linear room distance to search for donors
+			donorMinRCL?: number;      // donor colony minimum RCL
+			checkFrequency?: number;   // cadence in ticks to check (0 to check every tick)
+			feedAllLowRCL?: boolean;   // reserved for future behavior
+			allowList?: string[];      // receiver allow list
+			denyList?: string[];       // receiver deny list
+			maxConcurrent?: number;    // global max active feeder directives
+			perDonorMaxConcurrent?: number; // per-donor max active feeder directives
+		};
+	attitude: {
+		/**
+		 * How aggressive the AI is
+		 * Only used in room hostility checks for now.
+		 */
+		brazenness: number;
+	};
+	logistics?: {
+			haulQueue?: {
+				maxRetries?: number;
+				maxAge?: number; // ticks
+			}
+		},
+	accountResources?: {
+		pixelGenerationEnabled?: boolean;
+		tradePixels?: boolean;
+		tradeCPUUnlocks?: boolean;
+		pixel?: {
+			min?: number;           // Minimum pixels to maintain in account
+			max?: number;           // Maximum pixels before selling excess
+			buyThreshold?: number;  // Buy pixels when below this amount
+			sellThreshold?: number; // Sell pixels when above this amount
+		};
+		cpuUnlock?: {
+			min?: number;           // Minimum CPU unlocks to keep (reserve for emergencies)
+			max?: number;           // Maximum CPU unlocks before selling excess
+			buyThreshold?: number;  // Buy CPU unlocks when below this amount
+			sellThreshold?: number; // Sell CPU unlocks when above this amount
+		};
+	}
+}
 
 interface Memory {
 	tick: number;
@@ -19,6 +98,7 @@ interface Memory {
 	Overmind: {};
 	profiler: any;
 	overseer: any;
+	segmenter: import ("console/Segmenter").SegmenterMemory;
 	roomIntel: any;
 	colonies: { [name: string]: any };
 	creeps: { [name: string]: CreepMemory; };
@@ -46,7 +126,7 @@ interface Memory {
 	};
 
 	screepsProfiler?: any;
-
+	settings: MemorySettings;
 	settings: {
 		signature: string;
 		operationMode: operationMode;
@@ -54,17 +134,7 @@ interface Memory {
 		enableVisuals: boolean;
 		allies: string[];
 		resourceCollectionMode: resourceCollectionMode;
-		feeder?: {
-			enabled?: boolean;
-			maxRange?: number;        // linear room distance to search for donors
-			donorMinRCL?: number;      // donor colony minimum RCL
-			checkFrequency?: number;   // cadence in ticks to check (0 to check every tick)
-			feedAllLowRCL?: boolean;   // reserved for future behavior
-			allowList?: string[];      // receiver allow list
-			denyList?: string[];       // receiver deny list
-			maxConcurrent?: number;    // global max active feeder directives
-			perDonorMaxConcurrent?: number; // per-donor max active feeder directives
-		};
+		
 		powerCollection: {
 			enabled: boolean;
 			maxRange: number;
@@ -76,29 +146,7 @@ interface Memory {
 			maxRange: number;
 			maxConcurrent: number;
 		},
-		logistics?: {
-			haulQueue?: {
-				maxRetries?: number;
-				maxAge?: number; // ticks
-			}
-		},
-		accountResources?: {
-			pixelGenerationEnabled?: boolean;
-			tradePixels?: boolean;
-			tradeCPUUnlocks?: boolean;
-			pixel?: {
-				min?: number;           // Minimum pixels to maintain in account
-				max?: number;           // Maximum pixels before selling excess
-				buyThreshold?: number;  // Buy pixels when below this amount
-				sellThreshold?: number; // Sell pixels when above this amount
-			};
-			cpuUnlock?: {
-				min?: number;           // Minimum CPU unlocks to keep (reserve for emergencies)
-				max?: number;           // Maximum CPU unlocks before selling excess
-				buyThreshold?: number;  // Buy CPU unlocks when below this amount
-				sellThreshold?: number; // Sell CPU unlocks when above this amount
-			};
-		}
+		
 	};
 
 	[otherProperty: string]: any;

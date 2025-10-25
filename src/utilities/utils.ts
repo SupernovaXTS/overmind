@@ -55,11 +55,38 @@ export function color(str: string, color: string): string {
 
 function componentToHex(n: number): string {
 	const hex = n.toString(16);
-	return hex.length == 1 ? '0' + hex : hex;
+	return hex.length == 1 ? "0" + hex : hex;
 }
 
 export function rgbToHex(r: number, g: number, b: number): string {
-	return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+export function interpolateColor(c0: string, c1: string, f: number) {
+	const s0 = c0.match(/#?([0-9A-F]{1,2})([0-9A-F]{1,2})([0-9A-F]{1,2})/);
+	const s1 = c1.match(/#?([0-9A-F]{1,2})([0-9A-F]{1,2})([0-9A-F]{1,2})/);
+	if (!s0) {
+		throw new TypeError(`invalid value for c0: ${c0}`);
+	}
+	if (!s1) {
+		throw new TypeError(`invalid value for c1: ${c1}`);
+	}
+	if (typeof f !== "number" || f < 0 || f > 1) {
+		throw new TypeError(`f must be a number between 0.0 and 1.0`);
+	}
+
+	const n0 = s0.map((oct) => parseInt(oct, 16) * (1 - f));
+	const n1 = s1.map((oct) => parseInt(oct, 16) * f);
+
+	const ci = [1, 2, 3].map((i) => Math.min(Math.round(n0[i] + n1[i]), 255));
+	return (
+		"#" +
+		ci
+			// eslint-disable-next-line no-bitwise
+			.reduce((a, v) => (a << 8) + v, 0)
+			.toString(16)
+			.padStart(6, "0")
+	);
 }
 
 /**
@@ -271,6 +298,39 @@ export function logHeapStats(): void {
 		const heapLimit = Math.round(heapStats.heap_size_limit / 1048576);
 		console.log(`Heap usage: ${heapSize} MB + ${externalHeapSize} MB of ${heapLimit} MB (${heapPercent}%).`);
 	}
+}
+export function dump(...args: any[]): string {
+	let message = "";
+	for (const arg of args) {
+		let cache: any[] = [];
+		const msg = JSON.stringify(
+			arg,
+			function (key, value: any): any {
+				if (typeof value === "object" && value !== null) {
+					if (cache.indexOf(value) !== -1) {
+						// Duplicate reference found
+						try {
+							// If this value does not reference a parent it can be deduped
+							// eslint-disable-next-line
+							return JSON.parse(JSON.stringify(value));
+						} catch (error) {
+							// discard key if value cannot be deduped
+							return;
+						}
+					}
+					// Store value in our collection
+					cache.push(value);
+				}
+				// eslint-disable-next-line
+				return value;
+			},
+			"\t"
+		);
+		// @ts-expect-error Clear out the cache
+		cache = null;
+		message += "\n" + msg;
+	}
+	return message;
 }
 
 /**

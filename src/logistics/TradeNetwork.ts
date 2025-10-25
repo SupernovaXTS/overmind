@@ -197,13 +197,6 @@ export class TraderJoe implements ITradeNetwork {
 			return Infinity;
 		}
 	}
-	priceOfIntershard(mineralType: InterShardResourceConstant): number {
-		if (this.memory.cache.history[mineralType]) {
-			return this.memory.cache.history[mineralType].avg;
-		} else {
-			return Infinity;
-		}
-	}
 	/**
 	 * Builds a cache for market - this is very expensive; use infrequently
 	 */

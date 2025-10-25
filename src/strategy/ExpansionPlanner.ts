@@ -8,7 +8,7 @@ import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {Cartographer} from '../utilities/Cartographer';
 import {maxBy} from '../utilities/utils';
-import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
+import {MAX_OWNED_ROOMS, MAX_SHARD_OWNED_ROOMS} from '../~settings';
 import {MIN_EXPANSION_DISTANCE} from './ExpansionEvaluator';
 
 
@@ -46,7 +46,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 		}
 		// If you are on shard3, limit to 3 owned rooms // TODO: use CPU-based limiting metric
 		if (Game.shard.name == 'shard3') {
-			if (allColonies.length >= SHARD3_MAX_OWNED_ROOMS) {
+			if (allColonies.length >= MAX_SHARD_OWNED_ROOMS.shard3) {
 				return;
 			}
 		}

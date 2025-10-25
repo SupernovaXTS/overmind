@@ -12,14 +12,23 @@ import {
 	unpackCoordListAsPosList,
 	unpackPos
 } from '../utilities/packrat';
-import {ema, getCacheExpiration} from '../utilities/utils';
+import {ema,entries, getCacheExpiration, interpolateColor} from '../utilities/utils';
 import {CombatIntel} from './CombatIntel';
+import { FIND_EXIT_PORTAL } from "../movement/types";
+import { Visualizer } from 'visuals/Visualizer';
+import { Zerg } from 'zerg/Zerg';
 
 const RECACHE_TIME = 5000;
 const OWNED_RECACHE_TIME = 1000;
-const ROOM_CREEP_HISTORY_TICKS = 25;
+const SCORE_RECALC_PROB = 0.05;
+const FALSE_SCORE_RECALC_PROB = 0.01;
 
+export const ROOMINTEL_DEFAULT_VISUALS_RANGE = 5;
 
+export interface InvasionData {
+	harvested: number;
+	lastSeen: number;
+}
 export interface ExpansionData {
 	score: number;
 	bunkerAnchor: RoomPosition;
@@ -39,7 +48,8 @@ export interface PortalInfoInterShard {
 }
 
 export interface PortalInfo extends RoomObjectInfo {
-	destination: RoomPosition;
+	shardDestination?: { shard: string; room: string } | undefined;
+	roomDestination?: RoomPosition | undefined;
 	expiration: number | undefined;
 }
 
@@ -218,6 +228,30 @@ export class RoomIntel {
 			chillPos: savedLair.cp ? unpackCoordAsPos(savedLair.cp, roomName) : undefined
 		}));
 	}
+	/**
+	 * Get the list of all known portals.
+	 *
+	 * @param includeIntershard Whether to include intershard portals
+	 */
+	static findAllPortals(includeIntershard = false) {
+		const roomNames = [];
+		for (const [name, mem] of entries(Memory.rooms)) {
+			if (!mem[RMEM.PORTALS] || mem[RMEM.PORTALS].length === 0) {
+				continue;
+			}
+			roomNames.push(name);
+		}
+
+		const portals = [];
+		for (const roomName of roomNames) {
+			let portalInfos = this.getPortalInfo(roomName);
+			if (!includeIntershard) {
+				portalInfos = portalInfos.filter((p) => p.roomDestination);
+			}
+			portals.push(...portalInfos);
+		}
+		return portals;
+	}
 
 	/**
 	 * Unpackages saved information about a room's controller
@@ -259,7 +293,46 @@ export class RoomIntel {
 			rampartPositions: unpackCoordListAsPosList(data[RMEM_STRUCTS.RAMPARTS], roomName),
 		};
 	}
+	static limitedRoomVisual: Set<string> | undefined;
+		static getInvasionData(roomName: string): InvasionData | undefined {
+		const memory = Memory.rooms[roomName];
+		if (!memory) {
+			return undefined;
+		}
+		const data = memory[RMEM.INVASION_DATA];
+		if (!data) {
+			return undefined;
+		}
+		return <InvasionData>{
+			harvested: data[RMEM_INVASION.HARVESTED],
+			lastSeen: data[RMEM_INVASION.LAST_SEEN],
+		};
+	}
 
+	static invasionVisualsForRoom(roomName: string): void {
+		const invIntel = this.getInvasionData(roomName);
+		const room = Game.rooms[roomName];
+		if (invIntel) {
+			const { harvested, lastSeen } = invIntel;
+			const invasionLikely = this.isInvasionLikely(room);
+
+			const invData = [];
+			invData.push(["Harvested:", `${harvested}`]);
+			invData.push(["Last seen:", `${Game.time - lastSeen}t ago`]);
+			invData.push([
+				"Invasion likely:",
+				`${invasionLikely ? "yes" : "no"}`,
+			]);
+
+			const boxY = 11;
+			Visualizer.infoBox(
+				`Invasion Data`,
+				invData,
+				{ x: 1, y: boxY, roomName },
+				9
+			);
+		}
+	}
 
 	/**
 	 * Retrieves all info for permanent room objects and returns it in a more readable/useful form
@@ -835,6 +908,198 @@ export class RoomIntel {
 			if (room) {
 				this.markVisible(room);
 			}
+		}
+	}
+	private static drawMapVisuals(roomName: string) {
+		const exp = RoomIntel.getExpansionData(roomName);
+		const sec = RoomIntel.getSafetyData(roomName);
+		const objs = RoomIntel.getAllRoomObjectInfo(roomName);
+		const threatColor = interpolateColor(
+			"#00FF00",
+			"#FF0000",
+			sec.threatLevel
+		);
+		Game.map.visual.rect(new RoomPosition(2, 2, roomName), 4, 4, {
+			fill: threatColor,
+			stroke: "#FFFFFF",
+			opacity: 1,
+		});
+
+		if (roomName in Game.rooms) {
+			Game.map.visual.circle(new RoomPosition(4 + 4 + 2, 4, roomName), {
+				radius: 2,
+				fill: "#00CCCC",
+				stroke: "#000000",
+			});
+		}
+
+		const expPos = new RoomPosition(45, 5, roomName);
+		const expSize = 10;
+		if (objs?.controller === undefined && exp === undefined) {
+			Game.map.visual.text("?", expPos, {
+				fontSize: expSize,
+				color: "#AAAAAA",
+			});
+		} else if (exp === undefined) {
+			Game.map.visual.text("!", expPos, {
+				fontSize: expSize,
+				color: "#FFFF00",
+			});
+		} else if (exp === false) {
+			Game.map.visual.text("X", expPos, {
+				fontSize: expSize,
+				color: "#FF0000",
+			});
+		} else {
+			Game.map.visual.text("🏠", expPos, { fontSize: expSize });
+			Game.map.visual.text(
+				exp.score.toFixed(0),
+				new RoomPosition(48, 14, roomName),
+				{ fontSize: 4, color: "#00FF00", align: "right" }
+			);
+		}
+	}
+
+	private static drawRoomVisuals(roomName: string) {
+		const expData = [];
+
+		const exp = RoomIntel.getExpansionData(roomName);
+		const objs = RoomIntel.getAllRoomObjectInfo(roomName);
+
+		if (objs?.controller === undefined && exp === undefined) {
+			expData.push(["Incomplete"]);
+		} else if (exp === undefined) {
+			expData.push(["Incomplete"]);
+		} else if (exp === false) {
+			expData.push(["Uninhabitable"]);
+		} else {
+			expData.push(["Score", exp.score.toFixed(0)]);
+			expData.push([
+				"Anchor",
+				`${exp.bunkerAnchor.x}, ${exp.bunkerAnchor.y}`,
+			]);
+			expData.push(["Outposts:"]);
+			if (_.keys(exp.outposts).length !== 0) {
+				for (const outpost in exp.outposts) {
+					expData.push([outpost, exp.outposts[outpost].toString()]);
+				}
+			}
+		}
+
+		let boxY = 7;
+		boxY = Visualizer.infoBox(
+			`Expansion`,
+			expData,
+			{ x: 40, y: boxY, roomName: roomName },
+			6
+		);
+
+		const objData = [];
+		// Room objects
+		if (objs?.controller) {
+			const c = objs.controller;
+			if (c.owner) {
+				objData.push(["Controller"]);
+				objData.push([` ${c.owner}@${c.level}`]);
+				if (c.level !== 8 && c.progressTotal) {
+					objData.push([
+						"Progress",
+						`${((c.progress! / c.progressTotal) * 100).toFixed(
+							1
+						)}%`,
+					]);
+				}
+			}
+			if (c.reservation) {
+				objData.push([
+					"Reserved",
+					`${c.reservation.username} until ${c.reservation.ticksToEnd}`,
+				]);
+			}
+		}
+		if (objs?.sources.length) {
+			objData.push(["Sources", `${objs.sources.length}`]);
+		}
+		if (objs?.mineral) {
+			objData.push([
+				"Mineral",
+				`${objs.mineral.mineralType}@${objs.mineral.density}`,
+			]);
+		}
+		if (objs?.importantStructures) {
+			const s = objs.importantStructures;
+			objData.push(["Structures:"]);
+			if (s.spawnPositions.length) {
+				objData.push(["Spawns", `${s.spawnPositions.length}`]);
+			}
+			if (s.storagePos) {
+				objData.push(["Storage", `Yes`]);
+			}
+			if (s.terminalPos) {
+				objData.push(["Terminal", `Yes`]);
+			}
+			if (s.towerPositions.length) {
+				objData.push(["Towers", `${s.towerPositions.length}`]);
+			}
+			if (s.rampartPositions.length + s.rampartPositions.length) {
+				objData.push([
+					"Walls/Ramp.",
+					`${s.wallPositions.length}/${s.rampartPositions.length}`,
+				]);
+			}
+		}
+		if (!objData.length) {
+			objData.push(["Unexplored"]);
+		}
+		boxY = Visualizer.infoBox(
+			`Structures`,
+			objData,
+			{ x: 40, y: boxY, roomName: roomName },
+			8
+		);
+
+		<any>boxY;
+	}
+
+	static visuals(): void {
+		const until = Memory.settings.intelVisuals.until;
+		if (!Visualizer.enabled || until === undefined || Game.time > until) {
+			this.limitedRoomVisual = undefined;
+			return;
+		}
+
+		if (!this.limitedRoomVisual) {
+			this.limitedRoomVisual = new Set();
+			const range =
+				Memory.settings.intelVisuals.range ??
+				ROOMINTEL_DEFAULT_VISUALS_RANGE;
+			for (const colony of Object.values(Overmind.colonies)) {
+				let rooms = Cartographer.findRoomsInRange(
+					colony.room.name,
+					range
+				);
+				const scouts = colony.overlords.scout?.scouts ?? [];
+				rooms = rooms.concat(
+					_.flatten(
+						scouts.map((scout: Zerg) =>
+							Cartographer.findRoomsInRange(scout.room.name, range)
+						)
+					)
+				);
+
+				for (const name of rooms) {
+					this.limitedRoomVisual?.add(name);
+				}
+			}
+		}
+
+		for (const [name, _name] of this.limitedRoomVisual.entries()) {
+			if (!Memory.rooms[name]) {
+				continue;
+			}
+
+			this.drawMapVisuals(name);
+			this.drawRoomVisuals(name);
 		}
 	}
 
