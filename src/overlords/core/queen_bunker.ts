@@ -20,11 +20,10 @@ import {hasMinerals, mergeSum, minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 
-type SupplyStructure = StructureExtension | StructureSpawn | StructureTower | StructureLab;
+type SupplyStructure = StructureExtension | StructureSpawn | StructureTower;
 
 function isSupplyStructure(structure: Structure): structure is SupplyStructure {
 	return structure.structureType == STRUCTURE_EXTENSION
-		   || structure.structureType == STRUCTURE_LAB
 		   || structure.structureType == STRUCTURE_TOWER
 		   || structure.structureType == STRUCTURE_SPAWN;
 }
