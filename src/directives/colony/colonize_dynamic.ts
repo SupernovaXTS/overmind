@@ -79,9 +79,8 @@ export class DirectiveColonizeDynamic extends Directive {
 		}
 		
 		// Automatically place evolution chamber flag if not already present
-		if (this.room?.controller?.my) {
-			this.placeEvolutionChamberFlag();
-		}
+		this.placeEvolutionChamberFlag();
+
 	}
 
 	/**
@@ -182,10 +181,7 @@ export class DirectiveColonizeDynamic extends Directive {
 	}
 
 	run(verbose = false) {
-		if (this.room?.controller?.my) {
-			this.placeEvolutionChamberFlag();
-		}
-        if (this.toColonize && this.toColonize.spawns.length > 0) {
+		if (this.toColonize && this.toColonize.spawns.length > 0) {
 			// Reassign all pioneers to be miners and workers
 			const miningOverlords = _.map(this.toColonize.miningSites, site => site.overlords.mine);
 			
