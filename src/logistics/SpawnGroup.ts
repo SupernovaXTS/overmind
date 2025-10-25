@@ -158,9 +158,6 @@ export class SpawnGroup {
 		
 		// Early exit if no colonies or hatcheries are available
 		if (colonies.length === 0) {
-			if (this.requests.length > 0) {
-				log.error(`No colonies available in SpawnGroup ${this.ref}!`);
-			}
 			return;
 		}
 		
