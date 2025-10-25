@@ -1,4 +1,5 @@
 import {log} from '../console/log';
+import {PTR} from '../~settings';
 
 interface AccountResourcesSettings {
 	pixelGenerationEnabled: boolean;
@@ -149,6 +150,10 @@ export class AccountResources {
 	 * Attempts to buy pixels from the intershard market
 	 */
 	buyPixel(amount: number): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		if (!this.settings.tradePixels) {
 			return NO_ACTION;
 		}
@@ -272,6 +277,10 @@ export class AccountResources {
 	 * Attempts to sell pixels to the intershard market
 	 */
 	sellPixel(amount: number): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		if (!this.settings.tradePixels) {
 			return NO_ACTION;
 		}
@@ -327,6 +336,10 @@ export class AccountResources {
 	 * Attempts to buy CPU unlocks from the intershard market
 	 */
 	buyCPUUnlock(amount: number): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		if (!this.settings.tradeCPUUnlocks) {
 			return NO_ACTION;
 		}
@@ -357,6 +370,10 @@ export class AccountResources {
 	 * Attempts to sell CPU unlocks to the intershard market
 	 */
 	sellCPUUnlock(amount: number): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		if (!this.settings.tradeCPUUnlocks) {
 			return NO_ACTION;
 		}

@@ -15,7 +15,7 @@ import {
 	onPublicServer,
 	printRoomName,
 } from '../utilities/utils';
-import { RESERVE_CREDITS } from '../~settings';
+import { PTR, RESERVE_CREDITS } from '../~settings';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number; low: number } };
@@ -1523,6 +1523,10 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 		amount: number,
 		opts: TradeOpts = {}
 	): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		_.defaults(opts, defaultTradeOpts);
 
 		if (Game.market.credits < TraderJoeIntershard.settings.market.credits.canBuyAbove) {
@@ -1570,6 +1574,10 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 		amount: number,
 		opts: TradeOpts = {}
 	): number {
+		if (PTR) {
+			return NO_ACTION; // Don't trade intershard resources on PTR
+		}
+		
 		_.defaults(opts, defaultTradeOpts);
 
 		// If you don't have a lot of credits or preferDirect==true, try to sell directly to an existing buy order
