@@ -136,7 +136,7 @@ export class BarrierPlanner {
 	}
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
-									upgradeSitePos: RoomPosition): RoomPosition[] {
+                               upgradeSitePos: RoomPosition): RoomPosition[] {
 		//const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
@@ -171,21 +171,49 @@ export class BarrierPlanner {
 			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
-	// Get tunnel positions from road planner
-	let tunnelPositions: {x: number, y: number}[] = [];
-	if (this.roomPlanner.roadPlanner && typeof this.roomPlanner.roadPlanner.getRoadPositions === 'function') {
-		const terrain = Game.map.getRoomTerrain(this.colony.name);
-		const roadPositions = this.roomPlanner.roadPlanner.getRoadPositions(this.colony.name);
-		for (const pos of roadPositions) {
-			if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) {
-				tunnelPositions.push({x: pos.x, y: pos.y});
+		// Get tunnel positions from road planner
+		let tunnelPositions: {x: number, y: number}[] = [];
+		if (this.roomPlanner.roadPlanner && typeof this.roomPlanner.roadPlanner.getRoadPositions === 'function') {
+			const terrain = Game.map.getRoomTerrain(this.colony.name);
+			const roadPositions = this.roomPlanner.roadPlanner.getRoadPositions(this.colony.name);
+			for (const pos of roadPositions) {
+				if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) {
+					tunnelPositions.push({x: pos.x, y: pos.y});
+				}
 			}
 		}
-	}
-	// Get Min cut
-	const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false, undefined, tunnelPositions);
-	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-	return positions;
+		// Get Min cut
+		const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false, undefined, tunnelPositions);
+		const positions: RoomPosition[] = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		// After computing main barrier, add ramparts at entrances to mining sites outside the barrier
+		const barrierCoordsSet = new Set(barrierCoords.map(c => c.x + 50 * c.y));
+		const miningSites: { pos: RoomPosition }[] = [...this.colony.room.sources.map(s => ({ pos: s.pos }))];
+		if (this.colony.room.mineral) miningSites.push({ pos: this.colony.room.mineral.pos });
+		for (const site of miningSites) {
+			const sitePos = site.pos;
+			// If mining site is outside the barrier
+			if (!barrierCoordsSet.has(sitePos.x + 50 * sitePos.y)) {
+				// Find all adjacent non-wall tiles (entrances)
+				const terrain = Game.map.getRoomTerrain(sitePos.roomName);
+				for (let dx = -1; dx <= 1; dx++) {
+					for (let dy = -1; dy <= 1; dy++) {
+						if (dx === 0 && dy === 0) continue;
+						const nx = sitePos.x + dx;
+						const ny = sitePos.y + dy;
+						if (nx < 0 || nx > 49 || ny < 0 || ny > 49) continue;
+						if (terrain.get(nx, ny) !== TERRAIN_MASK_WALL) {
+							// Place rampart at entrance if not already in barrier
+							const key = nx + 50 * ny;
+							if (!barrierCoordsSet.has(key)) {
+								positions.push(new RoomPosition(nx, ny, sitePos.roomName));
+								barrierCoordsSet.add(key);
+							}
+						}
+					}
+				}
+			}
+		}
+		return positions;
 	}
 
 	init(): void {
