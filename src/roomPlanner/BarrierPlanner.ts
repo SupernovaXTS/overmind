@@ -118,11 +118,21 @@ export class BarrierPlanner {
 			y2 = minMax(y2, 3, 50 - 3);
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
+	// Get tunnel positions from road planner
+	let tunnelPositions: {x: number, y: number}[] = [];
+	if (this.roomPlanner.roadPlanner && typeof this.roomPlanner.roadPlanner.getRoadPositions === 'function') {
+		const terrain = Game.map.getRoomTerrain(this.colony.name);
+		const roadPositions = this.roomPlanner.roadPlanner.getRoadPositions(this.colony.name);
+		for (const pos of roadPositions) {
+			if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) {
+				tunnelPositions.push({x: pos.x, y: pos.y});
+			}
+		}
+	}
 	// Get Min cut
-	const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false);
+	const barrierCoords = getCutTiles(this.colony.name, rectArray, false, 2, false, undefined, tunnelPositions);
 	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-	//positions = positions.concat(result);
-		return positions;
+	return positions;
 	}
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
@@ -148,11 +158,21 @@ export class BarrierPlanner {
 			const [x2, y2] = [Math.min(x + 1, 49), Math.min(y + 1, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
+	// Get tunnel positions from road planner
+	let tunnelPositions: {x: number, y: number}[] = [];
+	if (this.roomPlanner.roadPlanner && typeof this.roomPlanner.roadPlanner.getRoadPositions === 'function') {
+		const terrain = Game.map.getRoomTerrain(this.colony.name);
+		const roadPositions = this.roomPlanner.roadPlanner.getRoadPositions(this.colony.name);
+		for (const pos of roadPositions) {
+			if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) {
+				tunnelPositions.push({x: pos.x, y: pos.y});
+			}
+		}
+	}
 	// Get Min cut
-	const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false);
+	const barrierCoords = getCutTiles(this.colony.name, rectArray, true, 2, false, undefined, tunnelPositions);
 	let positions = _.map(barrierCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		//positions = positions.concat(result);
-		return positions;
+	return positions;
 	}
 
 	init(): void {
