@@ -455,6 +455,9 @@ export class OvermindConsole {
 	 */
 	static buyResource(colonyName: string, resourceType: ResourceConstant, amount: number): string {
 		const colony = Overmind.colonies[colonyName];
+		if (!colony) {
+			return `Colony ${colonyName} not found.`;
+		}
 		if (!colony || !resourceType || typeof amount !== 'number' || amount <= 0) {
 			return 'Usage: buyResource(colony, resourceType, amount)';
 		}
