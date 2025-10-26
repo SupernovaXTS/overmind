@@ -111,7 +111,7 @@ export abstract class Directive {
 
 	debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert(this.print, args);
+			log.alert(this.print + args);
 		}
 	}
 

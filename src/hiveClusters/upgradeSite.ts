@@ -70,7 +70,13 @@ export class UpgradeSite extends HiveCluster {
 			if (inputSite) {
 				return inputSite.pos;
 			}
-			return this.calculateBatteryPos() || log.alert(`Upgrade site at ${this.pos.print}: no batteryPos!`);
+			const batteryPos = this.calculateBatteryPos();
+			if (batteryPos) {
+				return batteryPos;
+			}
+			else {
+				log.alert(`Upgrade site at ${this.pos.print}: no batteryPos!`);
+			}
 		});
 		if (this.batteryPos) this.colony.destinations.push({pos: this.batteryPos, order: 0});
 		// Register link
