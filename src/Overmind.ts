@@ -189,7 +189,7 @@ export default class _Overmind implements IOvermind {
 		}
 		
 		for (const e of this.exceptions) {
-			log.throw(e);
+			log.fatal(e.toString());
 		}
 		const err = new Error('Multiple exceptions caught this tick!');
 		err.stack = _.map(this.exceptions, e => e.name).join('\n');
