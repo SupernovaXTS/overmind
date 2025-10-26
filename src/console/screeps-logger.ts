@@ -20,6 +20,7 @@ const LEVEL_NAMES = [
 	"WARN",
 	"ALERT",
 	"INFO",
+	"NOTIFY",
 	"DEBUG",
 	"TRACE",
 ] as const;
@@ -30,8 +31,9 @@ export const LOG_LEVELS = {
 	WARN: 2,
 	ALERT: 3,
 	INFO: 4,
-	DEBUG: 5,
-	TRACE: 6,
+	NOTIFY: 5,
+	DEBUG: 6,
+	TRACE: 7,
 } as const;
 
 const DEFAULT_LOG_LEVEL = LOG_LEVELS.INFO;
@@ -43,6 +45,7 @@ const LEVEL_COLORS: Record<string, string> = {
 	WARN: "#B8860B",
     ALERT: "#FF8C00",
 	INFO: "#0055AA",
+	NOTIFY: "#008B8B",
 	DEBUG: "#228B22",
 	TRACE: "#555555",
 	DEFAULT: "#dddddd",
@@ -230,6 +233,21 @@ export class Logger {
 	): void {
 		this.log({
 			level: LOG_LEVELS.INFO,
+			message,
+			timestamp:
+				typeof options.timestamp === "number" ? options.timestamp : Date.now(),
+			tick: typeof options.tick === "number" ? options.tick : Game.time,
+			roomName: options.roomName,
+			memory: options.memory,
+			notify: options.notify,
+		});
+	}
+	notify(
+		message: string | (() => string),
+		options: Partial<LogEntry> = {}
+	): void {
+		this.log({
+			level: LOG_LEVELS.NOTIFY,
 			message,
 			timestamp:
 				typeof options.timestamp === "number" ? options.timestamp : Date.now(),
