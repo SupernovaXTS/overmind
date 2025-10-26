@@ -1,4 +1,4 @@
-import { Logger, LOG_LEVELS } from './screeps-logger';
+import { Logger, LOG_LEVELS, LogEntry } from './screeps-logger';
 
 export enum LogLevel {
 	FATAL = LOG_LEVELS.FATAL,
@@ -20,9 +20,15 @@ export const LOG_LEVEL: number = LogLevel.INFO;
 export const LOG_PRINT_TICK: boolean = true;
 export type LogMessage = string | object | (() => string);
 
-export const log = new Logger('overmind', {
-  level: LOG_LEVELS.INFO,
+
+const overmindFormat = (name: string, entry: LogEntry) => {
+  return `(${entry.tick}) [${name}]: ${entry.message}`;
+};
+
+export const log = new Logger('OM', {
+  level: LOG_LEVELS.NOTIFY,
   limit: 100,
+  format: overmindFormat
 });
 
 
