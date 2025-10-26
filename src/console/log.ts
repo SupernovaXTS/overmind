@@ -22,7 +22,7 @@ export type LogMessage = string | object | (() => string);
 
 
 const overmindFormat = (name: string, entry: LogEntry) => {
-  return `(${entry.tick}) [${name}]: ${entry.message}`;
+  return `(${entry.tick}) [${name}] [${entry.level}]: ${entry.message}`;
 };
 
 export const log = new Logger('OM', {
