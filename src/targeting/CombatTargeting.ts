@@ -252,7 +252,7 @@ export class CombatTargeting {
 			return;
 		}
 		if (swarm.anchor.roomName != roomName) {
-			log.warning(`Swarm is not in target room!`);
+			log.warn(`Swarm is not in target room!`);
 			return;
 		}
 

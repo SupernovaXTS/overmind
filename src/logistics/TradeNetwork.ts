@@ -174,10 +174,10 @@ export class TraderJoe implements ITradeNetwork {
 		this.notifications = [];
 		this.ordersPlacedThisTick = 0;
 	}
-
+	
 	private debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert('TradeNetwork:', args);
+			log.alert('TradeNetwork:');
 		}
 	}
 
@@ -604,7 +604,7 @@ export class TraderJoe implements ITradeNetwork {
 				terminal.room.name
 			).toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
 						`in ${printRoomName(terminal.room.name)}!`
 				);
@@ -693,7 +693,7 @@ export class TraderJoe implements ITradeNetwork {
 				terminal.room.name
 			).toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
 						`${printRoomName(terminal.room.name)}!`
 				);
@@ -1401,7 +1401,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 
 	private debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert('TradeNetwork:', args);
+			log.alert('TradeNetwork:' + args);
 		}
 	}
 
@@ -1815,7 +1815,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 		if (existingOrder) {
 			const price = +this.computeCompetitivePriceIntershard(type, resource).toFixed(3);
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`IntershardTradeNetwork: sanity checks not passed for ${type} order ${resource}!`
 				);
 				return ERR_NOT_ENOUGH_MARKET_DATA;
@@ -1864,7 +1864,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 
 			const price = +this.computeCompetitivePriceIntershard(type, resource).toFixed(3);
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`IntershardTradeNetwork: sanity checks not passed to create ${type} order ${resource}!`
 				);
 				return ERR_NOT_ENOUGH_MARKET_DATA;
@@ -2100,7 +2100,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				terminal.room.name
 			).toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`TradeNetwork: sanity checks not passed to handle existing ${type} order ${resource} ` +
 						`in ${printRoomName(terminal.room.name)}!`
 				);
@@ -2167,7 +2167,7 @@ export class TraderJoeIntershard implements IIntershardTradeNetwork {
 				terminal.room.name
 			).toFixed(3); // market only allows for 3 decimal places of precision
 			if (price == Infinity || price == 0) {
-				log.warning(
+				log.warn(
 					`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
 						`${printRoomName(terminal.room.name)}!`
 				);

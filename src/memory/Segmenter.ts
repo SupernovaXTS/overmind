@@ -90,7 +90,7 @@ export class Segmenter {
 		try {
 			segment = <Segment>JSON.parse(str);
 		} catch (e) {
-			log.warning(`Creating new object for RawMemory.segments[${id}]`);
+			log.warn(`Creating new object for RawMemory.segments[${id}]`);
 			this.debug(`error: ${e}, str: ${str}`);
 			segment = {};
 			this.cache.segments[id] = segment;
@@ -158,7 +158,7 @@ export class Segmenter {
 		}
 		const { id, username, data } = RawMemory.foreignSegment;
 		if (expectedUsername !== username || expectedId !== id) {
-			log.warning(
+			log.warn(
 				`Segmenter: loaded foreign segment doesn't match expected! (${id}/${expectedId}, ${username}/${expectedUsername})`
 			);
 			return undefined;
@@ -168,7 +168,7 @@ export class Segmenter {
 			segment = <Segment>JSON.parse(data);
 			return <T>segment;
 		} catch (e) {
-			log.warning(
+			log.warn(
 				`Segmenter: Could not parse RawMemory.foreignSegment.data!`
 			);
 		}
@@ -181,7 +181,7 @@ export class Segmenter {
 	): T[typeof key] | undefined {
 		const { id, username, data } = RawMemory.foreignSegment ?? {};
 		if (expectedUsername !== username || expectedId !== id) {
-			log.warning(
+			log.warn(
 				`Segmenter: loaded foreign segment doesn't match expected! (${id}/${expectedId}, ${username}/${expectedUsername})`
 			);
 			return undefined;
@@ -194,7 +194,7 @@ export class Segmenter {
 				return segment[key];
 			}
 		} catch (e) {
-			log.warning(
+			log.warn(
 				`Segmenter: Could not parse RawMemory.foreignSegment.data!`
 			);
 		}

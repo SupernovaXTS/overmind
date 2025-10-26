@@ -370,7 +370,7 @@ export class Swarm implements ProtoSwarm {
 		const pos = normalizePos(obj);
 		const directions = _.map(this.creeps, creep => creep.pos.getDirectionTo(obj));
 		// TODO
-		log.warning(`NOT IMPLEMENTED`);
+		log.warn(`NOT IMPLEMENTED`);
 		return TOP;
 	}
 
@@ -713,7 +713,7 @@ export class Swarm implements ProtoSwarm {
 
 			}
 		} else {
-			log.warning(`No target for swarm ${this.ref}!`);
+			log.warn(`No target for swarm ${this.ref}!`);
 		}
 
 		// Orient yourself to face structure targets

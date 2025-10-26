@@ -215,7 +215,7 @@ export class TerminalNetwork /*implements ITerminalNetwork*/ {
 			this.alreadyReceived.push(receiver);
 			_.remove(this.readyTerminals, terminal => terminal.id == sender.id);
 		} else {
-			log.warning(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
+			log.warn(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
 						`${receiver.room.print}! Response: ${response}`);
 		}
 		return response;

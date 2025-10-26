@@ -179,13 +179,13 @@ export class SectorLogistics {
 	static createRequest(colonyName: string, resourceType: ResourceConstant, amount: number): boolean {
 		const colony = Overmind.colonies[colonyName];
 		if (!colony || !colony.storage) {
-			log.warning(`Cannot create sector request: colony '${colonyName}' not found or has no storage`);
+			log.warn(`Cannot create sector request: colony '${colonyName}' not found or has no storage`);
 			return false;
 		}
 		
 		const amt = Math.floor(amount);
 		if (amt <= 0) {
-			log.warning(`Cannot create sector request: amount must be positive (got ${amount})`);
+			log.warn(`Cannot create sector request: amount must be positive (got ${amount})`);
 			return false;
 		}
 		

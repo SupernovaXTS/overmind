@@ -171,7 +171,7 @@ export class CombatCreepSetup /*extends CreepSetup*/ {
 			availableBoosts.move = colony.evolutionChamber.bestBoostAvailable('move', moveBoostNeeded);
 		}
 		if (_.sum(opts.boosts, b => ['dismantle', 'upgrade', 'construct', 'harvest'].includes(b) ? 1 : 0) > 1) {
-			log.warning(`Multiple boost types requested for work part! opts.boosts: ${print(opts.boosts)}`);
+			log.warn(`Multiple boost types requested for work part! opts.boosts: ${print(opts.boosts)}`);
 		}
 		return availableBoosts;
 	}

@@ -37,7 +37,7 @@ export class ClaimingOverlord extends Overlord {
 			// if there is no controller, we want to colonize a new shard -> path to directive which is the portal
 			const pathDestination = this.room.controller ? this.room.controller.pos : this.pos;
 			if (!Pathing.isReachable(pathablePos, pathDestination, _.filter(this.room.structures, s => !s.isWalkable))) {
-				log.warning(`Path for Directive ${this.directive.name} is not pathable`);
+				log.warn(`Path for Directive ${this.directive.name} is not pathable`);
 				return 0;
 			}
 

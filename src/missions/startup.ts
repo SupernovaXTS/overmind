@@ -39,7 +39,7 @@ export class MissionStartup extends Mission {
 			}
 			// const dismantlePotential = _.sum(this.room!.hostiles, h => CombatIntel.getDismantlePotential(h));
 			if (!this.room || !this.room.controller) {
-				log.warning('not this room or not this room controller');
+				log.warn('not this room or not this room controller');
 				return;
 			}
 			const danger = !this.room.controller.safeMode &&

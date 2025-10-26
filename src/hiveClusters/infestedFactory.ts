@@ -115,7 +115,7 @@ export class InfestedFactory extends HiveCluster {
 	private initFactoryStatus() {
 		const product = this.memory.activeProduction;
 		if (!product && this.memory.status !== FactoryStatus.Idle) {
-			log.warning(
+			log.warn(
 				`Unexpected lack of active production at ${this.print}! Reverting to idle state.`
 			);
 			this.memory.status = FactoryStatus.Idle;
@@ -225,7 +225,7 @@ export class InfestedFactory extends HiveCluster {
 		const timedOut =
 			ticksInStatus > FactoryStageTimeouts[this.memory.status];
 		if (timedOut) {
-			log.warning(
+			log.warn(
 				`${this.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, reverting to idle state!`
 			);
 			this.memory.status = FactoryStatus.Idle;
@@ -352,7 +352,7 @@ export class InfestedFactory extends HiveCluster {
 
 	produce(commodity: CommodityConstant, amount: number = 1) {
 		if (this.memory.status !== FactoryStatus.Idle) {
-			log.warning(
+			log.warn(
 				`${this.print} is currently producing, ignoring request`
 			);
 			return false;
@@ -437,7 +437,7 @@ export class InfestedFactory extends HiveCluster {
 		 			product.size;
 		 		this.memory.stats.totalProduction[product.commodityType as string] += product.size;
 			} else {
-				log.warning(
+				log.warn(
 					`${this.print}: couldn't run production: ${errorForCode(
 						result
 					)}!`

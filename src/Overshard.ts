@@ -65,7 +65,7 @@ export class Overshard {
 				overlord.suspendFor(500);
 			}
 		} else {
-			log.warning(`Inter shard packet: Creep to send ${creep.name} is not in Overmind.zerg`);
+			log.warn(`Inter shard packet: Creep to send ${creep.name} is not in Overmind.zerg`);
 		}
 		setInterShardMemory(my);
 	}
@@ -122,7 +122,7 @@ export class Overshard {
 					// Handle case where creep arrives but was already cross-shard tracked
 					tickHasCreep = true;
 					if (creep.memory && creep.memory[MEM.SHARD]) {
-						log.warning(`Receiving inter shard creep: ${creep.name} should have empty memory, ` +
+						log.warn(`Receiving inter shard creep: ${creep.name} should have empty memory, ` +
 									`but got memory with move data ${JSON.stringify(creep.memory._go)}. Proceeding anyway`);
 					}
 					// Remove previous instance of this creep
@@ -139,7 +139,7 @@ export class Overshard {
 							waypoints: Overshard.parseWayPoints(creep.memory._go.waypoints)
 						};
 					} else {
-						log.warning(`Inter shard creep ${zerg.print} has no move data. Cannot move`);
+						log.warn(`Inter shard creep ${zerg.print} has no move data. Cannot move`);
 					}
 				}
 				// Assumption: If a creep appears after (or at the same time as) this tick, then the earlier creep 
@@ -190,7 +190,7 @@ export class Overshard {
 				// Has reached target
 				delete creep.memory._go;
 			} else if (ret != OK) {
-				log.warning(`Cannot move inter-shard creep ${creep.print}: error code: ${ret}`);
+				log.warn(`Cannot move inter-shard creep ${creep.print}: error code: ${ret}`);
 			}
 		}
 	}

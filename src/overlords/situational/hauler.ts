@@ -83,7 +83,7 @@ export class HaulingOverlord extends Overlord {
 				}
 			}
 			// Shouldn't reach here
-			log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
+			log.warn(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 		} else {
 			// hauler.task = Tasks.goTo(this.directive);
 			hauler.goTo(this.directive, {pathOpts: {avoidSK: true}});
@@ -116,7 +116,7 @@ export class HaulingOverlord extends Overlord {
 				}
 			}
 			// Shouldn't reach here
-			log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
+			log.warn(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 		} else {
 			hauler.task = Tasks.goToRoom(this.colony.room.name);
 		}

@@ -242,7 +242,7 @@ export class ExpansionEvaluator {
 				if (supportsDynamic && evolutionChamberPos) {
 					log.info(`Room ${room.name} requires dynamic bunker (normal bunker doesn't fit) with evolution chamber at ${evolutionChamberPos.print}`);
 				} else {
-					log.warning(`Room ${room.name} cannot fit normal bunker and dynamic bunker planning also failed!`);
+					log.warn(`Room ${room.name} cannot fit normal bunker and dynamic bunker planning also failed!`);
 				}
 			}
 		} else {

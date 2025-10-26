@@ -56,7 +56,7 @@ export abstract class PowerOverlord extends Overlord {
 				if (Overmind.powerZerg[powerCreep.name]) {
 					Overmind.powerZerg[powerCreep.name].refresh();
 				} else {
-					log.warning(`${this.print}: could not find and refresh power zerg with name ${powerCreep.name}!`);
+					log.warn(`${this.print}: could not find and refresh power zerg with name ${powerCreep.name}!`);
 				}
 			}
 		}

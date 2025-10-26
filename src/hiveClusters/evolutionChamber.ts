@@ -149,7 +149,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	private initLabStatus(): void {
 		if (!this.memory.activeReaction && this.memory.status != LabStatus.Idle) {
-			log.warning(`Unexpected lack of active reaction at ${this.print}! Reverting to idle state.`);
+			log.warn(`Unexpected lack of active reaction at ${this.print}! Reverting to idle state.`);
 			this.memory.status = LabStatus.Idle;
 		}
 
@@ -233,7 +233,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 		}
 		if (timeout) {
-			log.warning(`${this.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, ` +
+			log.warn(`${this.print}: stuck in state ${this.memory.status} for ${ticksInStatus} ticks, ` +
 						`rebuilding reaction queue and reverting to idle state!`);
 			this.memory.status = LabStatus.Idle;
 			this.memory.statusTick = Game.time;
@@ -582,7 +582,7 @@ export class EvolutionChamber extends HiveCluster {
 						}
 						this.memory.stats.totalProduction[product] += LAB_REACTION_AMOUNT;
 					} else {
-						log.warning(`${this.print}: couldn't run reaction for lab @ ${lab.pos.print}! (${result})`);
+						log.warn(`${this.print}: couldn't run reaction for lab @ ${lab.pos.print}! (${result})`);
 					}
 				}
 			}

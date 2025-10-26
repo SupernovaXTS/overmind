@@ -131,7 +131,7 @@ export class TaskRecharge extends Task<rechargeTargetType> {
 	}
 
 	work() {
-		log.warning(`BAD RESULT: Should not get here...`);
+		log.warn(`BAD RESULT: Should not get here...`);
 		return ERR_INVALID_TARGET;
 	}
 }

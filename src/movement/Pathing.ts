@@ -141,7 +141,7 @@ export class Pathing {
 		// check to see whether findRoute should be used
 		const linearDistance = Game.map.getRoomLinearDistance(origin.roomName, destination.roomName);
 		if (opts.maxRooms && linearDistance > opts.maxRooms && !opts.allowPortals) {
-			log.warning(`Pathing from ${origin.print} to ${destination.print} exceeds max room specification ` +
+			log.warn(`Pathing from ${origin.print} to ${destination.print} exceeds max room specification ` +
 						`of ${opts.maxRooms}!`);
 		}
 
@@ -223,7 +223,7 @@ export class Pathing {
 			// options.allowedRooms and options.routeCallback can also be used to handle this situation
 			const useRoute = this.findRoute(origin.roomName, destination.roomName, opts);
 			if (useRoute != ERR_NO_PATH) {
-				log.warning(`Pathing: findPath from ${origin.print} to ${destination.print} failed without ` +
+				log.warn(`Pathing: findPath from ${origin.print} to ${destination.print} failed without ` +
 							`specified route. Trying again with route: ${JSON.stringify(useRoute)}.`);
 				opts.route = useRoute;
 				ret = this.findPath(origin, destination, opts);
@@ -375,7 +375,7 @@ export class Pathing {
 		}
 
 		if (route == ERR_NO_PATH) {
-			log.warning(`Pathing: couldn't findRoute from ${origin} to ${destination} ` +
+			log.warn(`Pathing: couldn't findRoute from ${origin} to ${destination} ` +
 						`with opts ${JSON.stringify(opts)}!`);
 			return ERR_NO_PATH;
 		} else {

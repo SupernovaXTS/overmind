@@ -104,9 +104,9 @@ export class GoalFinder {
 		}
 
 		if (DEBUG) {
-			log.debug(`Report for ${zerg.name}:`, JSON.stringify(analysis));
-			log.debug(`Approach for ${zerg.name}:`, JSON.stringify(approach));
-			log.debug(`Avoid for ${zerg.name}:`, JSON.stringify(avoid));
+			log.debug(`Report for ${zerg.name}:` + JSON.stringify(analysis));
+			log.debug(`Approach for ${zerg.name}:` + JSON.stringify(approach));
+			log.debug(`Avoid for ${zerg.name}:` + JSON.stringify(avoid));
 		}
 
 		return {approach, avoid};
@@ -120,7 +120,7 @@ export class GoalFinder {
 		const avoid: PathFinderGoal[] = [];
 
 		if (swarm.rooms.length > 1) {
-			log.warning(`Swarm in more than 1 room!`);
+			log.warn(`Swarm in more than 1 room!`);
 		}
 		// If in more than 1 room, pick the room with more hostile stuff in it
 		const room = maxBy(swarm.rooms, room => room.hostiles.length + room.hostileStructures.length) as Room;
@@ -201,8 +201,8 @@ export class GoalFinder {
 		}
 
 		if (DEBUG) {
-			log.debug(`Approach for ${swarm.print}:`, JSON.stringify(approach));
-			log.debug(`Avoid for ${swarm.print}:`, JSON.stringify(avoid));
+			log.debug(`Approach for ${swarm.print}:` + JSON.stringify(approach));
+			log.debug(`Avoid for ${swarm.print}:` + JSON.stringify(avoid));
 		}
 
 		return {approach, avoid};

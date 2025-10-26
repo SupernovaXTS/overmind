@@ -72,7 +72,7 @@
 // 		if (this.outputPos) this.colony.destinations.push(this.outputPos);
 // 		this.shouldDropMine = this.colony.level < MiningSite.settings.dropMineUntilRCL;
 // 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output) {
-// 			log.warning(`Mining site at ${this.pos.print} has no output!`);
+// 			log.warn(`Mining site at ${this.pos.print} has no output!`);
 // 		}
 // 		// Calculate statistics
 // 		this.stats();
@@ -88,7 +88,7 @@
 // 		// }
 // 		$.refresh(this, 'source', 'output');
 // 		if (!this.shouldDropMine && Game.time % 100 == 0 && !this.output) {
-// 			log.warning(`Mining site at ${this.pos.print} has no output!`);
+// 			log.warn(`Mining site at ${this.pos.print} has no output!`);
 // 		}
 // 		this.stats();
 // 	}

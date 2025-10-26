@@ -75,7 +75,7 @@ export class DirectiveColonizeDynamic extends Directive {
 			this.remove(true);
 		}
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
+			log.warn(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
 			this.remove(true);
 			return;
@@ -112,7 +112,7 @@ export class DirectiveColonizeDynamic extends Directive {
 		// Use BasePlanner to find optimal bunker location
 		const bunkerLocation = BasePlanner.getBunkerLocation(this.room, false);
 		if (!bunkerLocation) {
-			log.warning(`Could not find suitable bunker location in ${this.pos.roomName}`);
+			log.warn(`Could not find suitable bunker location in ${this.pos.roomName}`);
 			return;
 		}
 		
@@ -128,7 +128,7 @@ export class DirectiveColonizeDynamic extends Directive {
 		// Normal bunker doesn't fit - check if dynamic bunker is viable
 		const evolutionChamberPos = canBuildDynamicBunker(this.room, bunkerLocation);
 		if (!evolutionChamberPos) {
-			log.warning(`Could not find suitable evolution chamber position in ${this.pos.roomName} - room may not be suitable for dynamic bunker`);
+			log.warn(`Could not find suitable evolution chamber position in ${this.pos.roomName} - room may not be suitable for dynamic bunker`);
 			return;
 		}
 		
@@ -148,7 +148,7 @@ export class DirectiveColonizeDynamic extends Directive {
 				log.info(`Saved evolution chamber position ${evolutionChamberPos.print} to colony memory for ${this.pos.roomName}`);
 			}
 		} else {
-			log.warning(`Failed to create dynamic bunker core flag: ${bunkerResult}`);
+			log.warn(`Failed to create dynamic bunker core flag: ${bunkerResult}`);
 			return;
 		}
 	}

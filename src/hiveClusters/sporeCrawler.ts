@@ -252,7 +252,7 @@ export class SporeCrawler extends HiveCluster {
 				}
 			} else {
 				// Shouldn't get here
-				log.warning(`No time to impact! (Why?)`);
+				log.warn(`No time to impact! (Why?)`);
 			}
 		}
 

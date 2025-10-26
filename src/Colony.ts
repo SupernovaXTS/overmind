@@ -307,7 +307,7 @@ export class Colony {
 
 	protected debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert(this.print, args);
+			log.alert(this.print + ':' + args);
 		}
 	}
 

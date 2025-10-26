@@ -54,7 +54,7 @@
 // 				Game.notify(`Sent ${this.payment} energy from ${sender.room.name} to ` +
 // 							`${destination}. Fee: ${cost}`);
 // 			} else {
-// 				log.warning('No terminal to send payment for Contract_TiggaTerritoryAgreement!');
+// 				log.warn('No terminal to send payment for Contract_TiggaTerritoryAgreement!');
 // 				Game.notify('No terminal to send payment for Contract_TiggaTerritoryAgreement!');
 // 			}
 // 		}

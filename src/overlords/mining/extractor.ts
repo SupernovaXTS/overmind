@@ -83,7 +83,7 @@ export class ExtractorOverlord extends Overlord {
 			if (pos) return pos;
 		}
 		// Shouldn't ever get here
-		log.warning(`Last resort container position calculation for ${this.print}!`);
+		log.warn(`Last resort container position calculation for ${this.print}!`);
 		return _.first(this.pos.availableNeighbors(true));
 	}
 

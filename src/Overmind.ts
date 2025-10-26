@@ -179,7 +179,7 @@ export default class _Overmind implements IOvermind {
 	handleExceptions() {
 		if (this.exceptions.length == 0) return;
 
-		log.warning('Exceptions present this tick! Rebuilding Overmind object in next tick.');
+		log.warn('Exceptions present this tick! Rebuilding Overmind object in next tick.');
 		Memory.stats.persistent.lastErrorTick = Game.time;
 		this.shouldBuild = true;
 		this.expiration = Game.time;

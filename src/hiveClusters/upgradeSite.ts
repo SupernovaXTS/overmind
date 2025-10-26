@@ -193,7 +193,7 @@ export class UpgradeSite extends HiveCluster {
 				if (result == OK) {
 					return;
 				} else {
-					log.warning(`Upgrade site at ${this.pos.print}: cannot build battery! Result: ${result}`);
+					log.warn(`Upgrade site at ${this.pos.print}: cannot build battery! Result: ${result}`);
 				}
 			}
 		}

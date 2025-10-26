@@ -481,7 +481,7 @@ export class RoomPlanner {
 	finalize(ignoreRoads = false): void {
 		const collision = this.findCollision(ignoreRoads);
 		if (collision) {
-			log.warning(`Invalid layout: collision detected at ${collision.print}!`);
+			log.warn(`Invalid layout: collision detected at ${collision.print}!`);
 			log.info('Place an evolution chamber directive to switch to dynamic layout');
 			return;
 		}
@@ -532,7 +532,7 @@ export class RoomPlanner {
 			this.memory.recheckStructuresAt = Game.time + 3;
 			this.active = false;
 		} else {
-			log.warning('Not a valid room layout! Must have both hatchery and commandCenter placements ' +
+			log.warn('Not a valid room layout! Must have both hatchery and commandCenter placements ' +
 						'or bunker placement.');
 		}
 	}
@@ -708,7 +708,7 @@ export class RoomPlanner {
 						if (isSpawn(structure) && this.colony.spawns.length == 1) {
 							const spawnCost = 15000;
 							if (this.colony.assets[RESOURCE_ENERGY] < spawnCost) {
-								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
+								log.warn(`${this.colony.print}: Unsafe to destroy misplaced spawn: ${this.colony.assets[RESOURCE_ENERGY]}/${spawnCost} energy available`);
 								if (!destroyAllStructureTypes) {
 									return;
 								}
@@ -717,7 +717,7 @@ export class RoomPlanner {
 							const workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
 								worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
 							if (workTicksAvailable < workTicksNeeded) {
-								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
+								log.warn(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
 											`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
 								if (!destroyAllStructureTypes) {
 									return;
@@ -727,7 +727,7 @@ export class RoomPlanner {
 						// TODO: adding this for safety for now; remove later
 						const result: any = 'destroy() disabled'; // structure.destroy();
 						if (result != OK) {
-							log.warning(`${this.colony.name}: couldn't destroy structure of type ` +
+							log.warn(`${this.colony.name}: couldn't destroy structure of type ` +
 										`"${structureType}" at ${structure.pos.print}. Result: ${result}`);
 						} else {
 							log.info(`${this.colony.name}: destroyed ${structureType} at ${structure.pos.print}`);
@@ -793,13 +793,13 @@ export class RoomPlanner {
 
 					// If we've run into a problem then we might need to remove something
 					else {
-						log.warning(`${this.colony.print}: couldn't create site of type "${structureType}" at ${pos.print}. Result: ${result}`);
+						log.warn(`${this.colony.print}: couldn't create site of type "${structureType}" at ${pos.print}. Result: ${result}`);
 						const destroyResult = this.destroyStructurePreventingBuildingAtPos(pos);
 						if (destroyResult == OK) {
 							log.info(`${this.colony.print}: destroyed ${structureType} at ${pos.print}`);
 							this.memory.recheckStructuresAt = Game.time + RoomPlanner.settings.recheckAfter;
 						} else {
-							log.warning(`${this.colony.print}: couldn't destroy ${structureType} at ${pos.print}! Result: ${destroyResult}`);
+							log.warn(`${this.colony.print}: couldn't destroy ${structureType} at ${pos.print}! Result: ${destroyResult}`);
 						}
 					}
 				}
@@ -904,7 +904,7 @@ export class RoomPlanner {
 			}
 			const linkPos = this.calculateLinkPos(anchor);
 			if (!linkPos) {
-				log.warning(`Could not calculate link position for anchor at ${anchor.print}!`);
+				log.warn(`Could not calculate link position for anchor at ${anchor.print}!`);
 				return;
 			}
 			linkPos.createConstructionSite(STRUCTURE_LINK);
@@ -1004,7 +1004,7 @@ export class RoomPlanner {
 			if (this.placements.bunker) {
 				this.finalize();
 			} else {
-				log.warning(`No bunker placement!`);
+				log.warn(`No bunker placement!`);
 			}
 		}
 	}

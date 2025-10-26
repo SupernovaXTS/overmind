@@ -114,7 +114,7 @@ export class OvermindConsole {
 		{
 			name: "setLogLevel(int)",
 			description: "set the logging level from 0 - 4",
-			command: log.setLogLevel.bind(OvermindConsole),
+			command: log.setLevel.bind(OvermindConsole),
 		},
 		{
 			name: "suspendColony(roomName)",
@@ -615,7 +615,7 @@ export class OvermindConsole {
 			color(asciiLogoSmall.join(joinChar), "#ff00ff") +
 			joinChar +
 			OvermindConsole.info(aligned);
-		log.alert(msg);
+		log.warn(msg);
 	}
 
 	static printTrainingMessage(): void {
@@ -683,7 +683,7 @@ export class OvermindConsole {
 		_.each(Overmind.colonies, (colony) => {
 			const signer = _.sample(colony.getZergByRole("worker")) as Zerg | undefined;
 			if (!signer) {
-				log.warning(
+				log.warn(
 					`${colony.print}: unable to find a random worker to re-sign the controller`
 				);
 				return;

@@ -227,7 +227,12 @@ export class MiningOverlord extends Overlord {
 											_.filter(this.room.structures, s => !s.isWalkable));
 		if (pos) {
 			const structure = _.find(pos.lookFor(LOOK_STRUCTURES), s => !s.isWalkable);
-			return structure || log.error(`${this.print}: no structure at blocking pos ${pos.print}!`);
+			if (structure) {
+				return structure;
+			}
+			else {
+				log.error(`${this.print}: no structure at blocking pos ${pos.print}!`);
+			}
 		}
 	}
 
@@ -269,7 +274,7 @@ export class MiningOverlord extends Overlord {
 			if (pos) return pos;
 		}
 		// Shouldn't ever get here
-		log.warning(`Last resort container position calculation for ${this.print}!`);
+		log.warn(`Last resort container position calculation for ${this.print}!`);
 		return _.first(this.pos.availableNeighbors(true));
 	}
 
@@ -290,7 +295,7 @@ export class MiningOverlord extends Overlord {
 			const container = containerPos ? containerPos.lookForStructure(STRUCTURE_CONTAINER) as StructureContainer
 				| undefined : undefined;
 			if (container) {
-				log.warning(`${this.print}: this.container out of sync at ${containerPos.print}`);
+				log.warn(`${this.print}: this.container out of sync at ${containerPos.print}`);
 				this.container = container;
 				return;
 			}
@@ -430,7 +435,7 @@ export class MiningOverlord extends Overlord {
 				}
 			}
 		} else {
-			log.warning(`${this.print}: Link miner ${miner.print} has no link! (Why?)`);
+			log.warn(`${this.print}: Link miner ${miner.print} has no link! (Why?)`);
 		}
 	}
 
@@ -552,7 +557,7 @@ export class MiningOverlord extends Overlord {
 			}
 			return;
 		} else {
-			log.warning(`Link miner ${miner.print} has no link!`);
+			log.warn(`Link miner ${miner.print} has no link!`);
 		}
 
 		// Container mining
@@ -627,7 +632,7 @@ export class MiningOverlord extends Overlord {
 				return miner.goDismantle(dismantleTarget);
 			}
 		} else {
-			log.warning(`No reachable dismantle positions for ${miner.print}!`);
+			log.warn(`No reachable dismantle positions for ${miner.print}!`);
 		}
 
 	}

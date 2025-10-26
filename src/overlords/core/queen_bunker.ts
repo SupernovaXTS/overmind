@@ -163,7 +163,7 @@ export class BunkerQueenOverlord extends Overlord {
 				tasks.push(Tasks.transferAll(transferTarget));
 				queenPos = transferTarget.pos;
 			} else {
-				log.warning(`No transfer targets for ${queen.print}!`);
+				log.warn(`No transfer targets for ${queen.print}!`);
 				return null;
 			}
 		}
@@ -237,7 +237,7 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 		}
 		if (!withdrawTarget && withdrawTasks.length == 0) {
-			log.warning(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
+			log.warn(`Could not find adequate withdraw structure for ${queen.print}! (neededResources: 
 			${neededResources}, queenCarry: ${JSON.stringify(queenCarry)})`);
 			return null;
 		}
@@ -258,7 +258,7 @@ export class BunkerQueenOverlord extends Overlord {
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 			} else {
-				log.warning(`No transfer targets for ${queen.print}!`);
+				log.warn(`No transfer targets for ${queen.print}!`);
 				return null;
 			}
 		}
@@ -293,7 +293,7 @@ export class BunkerQueenOverlord extends Overlord {
 		if (transferTarget) {
 			tasks.push(Tasks.transferAll(transferTarget));
 		} else {
-			log.warning(`No transfer targets for ${queen.print}!`);
+			log.warn(`No transfer targets for ${queen.print}!`);
 			return null;
 		}
 		// Step 4: return chained task manifest
@@ -316,7 +316,7 @@ export class BunkerQueenOverlord extends Overlord {
 			if (chargeSpot) {
 				return chargeSpot;
 			} else {
-				log.warning(`Could not determine charging spot for queen at ${queen.pos.print}!`);
+				log.warn(`Could not determine charging spot for queen at ${queen.pos.print}!`);
 				return queen.pos;
 			}
 		}

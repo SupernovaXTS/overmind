@@ -183,7 +183,7 @@ export class TransportRequestGroup {
 		// 		}
 		// 	}
 		// }
-		// log.warning('Could not determine requestor amount!');
+		// log.warn('Could not determine requestor amount!');
 		// return 0;
 	}
 
@@ -217,7 +217,7 @@ export class TransportRequestGroup {
 		// 		}
 		// 	}
 		// }
-		// log.warning('Could not determine provider amount!');
+		// log.warn('Could not determine provider amount!');
 		// return 0;
 	}
 

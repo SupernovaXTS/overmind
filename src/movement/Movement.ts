@@ -586,7 +586,7 @@ export class Movement {
 			}
 		} else {
 			// Shouldn't reach here ideally
-			log.warning(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
+			log.warn(`${otherCreep.name}@${otherCreep.pos.print} is not Zerg! (Why?)`);
 			otherCreep.suicide();
 			if (outcome == OK) {
 				if (otherData && otherData.path) {
@@ -744,7 +744,7 @@ export class Movement {
 					return creep.move(direction);
 				}
 			}
-			log.warning(`moveOnExit() assumes nearby exit tile, position: ${creep.pos}`);
+			log.warn(`moveOnExit() assumes nearby exit tile, position: ${creep.pos}`);
 			return ERR_NO_PATH;
 		}
 	}
@@ -775,7 +775,7 @@ export class Movement {
 			creep.debug(`moving off exit toward ${pos.print}, direction ${direction}`);
 			return creep.move(direction);
 		} else {
-			log.warning(`${creep.print}: cannot move off exit!`);
+			log.warn(`${creep.print}: cannot move off exit!`);
 			return ERR_NO_PATH;
 		}
 	}
@@ -838,7 +838,7 @@ export class Movement {
 		});
 
 		// if (options.range! < Math.max(swarm.width, swarm.height)) {
-		// 	log.warning(`Range specified is ${options.range}; not allowable for ${swarm.width}x${swarm.height} swarm!`);
+		// 	log.warn(`Range specified is ${options.range}; not allowable for ${swarm.width}x${swarm.height} swarm!`);
 		// }
 
 		destination = normalizePos(destination);
@@ -1387,7 +1387,7 @@ export class Movement {
 				moveData.state.push(nextCoord.y);
 			} else {
 				// Shouldn't ever reach here
-				log.warning(`Invalid moveData.state length!`);
+				log.warn(`Invalid moveData.state length!`);
 			}
 		}
 	}

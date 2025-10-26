@@ -72,7 +72,7 @@ export class DirectiveColonize extends Directive {
 			this.remove(true);
 		}
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
+			log.warn(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
 			this.remove(true);
 			return;

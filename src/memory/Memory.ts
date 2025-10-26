@@ -26,7 +26,7 @@ export function getAutonomyLevel(): number {
 		case ('automatic'):
 			return Autonomy.Automatic;
 		default:
-			log.warning(`ERROR: ${Memory.settings.operationMode} is not a valid operation mode! ` +
+			log.warn(`ERROR: ${Memory.settings.operationMode} is not a valid operation mode! ` +
 						`Defaulting to ${DEFAULT_OPERATION_MODE}; use setMode() to change.`);
 			Memory.settings.operationMode = DEFAULT_OPERATION_MODE;
 			return getAutonomyLevel();
@@ -50,18 +50,18 @@ export class Mem {
 	static shouldRun(): boolean {
 		let shouldRun: boolean = true;
 		if (!isIVM()) {
-			log.warning(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
+			log.warn(`Overmind requires isolated-VM to run. Change settings at screeps.com/a/#!/account/runtime`);
 			shouldRun = false;
 		}
 		if (USE_SCREEPS_PROFILER && Game.time % 10 == 0) {
-			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
+			log.warn(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
 
 		// only run the reset Bucket on shard3 so we can generate pixels on the others
 		if (Game.cpu.bucket < 500 && Game.shard.name == 'shard3') {
 			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
-				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
+				log.warn(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
 				Memory.resetBucket = true;
 				Memory.haltTick = Game.time + 1; // reset global next tick
 			} else {

@@ -181,7 +181,7 @@ export class RemoteUpgradingOverlord extends Overlord {
 			const target = _.find(_.compact([this.parentColony.storage, this.parentColony.terminal]),
 								  s => s!.store[RESOURCE_ENERGY] >= carrier.carryCapacity);
 			if (!target) {
-				log.warning(`${this.print}: no energy withdraw target for ${carrier.print}!`);
+				log.warn(`${this.print}: no energy withdraw target for ${carrier.print}!`);
 				return;
 			}
 			if (carrier.carry.getUsedCapacity() > carrier.carry.getUsedCapacity(RESOURCE_ENERGY)) {

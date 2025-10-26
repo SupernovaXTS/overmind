@@ -150,7 +150,7 @@ export class RoadPlanner {
 							roadCount++;
 						}
 					} else { // shouldn't happen
-						log.warning(`No vision or recalled cost matrix in room ${pos.roomName}! (Why?)`);
+						log.warn(`No vision or recalled cost matrix in room ${pos.roomName}! (Why?)`);
 					}
 				}
 			}
@@ -254,7 +254,7 @@ export class RoadPlanner {
 		const ret = PathFinder.search(origin, {pos: destination, range: 1}, {roomCallback: callback, maxOps: 40000});
 
 		if (ret.incomplete) {
-			log.warning(`Roadplanner for ${this.colony.print}: could not plan road path!`);
+			log.warn(`Roadplanner for ${this.colony.print}: could not plan road path!`);
 			return;
 		}
 
@@ -362,7 +362,7 @@ export class RoadPlanner {
 
 				if (ret == ERR_NOT_OWNER) {
 					if (Game.time % 50 == 0) {
-						log.warning(`${this.colony.print}: couldn't create road site at ${pos.print}; room ` +
+						log.warn(`${this.colony.print}: couldn't create road site at ${pos.print}; room ` +
 									`is reserved/owned by hostile forces!`);
 					}
 				} else if (ret == ERR_FULL) {
@@ -370,11 +370,11 @@ export class RoadPlanner {
 					// you're already at max placed sites searches through EVERY SINGLE GAME OBJECT you have
 					// access to, which is quite expensive! Don't try to make a bunch more of these or you'll
 					// murder your CPU.
-					log.warning(`${this.colony.print}: couldn't create road site at ${pos.print}, too many ` +
+					log.warn(`${this.colony.print}: couldn't create road site at ${pos.print}, too many ` +
 								`construction sites!`);
 					break;
 				} else {
-					log.warning(`${this.colony.print}: couldn't create road site at ${pos.print} (${ret})`);
+					log.warn(`${this.colony.print}: couldn't create road site at ${pos.print} (${ret})`);
 				}
 			}
 		}

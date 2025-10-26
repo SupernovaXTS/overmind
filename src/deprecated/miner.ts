@@ -65,7 +65,7 @@
 // 			miner.task = Tasks.harvest(this.directive.source);
 // 			return true;
 // 		} else {
-// 			log.warning(`No source for ${this.print}!`);
+// 			log.warn(`No source for ${this.print}!`);
 // 		}
 // 	}
 // 	return false;

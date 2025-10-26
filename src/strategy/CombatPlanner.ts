@@ -287,7 +287,7 @@ export class CombatPlanner {
 		} else if (isInnerWall) {
 			return 'innerwall';
 		} else {
-			log.warning(`Inconclusive room layout for ${room.print}! Assuming inner wall.`);
+			log.warn(`Inconclusive room layout for ${room.print}! Assuming inner wall.`);
 			return 'innerwall';
 		}
 

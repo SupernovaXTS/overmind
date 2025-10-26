@@ -31,7 +31,7 @@ export class DirectiveColonizeShard extends Directive {
 		// Remove if misplaced
 		const roomType = Cartographer.roomType(this.pos.roomName);
 		if (roomType != ROOMTYPE_CONTROLLER && roomType != ROOMTYPE_CROSSROAD) {
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller or crossroad (portal) room; ` +
+			log.warn(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller or crossroad (portal) room; ` +
 						`removing directive!`);
 			this.remove(true);
 			return;

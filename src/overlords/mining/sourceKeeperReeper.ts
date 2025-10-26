@@ -105,7 +105,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 				if (target) {
 					Movement.invasionMove(reaper, target);
 				} else {
-					log.warning(`KeeperReaper@${reaper.pos.print}: no invader target!`);
+					log.warn(`KeeperReaper@${reaper.pos.print}: no invader target!`);
 				}
 			}
 		} else {

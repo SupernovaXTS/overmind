@@ -138,11 +138,11 @@ export class LogisticsNetwork {
 			dAmountdt   : 0,
 		});
 		if (target.room != this.colony.room) {
-			log.warning(`${target.ref} at ${target.pos.print} is outside colony room; shouldn't request!`);
+			log.warn(`${target.ref} at ${target.pos.print} is outside colony room; shouldn't request!`);
 			return;
 		}
 		if (opts.resourceType == 'all') {
-			log.warning(`Logistics request error: 'all' can only be used for output requests`);
+			log.warn(`Logistics request error: 'all' can only be used for output requests`);
 			return;
 		}
 		if (!opts.amount) {
@@ -427,7 +427,7 @@ export class LogisticsNetwork {
 		// requestInput instance, needs refilling
 		if (amount > 0) {
 			if (request.resourceType == 'all') {
-				log.warning(`Improper resourceType in bufferChoices! Type 'all' is only allowable for outputs!`);
+				log.warn(`Improper resourceType in bufferChoices! Type 'all' is only allowable for outputs!`);
 				return [];
 			}
 			// Change in resources if transporter goes straight to the input

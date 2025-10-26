@@ -171,7 +171,7 @@ export abstract class Directive {
 	refresh(): void {
 		const flag = this.flag;
 		if (!flag) {
-			log.warning(`Missing flag for directive ${this.print}! Removing directive.`);
+			log.warn(`Missing flag for directive ${this.print}! Removing directive.`);
 			this.remove();
 			return;
 		}
@@ -210,7 +210,7 @@ export abstract class Directive {
 		}
 		const memDistance = this.memory[MEM.DISTANCE]!;
 		if (memDistance.incomplete) {
-			log.warning(`${this.print}: distanceFromColony() info incomplete!`);
+			log.warn(`${this.print}: distanceFromColony() info incomplete!`);
 		}
 		return {
 			unweighted: memDistance[MEM_DISTANCE.UNWEIGHTED],
@@ -226,7 +226,7 @@ export abstract class Directive {
 				if (result == OK) {
 					log.debug(`Moving ${this.name} from ${this.flag.pos.print} to ${pos.print}.`);
 				} else {
-					log.warning(`Could not set room position to ${JSON.stringify(this.memory.setPos)}!`);
+					log.warn(`Could not set room position to ${JSON.stringify(this.memory.setPos)}!`);
 				}
 			} else {
 				delete this.memory.setPos;

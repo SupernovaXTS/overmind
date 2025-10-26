@@ -75,13 +75,13 @@ export class PowerHaulingOverlord extends Overlord {
 					return;
 				} else {
 					hauler.say('💀 RIP 💀', true);
-					log.warning(`${hauler.name} is committing suicide!`);
+					log.warn(`${hauler.name} is committing suicide!`);
 					hauler.retire();
 					return;
 				}
 			}
 			// Shouldn't reach here
-			log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
+			log.warn(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 		} else {
 			hauler.goTo(this.directive);
 		}
@@ -112,7 +112,7 @@ export class PowerHaulingOverlord extends Overlord {
 				}
 			}
 			// Shouldn't reach here
-			log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
+			log.warn(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 		} else {
 			hauler.task = Tasks.goToRoom(this.colony.room.name);
 		}
@@ -123,7 +123,7 @@ export class PowerHaulingOverlord extends Overlord {
 			if (this.directive.memory.state >= 4) {
 				// FIXME: Maybe ditch this and put it as a separate on-finishing method to reassign
 				hauler.say('💀 RIP 💀', true);
-				log.warning(`${hauler.name} is committing suicide as directive is done!`);
+				log.warn(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
 				hauler.retire();
 			}

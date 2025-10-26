@@ -48,7 +48,7 @@ export class BarrierPlanner {
 
 	private computeEdgeBarrierPositions(room: Room | undefined): RoomPosition[]  {
 		if (!room) {
-			log.warning('No room in room position! (Why?)');
+			log.warn('No room in room position! (Why?)');
 			return [];
 		}
 		const exitsDesc = Game.map.describeExits(room.name);
@@ -304,7 +304,7 @@ export class BarrierPlanner {
 			if (count > 0 && this.canPlaceRampart(pos) && this.barrierShouldBeHere(pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
-					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
+					log.warn(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}
@@ -342,7 +342,7 @@ export class BarrierPlanner {
 			if (count > 0 && this.canPlaceRampart(pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
-					log.warning(`${this.colony.name}: couldn't create bunker rampart at ${pos.print}. Result: ${ret}`);
+					log.warn(`${this.colony.name}: couldn't create bunker rampart at ${pos.print}. Result: ${ret}`);
 				} else {
 					count--;
 				}

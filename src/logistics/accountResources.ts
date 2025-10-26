@@ -174,7 +174,7 @@ export class AccountResources {
 		if (result === OK) {
 			log.info(`Successfully initiated pixel purchase: ${amountToBuy}`);
 		} else if (result !== NO_ACTION) {
-			log.warning(`Failed to buy pixels. Error: ${result}`);
+			log.warn(`Failed to buy pixels. Error: ${result}`);
 		}
 
 		return result;
@@ -188,7 +188,7 @@ export class AccountResources {
 	 */
 	buyPixelsAtCheapestPrice(amount: number): ScreepsReturnCode {
 		if (amount <= 0) {
-			log.warning(`Invalid pixel amount: ${amount}`);
+			log.warn(`Invalid pixel amount: ${amount}`);
 			return ERR_INVALID_ARGS;
 		}
 
@@ -199,7 +199,7 @@ export class AccountResources {
 		});
 
 		if (!orders || orders.length === 0) {
-			log.warning(`No pixel sell orders available on the market`);
+			log.warn(`No pixel sell orders available on the market`);
 			return ERR_NOT_FOUND;
 		}
 
@@ -229,7 +229,7 @@ export class AccountResources {
 
 		// Check if we can afford it
 		if (Game.market.credits < totalCost) {
-			log.warning(`Insufficient credits to buy ${amount} pixels. Need: ${totalCost.toFixed(2)}, Have: ${Game.market.credits.toFixed(2)}`);
+			log.warn(`Insufficient credits to buy ${amount} pixels. Need: ${totalCost.toFixed(2)}, Have: ${Game.market.credits.toFixed(2)}`);
 			return ERR_NOT_ENOUGH_RESOURCES;
 		}
 
@@ -238,10 +238,10 @@ export class AccountResources {
 		if (insufficientSupply) {
 			const available = amount - remainingAmount;
 			if (available <= 0) {
-				log.warning(`Not enough pixels available on market. No purchasable amount found.`);
+				log.warn(`Not enough pixels available on market. No purchasable amount found.`);
 				return ERR_NOT_ENOUGH_RESOURCES;
 			}
-			log.warning(`Not enough pixels available on market. Requested: ${amount}, Available: ${available}. Proceeding to buy available amount.`);
+			log.warn(`Not enough pixels available on market. Requested: ${amount}, Available: ${available}. Proceeding to buy available amount.`);
 		}
 
 		// Execute the purchases
@@ -256,7 +256,7 @@ export class AccountResources {
 				totalBought += purchase.amount;
 				log.info(`Bought ${purchase.amount} pixels at ${purchase.price} credits/pixel from order ${purchase.orderId}`);
 			} else {
-				log.warning(`Failed to buy from order ${purchase.orderId}: ${result}`);
+				log.warn(`Failed to buy from order ${purchase.orderId}: ${result}`);
 				// Continue trying other orders
 			}
 		}
@@ -265,7 +265,7 @@ export class AccountResources {
 			log.info(`Successfully bought ${totalBought} pixels for ${totalCost.toFixed(2)} credits`);
 			return OK;
 		} else if (totalBought > 0) {
-			log.warning(`Partially bought ${totalBought}/${amount} pixels`);
+			log.warn(`Partially bought ${totalBought}/${amount} pixels`);
 			return ERR_FULL; // Using this to indicate partial success
 		} else {
 			log.error(`Failed to buy any pixels`);
@@ -301,7 +301,7 @@ export class AccountResources {
 		if (result === OK) {
 			log.info(`Successfully initiated pixel sale: ${amountToSell}`);
 		} else if (result !== NO_ACTION) {
-			log.warning(`Failed to sell pixels. Error: ${result}`);
+			log.warn(`Failed to sell pixels. Error: ${result}`);
 		}
 
 		return result;
@@ -360,7 +360,7 @@ export class AccountResources {
 		if (result === OK) {
 			log.info(`Successfully initiated CPU unlock purchase: ${amountToBuy}`);
 		} else if (result !== NO_ACTION) {
-			log.warning(`Failed to buy CPU unlocks. Error: ${result}`);
+			log.warn(`Failed to buy CPU unlocks. Error: ${result}`);
 		}
 
 		return result;
@@ -394,7 +394,7 @@ export class AccountResources {
 		if (result === OK) {
 			log.info(`Successfully initiated CPU unlock sale: ${amountToSell}`);
 		} else if (result !== NO_ACTION) {
-			log.warning(`Failed to sell CPU unlocks. Error: ${result}`);
+			log.warn(`Failed to sell CPU unlocks. Error: ${result}`);
 		}
 
 		return result;
@@ -407,7 +407,7 @@ export class AccountResources {
 		const currentUnlocks = Game.resources[CPU_UNLOCK] || 0;
 
 		if (currentUnlocks < count) {
-			log.warning(`Insufficient CPU unlocks. Have: ${currentUnlocks}, Need: ${count}`);
+			log.warn(`Insufficient CPU unlocks. Have: ${currentUnlocks}, Need: ${count}`);
 			return false;
 		}
 
@@ -416,7 +416,7 @@ export class AccountResources {
 			log.info(`CPU unlock used successfully. Remaining: ${currentUnlocks - 1}`);
 			return true;
 		} else {
-			log.warning(`Failed to use CPU unlock. Error code: ${result}`);
+			log.warn(`Failed to use CPU unlock. Error code: ${result}`);
 			return false;
 		}
 	}

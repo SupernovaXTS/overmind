@@ -113,7 +113,7 @@ export class TransportOverlord extends Overlord {
 			// Target is requesting input
 			if (amount > 0) {
 				if (isResource(request.target) || isTombstone(request.target) || isRuin(request.target)) {
-					log.warning(`Improper logistics request: should not request input for resource or tombstone or ruin!`);
+					log.warn(`Improper logistics request: should not request input for resource or tombstone or ruin!`);
 					return;
 				} else if (request.resourceType == 'all') {
 					log.error(`${this.print}: cannot request 'all' as input!`);

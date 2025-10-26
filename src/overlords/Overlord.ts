@@ -152,10 +152,10 @@ export abstract class Overlord {
 						Overmind.zerg[creep.name].refresh();
 						// Only warn for non-spawning creeps to avoid noisy logs during birth ticks
 						if (!creep.spawning) {
-							log.warning(`${this.print}: created missing Zerg wrapper for ${creep.name} during refresh.`);
+							log.warn(`${this.print}: created missing Zerg wrapper for ${creep.name} during refresh.`);
 						}
 					} catch (e) {
-						log.warning(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
+						log.warn(`${this.print}: could not find and refresh zerg with name ${creep.name}!`);
 					}
 				}
 			}
@@ -386,12 +386,12 @@ export abstract class Overlord {
 	 * operations can result in a long time
 	 */
 	protected requestSquad(setups: (CreepSetup | CombatCreepSetup)[], opts = {} as CreepRequestOptions) {
-		log.warning(`Overlord.requestSquad() is not finished yet!`); // TODO: finish
+		log.warn(`Overlord.requestSquad() is not finished yet!`); // TODO: finish
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
 		const spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
 		if (spawner) {
 			if (setups.length > 3) {
-				log.warning(`Requesting squads of >3 is not advisable`);
+				log.warn(`Requesting squads of >3 is not advisable`);
 			}
 			const request: SpawnRequest = {
 				setup   : _.head(setups),
@@ -405,7 +405,7 @@ export abstract class Overlord {
 			spawner.enqueue(request);
 		} else {
 			if (Game.time % 100 == 0) {
-				log.warning(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
+				log.warn(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
 			}
 		}
 	}
@@ -431,7 +431,7 @@ export abstract class Overlord {
 			spawner.enqueue(request);
 		} else {
 			if (Game.time % 100 == 0) {
-				log.warning(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
+				log.warn(`Overlord ${this.ref} @ ${this.pos.print}: no spawner object!`);
 			}
 		}
 	}

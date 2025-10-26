@@ -41,7 +41,7 @@ export class DirectiveOutpost extends Directive {
 
 	run(): void {
 		if (RoomIntel.roomOwnedBy(this.pos.roomName)) {
-			log.warning(`Removing ${this.print} since room is owned!`);
+			log.warn(`Removing ${this.print} since room is owned!`);
 			this.remove();
 		}
 		if (Game.time % 10 == 3 && this.room && this.room.controller

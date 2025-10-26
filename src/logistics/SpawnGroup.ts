@@ -94,7 +94,7 @@ export class SpawnGroup {
 												Game.rooms[roomName].controller!.level >= this.settings.requiredRCL);
 
 		if (this.colonyNames.length == 0) {
-			log.warning(`No colonies meet the requirements for SpawnGroup: ${this.ref}`);
+			log.warn(`No colonies meet the requirements for SpawnGroup: ${this.ref}`);
 		}
 		this.energyCapacityAvailable = _.max(_.map(this.colonyNames,
 												   roomName => Game.rooms[roomName].energyCapacityAvailable));
@@ -175,7 +175,7 @@ export class SpawnGroup {
 		for (const request of this.requests) {
 			const maxColony = _.max(colonies, colony => colony.room.energyCapacityAvailable);
 			if (!maxColony || !maxColony.evolutionChamber) {
-				log.warning(`SpawnGroup.run: Skipping request for ${request.setup.role} because maxColony or its clusters are not initialized.`);
+				log.warn(`SpawnGroup.run: Skipping request for ${request.setup.role} because maxColony or its clusters are not initialized.`);
 				continue;
 			}
 			const {body, boosts} = request.setup.create(maxColony);
@@ -185,7 +185,7 @@ export class SpawnGroup {
 				if (!this.memory.unaffordableRequestCount) this.memory.unaffordableRequestCount = 0;
 				this.memory.unaffordableRequestCount++;
 				if (this.memory.unaffordableRequestCount <= 5 || this.memory.unaffordableRequestCount % 10 === 0) {
-					log.warning(`No hatcheries in SpawnGroup ${this.ref} can afford creep with role ${request.setup.role} ` +
+					log.warn(`No hatcheries in SpawnGroup ${this.ref} can afford creep with role ${request.setup.role} ` +
 						`(cost: ${bodyCostValue}, max capacity: ${this.energyCapacityAvailable}) ` +
 						`for Overlord ${request.overlord.print}! ` +
 						`(occurred ${this.memory.unaffordableRequestCount} times)`);

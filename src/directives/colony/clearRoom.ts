@@ -37,7 +37,7 @@ export class DirectiveClearRoom extends Directive {
 		super(flag, colony => colony.level >= 3);
 		// Remove if misplaced
 		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
+			log.warn(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
 						`removing directive!`);
 			this.remove(true);
 		}

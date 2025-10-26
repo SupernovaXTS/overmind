@@ -184,7 +184,7 @@ export class CommandCenterOverlord extends Overlord {
 												Tasks.transfer(request.target, resource, withdrawAmount)]);
 					return true;
 				} else {
-					log.warning(`${manager.print}: could not fulfill supply request for ${resource}!`);
+					log.warn(`${manager.print}: could not fulfill supply request for ${resource}!`);
 					return false;
 				}
 			}
@@ -444,7 +444,7 @@ export class CommandCenterOverlord extends Overlord {
 	// 			return true;
 	// 		}
 	// 	}
-	// 	log.warning('No shit to drop! Shouldn\'t reach here!');
+	// 	log.warn('No shit to drop! Shouldn\'t reach here!');
 	// 	return false;
 	// }
 

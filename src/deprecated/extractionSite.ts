@@ -52,7 +52,7 @@
 // 		}, 10);
 // 		if (this.outputPos) this.colony.destinations.push(this.outputPos);
 // 		if (Game.time % 100 == 0 && !this.output) {
-// 			log.warning(`Mineral site at ${this.pos.print} has no output!`);
+// 			log.warn(`Mineral site at ${this.pos.print} has no output!`);
 // 		}
 // 	}
 //

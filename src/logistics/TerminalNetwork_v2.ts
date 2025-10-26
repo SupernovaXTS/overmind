@@ -347,13 +347,13 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', getDefaultTerminalNetworkMemory);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', getDefaultTerminalNetworkStats);
 	}
-
+	
 	private debug(...args: any[]) {
 		if (this.memory.debug) {
-			log.alert('TerminalNetwork:', args);
+			log.alert('TerminalNetwork:' + args);
 		}
 	}
-
+	
 	/**
 	 * Adds a colony to the terminal network; should be populated following constructor() phase
 	 */
@@ -403,7 +403,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			this.notify(msg);
 			// this.logTransfer(resourceType, amount, sender.room.name, receiver.room.name);
 		} else {
-			log.warning(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
+			log.warn(`Could not send ${amount} ${resourceType} from ${sender.room.print} to ` +
 						`${receiver.room.print}! Response: ${response}`);
 			if (response == ERR_NOT_ENOUGH_RESOURCES || response == ERR_TIRED) {
 				this.terminalOverload[sender.room.name] = true;
@@ -523,7 +523,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		}
 		// If you already requested the resource via a different method, throw a warning and override
 		if (this.colonyThresholds[requestor.name][resource] != undefined) {
-			log.warning(`TerminalNetwork.colonyThresholds[${requestor.name}][${resource}] already set to:` +
+			log.warn(`TerminalNetwork.colonyThresholds[${requestor.name}][${resource}] already set to:` +
 						`${this.colonyThresholds[requestor.name][resource]}; overriding previous request!`);
 		}
 		// Set the thresholds and set state to activeRequestor
@@ -552,7 +552,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 
 		// Need to have the resources to lock them
 		if (requestor.assets[resource] < newLockAmount) {
-			log.warning(`TerminalNetwork.lockResource() called for ${requestor.print} locking ${lockAmount} ` +
+			log.warn(`TerminalNetwork.lockResource() called for ${requestor.print} locking ${lockAmount} ` +
 						`(total: ${newLockAmount}) of ${resource}, but colony only has ` +
 						`${requestor.assets[resource]} amount!`);
 		}
@@ -570,7 +570,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 		if (PHASE != 'init') log.error(`TerminalNetwork.exportResource must be called in the init() phase!`);
 		// If you already requested the resource via a different method, throw a warning and override
 		if (this.colonyThresholds[provider.name] && this.colonyThresholds[provider.name][resource] != undefined) {
-			log.warning(`TerminalNetwork.colonyThresholds[${provider.name}][${resource}] already set to:` +
+			log.warn(`TerminalNetwork.colonyThresholds[${provider.name}][${resource}] already set to:` +
 						`${this.colonyThresholds[provider.name][resource]}; overriding previous export!`);
 		}
 		// Set the thresholds, but in this case we don't set the state to activeProvider - this is automatically done
@@ -1081,7 +1081,7 @@ export class TerminalNetworkV2 implements ITerminalNetwork {
 			for (const colony of this.colonies) {
 				if (this.getRemainingSpace(colony) < TerminalNetworkV2.settings.minColonySpace
 					&& !colony.state.isRebuilding) {
-					log.warning(`${colony.print} is critially full; requires immediate attention!`);
+					log.warn(`${colony.print} is critially full; requires immediate attention!`);
 				}
 			}
 

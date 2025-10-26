@@ -83,7 +83,7 @@ export class CombatIntel {
 			}
 			return expectedDamage;
 		} else {
-			log.warning(`CombatIntel.towerDamageAtPos: room visibility at ${pos.print}!`);
+			log.warn(`CombatIntel.towerDamageAtPos: room visibility at ${pos.print}!`);
 			return 0;
 		}
 	}
@@ -266,7 +266,7 @@ export class CombatIntel {
 	findSimpleSiegeFallback(): RoomPosition {
 		const ret = Pathing.findPath(this.colony.pos, this.directive.pos, {range: 23});
 		if (ret.incomplete) {
-			log.warning(`Incomplete path while finding fallback! Destination: ${this.directive.pos.print}`);
+			log.warn(`Incomplete path while finding fallback! Destination: ${this.directive.pos.print}`);
 		}
 		const firstPosInRoom = _.find(ret.path, pos => pos.roomName == this.directive.pos.roomName);
 		if (firstPosInRoom) {
@@ -287,7 +287,7 @@ export class CombatIntel {
 			log.debug(`Incomplete swarm path to find assembly point. Retrying with startpos = fallback.`);
 			ret = Pathing.findSwarmPath(simpleFallback, this.directive.pos, clearance.width, clearance.height);
 			if (ret.incomplete) {
-				log.warning(`No pathable assembly point!`);
+				log.warn(`No pathable assembly point!`);
 			}
 		}
 		const path = ret.path.reverse();
@@ -819,7 +819,7 @@ export class CombatIntel {
 		// TODO: rewrite this
 
 		// if (!creep.room.my) {
-		// 	log.warning(`isEdgeDancing should only be called in owned rooms!`);
+		// 	log.warn(`isEdgeDancing should only be called in owned rooms!`);
 		// }
 		// const creepOccupancies = creep.room.memory[RMEM.CREEPS_IN_ROOM];
 		// if (creepOccupancies) {

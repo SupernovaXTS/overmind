@@ -100,7 +100,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 
 		const room = swarm.rooms[0];
 		if (!room) {
-			log.warning(`${this.print} No room! (Why?)`);
+			log.warn(`${this.print} No room! (Why?)`);
 		}
 		// Siege the room
 		const nearbyHostiles = _.filter(room.hostiles, creep => swarm.minRangeTo(creep) <= 3 + 1);
